@@ -74,7 +74,7 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
     var percent by remember { mutableStateOf("") }
     @Composable
     fun PercentField(modifier: Modifier) = UTextField(percent, {
-        percent = it.filter(Char::isDigit).take(3)
+        percent = it.filter(Char::isDigit).take(3).let { p -> if ((p.toIntOrNull() ?: 0) > 100) "100" else p }
         percent.toIntOrNull()?.let { p -> page = Book.atPercent(total, p).toString() }
     }, modifier, number = true, placeholder = Book.percentOf(total, page.toIntOrNull() ?: 0).toString(), suffix = "%")
     Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding().imePadding()) {

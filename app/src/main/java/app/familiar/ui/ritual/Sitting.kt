@@ -77,7 +77,7 @@ fun SittingForm(book: Book, fromPage: Int, startPage: Int, slime: Boolean, butto
                     }, Modifier.weight(2f), number = true, placeholder = stringResource(R.string.page_short))
                     // Readers and players that only show how far you are: a percent works too.
                     if (known) UTextField(percent, {
-                        percent = it.filter(Char::isDigit).take(3)
+                        percent = it.filter(Char::isDigit).take(3).let { p -> if ((p.toIntOrNull() ?: 0) > 100) "100" else p }
                         typed = ""; typedTime = null
                         percent.toIntOrNull()?.let { p -> moved(Book.atPercent(book.pages, p)) }
                     }, Modifier.weight(1f), number = true, placeholder = Book.percentOf(book.pages, page).toString(), suffix = "%")
@@ -91,8 +91,10 @@ fun SittingForm(book: Book, fromPage: Int, startPage: Int, slime: Boolean, butto
             SwitchRow(stringResource(R.string.finished_book), null, finish || atEnd, { on ->
                 finish = on
                 if (on && known && !noPage && !atEnd) { before = page; page = book.pages }
-                if (!on && atEnd && fromPage < book.pages) page = (before ?: (page - 1)).coerceIn(fromPage, book.pages - 1)
-                before = null
+                if (!on) {
+                    if (atEnd && fromPage < book.pages) page = (before ?: (page - 1)).coerceIn(fromPage, book.pages - 1)
+                    before = null
+                }
                 typed = ""; typedTime = null; percent = ""
             })
         }
