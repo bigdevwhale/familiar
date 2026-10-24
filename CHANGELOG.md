@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2] - 2026-10-24
+
+- **Progress in percent:** when you log a sitting or add a book, type how far you are in percent instead of the page or minute, as e-readers and audiobook apps show it. The shelf shows the percent next to the page.
+- **Audiobooks in hours and minutes:** the length and where you are are typed as hours and minutes, the way shops and players show them.
+- **The tree of stories:** the fireflies drift smoothly and blink each at its own pace, with a soft glow instead of a dark outline; more of them come as the tree bears fruit. The crown is even on both sides, and the fruits glow steadily.
+- **Fix:** the “finished the book” switch could not be turned off again once tapped while logging a sitting.
+
 ## [1.3.1] - 2026-10-23
 
 - **Search finds genres:** typing a genre (“mystery”, “детектив”) in the shelf search finds its books, not only your own genres and subgenres.

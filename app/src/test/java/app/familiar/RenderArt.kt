@@ -175,6 +175,38 @@ class RenderArt {
         File(out, "season_rooms.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
+    /** The tree of stories with 0, 12 and 60 books, a few frames each, on the light and the dark ground. */
+    @Test
+    fun tree() {
+        val k = 3
+        val w = 128 * k
+        val h = 112 * k
+        val counts = listOf(0, 12, 60)
+        val frames = listOf(0, 3, 6, 9)
+        val bmp = Bitmap.createBitmap(w * frames.size, h * counts.size * 2, Bitmap.Config.ARGB_8888)
+        for ((d, bg) in listOf(0xFFEDE4D3.toInt(), 0xFF2B2438.toInt()).withIndex()) counts.forEachIndexed { r, n ->
+            val fruits = List(n) { tails[it % tails.size] }
+            frames.forEachIndexed { c, f ->
+                val px = app.familiar.ui.pix.Scenes.tree(fruits, f, d == 1).first
+                // The fireflies the tree tab paints on top, as they are at this moment.
+                val (core, halo) = if (d == 1) 0xFFF6F7B0.toInt() to 0xFFC9EE6A.toInt() else 0xFFD08A1E.toInt() to 0xFFF2C14E.toInt()
+                for (fly in app.familiar.ui.pix.Scenes.fireflies(n, f * 1.3f)) {
+                    val fx = fly.x.toInt(); val fy = fly.y.toInt()
+                    for (dy in -1..1) for (dx in -1..1) px.set(fx + dx, fy + dy, halo, ((if (dx == 0 || dy == 0) 0.5f else 0.2f) * fly.light * 255).toInt())
+                    px.set(fx, fy, core, (fly.light * 255).toInt())
+                }
+                val y0 = (d * counts.size + r) * h
+                for (y in 0 until px.h) for (x in 0 until px.w) {
+                    val p = px.c[y * px.w + x]
+                    val a = (p ushr 24) and 0xFF
+                    val col = if (a == 0) bg else blend(bg, p, a / 255f)
+                    for (j in 0 until k) for (i in 0 until k) bmp.setPixel(c * w + x * k + i, y0 + y * k + j, col)
+                }
+            }
+        }
+        File(out, "tree.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
     @Test
     fun stages() = sheet("stages", Species.entries.map { sp -> Stage.entries.map { Sprites.frame(look(sp, it), 0) } }, scale = 3)
 

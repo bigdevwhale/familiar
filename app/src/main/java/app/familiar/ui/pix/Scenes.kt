@@ -112,16 +112,24 @@ object Scenes {
         // The hollow, where two eyes glint now and then.
         px.shade(ellipse(64f, 82f, 4f, 5.5f), facing(), Ramp(R.wood[0], R.mouth[0]), lo = 1, hi = 1)
         if (f % 12 != 5) { px.set(62, 81, R.gold[5]); px.set(66, 81, R.gold[5]) }
-        // The crown: washes of leaves, darker underneath.
-        val blobs = 11
-        for (i in 0 until blobs) {
-            val a = i * 2 * PI / blobs
-            val bx = cx + cos(a).toFloat() * rx * 0.62f
-            val by = cy + sin(a).toFloat() * ry * 0.55f
-            val r = (15f + (noise(i, 2, 9) + 0.5f) * 7f) * grow
-            px.shade(ellipse(bx, by, r * 1.1f, r * 0.9f), dome(bx, by - 2, r * 1.1f, r * 0.9f), R.leaf, texture = { x, y -> if (noise(x / 2, y / 2, i) > 0.3f) 0.15f else 0f }, rim = R.leaf[5], dither = 0.6f)
+        // The crown: clumps of leaves round the edge, even on both sides, the upper ones behind the
+        // lower so each clump shows its rounded top. Their edges inside are dark leaf, not ink.
+        val blobs = 12
+        val clumps = List(blobs) { i ->
+            val a = (i + 0.5f) * 2 * PI.toFloat() / blobs
+            val r = (15f + (noise(minOf(i, (blobs + 5 - i) % blobs), 2, 9) + 0.5f) * 6f) * grow
+            Triple(cx + cos(a) * rx * 0.62f, cy + sin(a) * ry * 0.55f, r)
+        }.sortedBy { it.second }
+        clumps.forEachIndexed { i, (bx, by, r) ->
+            px.shade(ellipse(bx, by, r * 1.1f, r * 0.9f), dome(bx, by - 2, r * 1.1f, r * 0.9f), R.leaf, texture = { x, y -> if (noise(x / 2, y / 2, i) > 0.3f) 0.15f else 0f }, rim = R.leaf[5], dither = 0.6f, line = R.leaf[1])
         }
         px.shade(ellipse(cx, cy - 2, rx * 0.75f, ry * 0.75f), dome(cx, cy - 6, rx * 0.75f, ry * 0.75f), R.leaf, texture = { x, y -> if (noise(x / 2, y / 2, 50) > 0.3f) 0.15f else 0f }, dither = 0.6f, outline = false)
+        // A few lit tufts on the sunny upper left.
+        for ((tx, ty, tr) in listOf(Triple(-0.38f, -0.42f, 9f), Triple(0.05f, -0.6f, 8f), Triple(-0.62f, -0.05f, 7f))) {
+            val x = cx + tx * rx
+            val y = cy + ty * ry
+            px.shade(ellipse(x, y, tr * grow, tr * 0.7f * grow), dome(x - 2, y - 3, tr * grow, tr * 0.7f * grow), R.leaf, dither = 0.6f, outline = false, lo = 3)
+        }
         // Fruits, on a sunflower spiral.
         val slots = maxOf(n, 14)
         val out = ArrayList<Fruit>()
@@ -131,20 +139,34 @@ object Scenes {
             val x = cx + cos(a) * rx * 0.86f * r
             val y = cy + sin(a) * ry * 0.86f * r
             val ramp = R.around(c)
-            if ((f + i) % 4 != 0) px.glow(x, y, 6f, ramp[6], 70, 3, onlyDrawn = true)
+            // Each fruit glows steadily and swells a little once a turn, at its own moment.
+            val bright = (f + i * 5) % 12 == 0
+            px.glow(x, y, if (bright) 7.5f else 6f, ramp[6], if (night) 90 else 70, 3, onlyDrawn = true)
             px.shade(ellipse(x, y, 2.6f, 2.6f), dome(x, y, 2.6f, 2.6f), ramp, spec = true, lo = 1)
             px.set(x.toInt() - 1, y.toInt() - 3, R.wood[2])
             out += Fruit(i, x.toInt(), y.toInt())
         }
-        // Fireflies.
-        for (i in 0 until 6) {
-            val a = (f / 12f + i / 6f) * 2 * PI
-            val x = (64 + cos(a + i).toFloat() * 50 * (0.6f + 0.4f * ((i % 3) / 2f))).toInt()
-            val y = (52 + sin(a * 2 + i).toFloat() * 30).toInt()
-            if ((f + i) % 3 != 0) { px.set(x, y, R.gold[5]); px.set(x + 1, y, R.gold[4], 120); px.set(x, y + 1, R.gold[4], 120) }
-        }
         val solid = BooleanArray(px.w * px.h) { px.c[it].al() >= 160 }
         px.ring(solid, OUT)
         return px to out
+    }
+
+    /** A firefly by the tree, in its pixels, and how brightly it shines (0..1). */
+    class Firefly(val x: Float, val y: Float, val light: Float)
+
+    /**
+     * The fireflies round the tree at [t] seconds: more of them as it bears [fruits]. They drift
+     * smoothly on slow loops and each blinks at its own pace, so they are drawn every frame on
+     * top of the tree rather than baked into its few frames.
+     */
+    fun fireflies(fruits: Int, t: Float): List<Firefly> = List(5 + minOf(fruits / 6, 7)) { i ->
+        val r = kotlin.random.Random(i * 7919 + 13)
+        fun p() = r.nextFloat() * 2 * PI.toFloat()
+        val sx = 0.12f + r.nextFloat() * 0.18f
+        val sy = 0.15f + r.nextFloat() * 0.2f
+        val x = 64f + sin(t * sx + p()) * (34f + r.nextFloat() * 20f) + sin(t * sx * 2.7f + p()) * 5f
+        val y = 56f + sin(t * sy + p()) * (26f + r.nextFloat() * 10f) + sin(t * sy * 3.1f + p()) * 4f
+        val blink = sin(t * (0.9f + r.nextFloat() * 1.2f) + p())
+        Firefly(x, y, (blink * 0.5f + 0.5f).let { it * it }.coerceIn(0f, 1f))
     }
 }

@@ -23,15 +23,44 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import app.familiar.R
 import app.familiar.ui.theme.U
 import app.familiar.ui.theme.UType
+
+/**
+ * A length of time as hours and minutes, the way players and shops show it. [minutes] is null
+ * while both are empty; more than 59 minutes is fine, they just add up.
+ */
+@Composable
+fun HoursMinutesField(minutes: Int?, onChange: (Int?) -> Unit, modifier: Modifier = Modifier) {
+    fun total(h: String, m: String) = if (h.isEmpty() && m.isEmpty()) null else (h.toIntOrNull() ?: 0) * 60 + (m.toIntOrNull() ?: 0)
+    var h by remember { mutableStateOf(minutes?.let { (it / 60).toString() } ?: "") }
+    var m by remember { mutableStateOf(minutes?.let { (it % 60).toString() } ?: "") }
+    // Set from outside (by a percent, a found book): show the new time.
+    LaunchedEffect(minutes) {
+        if (minutes != total(h, m)) {
+            h = minutes?.let { (it / 60).toString() } ?: ""
+            m = minutes?.let { (it % 60).toString() } ?: ""
+        }
+    }
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        UTextField(h, { h = it.filter(Char::isDigit).take(3); onChange(total(h, m)) }, Modifier.weight(1f), placeholder = "0", number = true, suffix = stringResource(R.string.unit_h))
+        UTextField(m, { m = it.filter(Char::isDigit).take(4); onChange(total(h, m)) }, Modifier.weight(1f), placeholder = "0", number = true, suffix = stringResource(R.string.unit_min))
+    }
+}
 
 /** − value + */
 @Composable

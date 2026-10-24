@@ -38,6 +38,7 @@ import app.familiar.domain.Genre
 import app.familiar.ui.FamiliarData
 import app.familiar.ui.Go
 import app.familiar.ui.components.Chip
+import app.familiar.ui.components.HoursMinutesField
 import app.familiar.ui.components.PrimaryButton
 import app.familiar.ui.components.SectionTitle
 import app.familiar.ui.components.TopBar
@@ -69,6 +70,13 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
     // The length is optional: 0 means not known yet.
     val total = pages.toIntOrNull()?.takeIf { it in 1..20000 } ?: 0
     val ok = title.isNotBlank() && (pages.isBlank() || pages.toIntOrNull()?.let { it in 1..20000 } == true)
+    // How far through, for readers and players that only show a percent: it sets the page.
+    var percent by remember { mutableStateOf("") }
+    @Composable
+    fun PercentField(modifier: Modifier) = UTextField(percent, {
+        percent = it.filter(Char::isDigit).take(3)
+        percent.toIntOrNull()?.let { p -> page = Book.atPercent(total, p).toString() }
+    }, modifier, number = true, placeholder = Book.percentOf(total, page.toIntOrNull() ?: 0).toString(), suffix = "%")
     Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding().imePadding()) {
         TopBar(stringResource(if (old == null) R.string.book_add else R.string.book_edit), { go.back() })
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 18.dp)) {
@@ -87,16 +95,29 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
             UTextField(author, { author = it.take(80) }, placeholder = stringResource(R.string.f_author_hint))
             Spacer(Modifier.height(8.dp))
             app.familiar.ui.components.SwitchRow(stringResource(R.string.f_audio), stringResource(R.string.f_audio_sub), audio, { audio = it })
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (audio) {
+                // An audiobook's length as the shop or the player shows it: hours and minutes.
+                SectionTitle(stringResource(R.string.f_minutes))
+                HoursMinutesField(pages.toIntOrNull(), { pages = it?.toString() ?: "" })
+                SectionTitle(stringResource(R.string.f_minute_now))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HoursMinutesField(page.toIntOrNull(), { page = it?.toString() ?: ""; percent = "" }, Modifier.weight(2f))
+                    if (total > 0) PercentField(Modifier.weight(1f))
+                }
+            } else Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Column(Modifier.weight(1f)) {
-                    SectionTitle(stringResource(if (audio) R.string.f_minutes else R.string.f_pages))
+                    SectionTitle(stringResource(R.string.f_pages))
                     UTextField(pages, { pages = it.filter(Char::isDigit).take(5) }, number = true, placeholder = stringResource(R.string.f_pages_optional))
                 }
                 Column(Modifier.weight(1f)) {
-                    SectionTitle(stringResource(if (audio) R.string.f_minute_now else R.string.f_page_now))
-                    UTextField(page, { page = it.filter(Char::isDigit).take(5) }, number = true, placeholder = "0")
+                    SectionTitle(stringResource(R.string.f_page_now))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        UTextField(page, { page = it.filter(Char::isDigit).take(5); percent = "" }, Modifier.weight(1f), number = true, placeholder = "0")
+                        if (total > 0) PercentField(Modifier.weight(1f))
+                    }
                 }
             }
+            if (total == 0) Text(stringResource(R.string.f_percent_note), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 6.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Column(Modifier.weight(2f)) {
                     SectionTitle(stringResource(R.string.f_series))

@@ -359,13 +359,13 @@ fun pages(n: Int): String = pluralStringResource(R.plurals.pages, n, n)
 /** Minutes as hours and minutes, 1:05. */
 fun hm(min: Int): String = "%d:%02d".format(min / 60, min % 60)
 
-/** "Page 12 of 300", or for an audiobook "1:05 of 9:30". */
+/** "Page 12 of 300 · 4%", or for an audiobook "1:05 of 9:30 · 11%". */
 @Composable
 fun progressLabel(b: app.familiar.data.Book): String =
     when {
         b.pages <= 0 -> if (b.audio) stringResource(R.string.minute_at, hm(b.page)) else stringResource(R.string.page_n, b.page)
-        b.audio -> stringResource(R.string.audio_of, hm(b.page), hm(b.pages))
-        else -> stringResource(R.string.page_of, b.page, b.pages)
+        b.audio -> stringResource(R.string.audio_of, hm(b.page), hm(b.pages)) + " · ${app.familiar.data.Book.percentOf(b.pages, b.page)}%"
+        else -> stringResource(R.string.page_of, b.page, b.pages) + " · ${app.familiar.data.Book.percentOf(b.pages, b.page)}%"
     }
 
 /** Pages read, or minutes listened. */

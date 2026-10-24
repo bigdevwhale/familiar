@@ -164,7 +164,8 @@
 
     <!-- Sitting -->
     <string name="stopped_at">Stopped at</string>
-    <string name="page_type">Or type a page, up to %d</string>
+    <string name="page_type">Or type the page, up to %d, or how far you are in percent</string>
+    <string name="page_short">Page</string>
     <string name="read_now">That\'s %s read</string>
     <string name="finished_book">I finished the book</string>
     <string name="slime_item">What should the slime swallow?</string>
@@ -401,12 +402,16 @@
     <string name="saga_goal_done">The promise of %d books was kept.</string>
     <string name="audio_of">%1$s of %2$s</string>
     <string name="minute_at">At %s</string>
-    <string name="minute_type">Or type the minute, up to %d</string>
+    <string name="time_type">Or type the time, up to %s, or how far you are in percent</string>
+    <string name="time_type_any">Or type the time</string>
+    <string name="unit_h">h</string>
+    <string name="unit_min">min</string>
+    <string name="f_percent_note">Give the length to type how far you are in percent.</string>
     <string name="listened_now">That\'s %s listened</string>
     <string name="f_audio">Audiobook</string>
     <string name="f_audio_sub">Counted in minutes instead of pages</string>
-    <string name="f_minutes">Length, minutes</string>
-    <string name="f_minute_now">Now at minute</string>
+    <string name="f_minutes">Length</string>
+    <string name="f_minute_now">Now at</string>
     <string name="audio_playing">Every minute listened counts by itself.</string>
     <string name="audio_finish">Stop the record</string>
     <string name="part_minutes">Minutes</string>

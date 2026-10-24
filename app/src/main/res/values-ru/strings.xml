@@ -165,7 +165,8 @@
     <string name="log_text">Читаешь без приложения? Расскажи фамильяру, как прошло: страница, на которой остановка, или просто сколько минут ушло на чтение или прослушивание.</string>
 
     <string name="stopped_at">Где остановка</string>
-    <string name="page_type">Или введи страницу, до %d</string>
+    <string name="page_type">Или введи страницу (до %d) или процент прочитанного</string>
+    <string name="page_short">Страница</string>
     <string name="read_now">Прочитано: %s</string>
     <string name="finished_book">Книга дочитана</string>
     <string name="slime_item">Что проглотит слайм?</string>
@@ -414,12 +415,16 @@
     <string name="saga_goal_done">Обещание прочитать %d книг сдержано.</string>
     <string name="audio_of">%1$s из %2$s</string>
     <string name="minute_at">На %s</string>
-    <string name="minute_type">Или введи минуту, до %d</string>
+    <string name="time_type">Или введи время (до %s) или процент прослушанного</string>
+    <string name="time_type_any">Или введи время</string>
+    <string name="unit_h">ч</string>
+    <string name="unit_min">мин</string>
+    <string name="f_percent_note">Укажи объём, и прогресс можно будет вводить в процентах.</string>
     <string name="listened_now">Прослушано: %s</string>
     <string name="f_audio">Аудиокнига</string>
     <string name="f_audio_sub">Считается в минутах, а не в страницах</string>
-    <string name="f_minutes">Длительность, мин</string>
-    <string name="f_minute_now">Сейчас на минуте</string>
+    <string name="f_minutes">Длительность</string>
+    <string name="f_minute_now">Сейчас на</string>
     <string name="audio_playing">Каждая прослушанная минута засчитывается сама.</string>
     <string name="audio_finish">Остановить пластинку</string>
     <string name="part_minutes">Минуты</string>

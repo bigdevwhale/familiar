@@ -356,4 +356,16 @@ class FamiliarTest {
         assertEquals(listOf("Dracula"), by.copy(query = "ужас").apply(b, emptyList(), genreNames = mapOf(Genre.HORROR to "Ужасы")).map { it.title })
         assertEquals(by.copy(reverse = true), app.familiar.ui.books.Browse.sorted("AUTHOR:r"))
     }
+
+    @Test
+    fun percentToPageAndBack() {
+        assertEquals(150, Book.atPercent(300, 50))
+        assertEquals(0, Book.atPercent(300, 0))
+        assertEquals(300, Book.atPercent(300, 140))
+        // An audiobook of 9 h 30 min, 37% in.
+        assertEquals(211, Book.atPercent(570, 37))
+        assertEquals(37, Book.percentOf(570, 211))
+        assertEquals(0, Book.percentOf(0, 40))
+        assertEquals(100, Book.percentOf(300, 300))
+    }
 }
