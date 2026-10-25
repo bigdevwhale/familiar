@@ -6,6 +6,13 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.3.4] - 2026-10-25
+
+### Added
+- Community links in settings: report a bug, suggest an idea or follow updates through the StillCraft bot on Telegram, and the StillCraft chat.
+
+<!-- tg skip -->
+
 ## [1.3.3] - 2026-10-24
 
 - **Fix:** turning “finished the book” off again takes you back to the page you were on, not one page before the end.

@@ -48,6 +48,7 @@ import app.familiar.notify.Alarms
 import app.familiar.ui.FamiliarData
 import app.familiar.ui.Language
 import app.familiar.ui.components.Chip
+import app.familiar.ui.components.CommunityLinks
 import app.familiar.ui.components.ConfirmDialog
 import app.familiar.ui.components.InfoRow
 import app.familiar.ui.components.SectionTitle
@@ -190,6 +191,8 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
                     }
                 }
             }
+
+            CommunityLinks()
 
             SectionTitle(stringResource(R.string.about))
             UCard {
