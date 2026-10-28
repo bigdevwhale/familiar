@@ -96,6 +96,9 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
                     if (book.pages > 0) Bar(book.fraction, color = U.c.accent, track = U.c.accentSoft)
                     Spacer(Modifier.height(4.dp))
                     Text(app.familiar.ui.progressLabel(book), style = UType.Small)
+                    app.familiar.domain.Insights.forecast(book, data.stats)?.let {
+                        Text(stringResource(R.string.forecast, app.familiar.ui.dateOf(it)), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 2.dp))
+                    }
                 }
             }
             Spacer(Modifier.height(18.dp))

@@ -93,6 +93,7 @@ Stroke the familiar sideways and it squeezes its eyes shut and purrs. After midn
 | 🎯 | **Goal for the year** | How many books this year, with how far ahead of or behind the pace you are. |
 | ⚔️ | **The guild** | Three monthly errands, the same for every reader, none of them a must. |
 | 📖 | **Saga** | Your year told as a legend, with a square for every day of reading, ready to share. |
+| 📊 | **The ledger** | Pages a day, pace in pages an hour by genre, the time of day you read most, six months in columns, and the day you'll finish the book you're on. |
 | 🔔 | **Reminder and widget** | An evening line from your familiar, quiet on days you've read; a home-screen widget with the familiar and today's pages. |
 
 <table>

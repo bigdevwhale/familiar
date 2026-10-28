@@ -6,6 +6,16 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.4.0] - 2026-10-28
+
+- **The ledger:** a new page under the saga with the plain numbers: pages a day, minutes a sitting, hours by the candle; your pace in pages an hour, overall and in each genre; when you read most (morning, day, evening or night) and your best day of the week; the last six months as columns, with the books finished in each and how this month compares with the last.
+- **When you'll finish:** a book you're reading shows the day you'll finish it if you go on as in the last two weeks.
+
+<!-- tg
+Новое: «Счётная книга» под сагой — скорость чтения по жанрам, когда ты читаешь чаще всего и полгода по месяцам.
+На странице книги теперь видно, когда ты её дочитаешь, если читать в том же темпе.
+-->
+
 ## [1.3.4] - 2026-10-25
 
 ### Added

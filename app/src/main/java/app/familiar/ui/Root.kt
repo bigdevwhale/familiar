@@ -142,6 +142,7 @@ class Go(private val nav: NavHostController) {
     fun editBook(id: Long = 0, series: String = "") = nav.navigate("edit/$id?series=" + android.net.Uri.encode(series))
     fun bestiary() = nav.navigate("bestiary")
     fun saga() = nav.navigate("saga")
+    fun stats() = nav.navigate("stats")
     fun furnish() = nav.navigate("furnish")
     fun series(name: String) = nav.navigate("series/" + android.net.Uri.encode(name))
     fun settings() = nav.navigate("settings")
@@ -235,6 +236,7 @@ fun FamiliarRoot(settings: Settings, dim: (Boolean) -> Unit) {
         }
         composable("bestiary") { BestiaryScreen(data, go) }
         composable("saga") { SagaScreen(data, go) }
+        composable("stats") { app.familiar.ui.tree.StatsScreen(data, go) }
         composable("furnish") { app.familiar.ui.den.FurnishScreen(data, go) }
         composable("series/{name}", arguments = listOf(navArgument("name") { type = NavType.StringType })) { e ->
             app.familiar.ui.books.SeriesScreen(e.arguments?.getString("name").orEmpty(), data, go)

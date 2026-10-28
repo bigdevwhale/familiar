@@ -385,6 +385,12 @@ fun mana(n: Int): String = stringResource(R.string.mana_n, n)
 fun dateShort(t: Long): String = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale()).format(Instant.ofEpochMilli(t).atZone(ZoneId.systemDefault()))
 
 @Composable
+fun dateOf(d: java.time.LocalDate): String =
+    // "3 November" within this year, the full date beyond it.
+    if (d.year == java.time.LocalDate.now().year) DateTimeFormatter.ofPattern("d MMMM", locale()).format(d)
+    else DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale()).format(d)
+
+@Composable
 fun timeShort(t: Long): String = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale()).format(Instant.ofEpochMilli(t).atZone(ZoneId.systemDefault()))
 
 /** The look of a familiar from what's been read so far. */

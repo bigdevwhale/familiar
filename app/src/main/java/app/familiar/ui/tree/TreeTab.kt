@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.HistoryEdu
+import androidx.compose.material.icons.rounded.Insights
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -158,6 +159,17 @@ fun TreeTab(data: FamiliarData, go: Go) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.saga_title, s.today.year), style = UType.Strong)
                     Text(stringResource(R.string.saga_sub), style = UType.Muted)
+                }
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        UCard(onClick = { go.stats() }) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Rounded.Insights, null, tint = U.c.mana)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.stats_title), style = UType.Strong)
+                    Text(stringResource(R.string.stats_sub), style = UType.Muted)
                 }
             }
         }

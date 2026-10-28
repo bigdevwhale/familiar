@@ -5,7 +5,9 @@ import app.familiar.data.Book
 import app.familiar.data.Pet
 import app.familiar.data.Reading
 import app.familiar.data.Shelf
+import app.familiar.domain.DayPart
 import app.familiar.domain.Genre
+import app.familiar.domain.Insights
 import app.familiar.domain.Mana
 import app.familiar.domain.Mood
 import app.familiar.domain.Part
@@ -367,5 +369,39 @@ class FamiliarTest {
         assertEquals(37, Book.percentOf(570, 211))
         assertEquals(0, Book.percentOf(0, 40))
         assertEquals(100, Book.percentOf(300, 300))
+    }
+
+    @Test
+    fun paceIsPagesAnHourByGenre() {
+        val books = listOf(book(1), book(2, Genre.HISTORY))
+        val n = Insights(stats(listOf(read(1, 30), read(2, 30), read(3, 10, book = 2)), books))
+        assertEquals(46, n.pace)
+        assertEquals(listOf(Genre.FANTASY to 60, Genre.HISTORY to 20), n.paceByGenre)
+        // Too little timed reading says nothing yet.
+        assertNull(Insights(stats(listOf(read(1, 30, minutes = 20)))).pace)
+    }
+
+    @Test
+    fun habitsAndMonths() {
+        val n = Insights(stats(listOf(read(0, hour = 7), read(1), read(2), read(20))))
+        assertEquals(DayPart.EVENING, n.bestPart)
+        assertEquals(1, n.dayParts[DayPart.MORNING])
+        assertEquals(30, n.avgSitting)
+        assertEquals(20, n.perDay)
+        assertEquals(6, n.months.size)
+        assertEquals(YearMonth.of(2026, 10), n.months.last().month)
+        assertEquals(60, n.months.last().amount)
+        assertEquals(20, n.months[4].amount)
+    }
+
+    @Test
+    fun forecastFromTheLastTwoWeeks() {
+        val b = book(1).copy(page = 60)
+        // Begun yesterday, 30 pages a day: 240 left is eight more days.
+        assertEquals(today.plusDays(8), Insights.forecast(b, stats(listOf(read(1, 30), read(0, 30)), listOf(b))))
+        // Read a month ago only: no pace to go by.
+        assertNull(Insights.forecast(b, stats(listOf(read(30, 60)), listOf(b))))
+        assertNull(Insights.forecast(b.copy(shelf = Shelf.PAUSED.name), stats(listOf(read(0, 30)), listOf(b))))
+        assertNull(Insights.forecast(b.copy(pages = 0), stats(listOf(read(0, 30)), listOf(b))))
     }
 }
