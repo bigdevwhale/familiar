@@ -71,17 +71,33 @@ object DemoSeed {
                     dao.activate(moth)
                 }
                 if (day == today.minusDays(3) && moth != 0L) dao.activate(fox)
-                val night = rnd.nextFloat() < 0.25f
-                val h = if (night) 22 + rnd.nextInt(2) else 19 + rnd.nextInt(3)
+                // Mostly evenings, some late nights, a commute in the morning, a lunch break.
+                val when_ = rnd.nextFloat()
+                val h = when {
+                    when_ < 0.12f -> 7 + rnd.nextInt(2)
+                    when_ < 0.24f -> 12 + rnd.nextInt(2)
+                    when_ < 0.48f -> 22 + rnd.nextInt(2)
+                    else -> 19 + rnd.nextInt(3)
+                }
                 val read = (mean * (0.75f + rnd.nextFloat() * 0.5f)).toInt().coerceAtMost(stopAt - page)
-                val minutes = (read / (1f + rnd.nextFloat() * 0.4f)).toInt().coerceAtLeast(10)
-                val s = at(day, h, rnd.nextInt(50))
-                val book = dao.book(id)!!
-                Library.sit(
-                    dao, book, page, page + read, s, s + minutes * 60_000L, timed = rnd.nextFloat() < 0.8f,
-                    stillSec = if (rnd.nextFloat() < 0.4f) minutes * 40 else 0, zone = zone,
-                )
-                page += read
+                // A believable pace: 25 to 45 pages an hour, slower in heavier books.
+                val perMinute = when (b.genre) {
+                    Genre.CLASSIC, Genre.NONFICTION, Genre.HISTORY -> 0.45f
+                    Genre.ROMANCE, Genre.MYSTERY -> 0.68f
+                    else -> 0.58f
+                } * (0.85f + rnd.nextFloat() * 0.3f)
+                // Many evenings are split: a chapter on the way in the morning, the rest at home.
+                val early = if (h >= 17 && read > 20 && rnd.nextFloat() < 0.5f) (read * (0.3f + rnd.nextFloat() * 0.2f)).toInt() else 0
+                for ((pages, hour) in listOf(early to 7 + rnd.nextInt(2), read - early to h)) {
+                    if (pages <= 0) continue
+                    val minutes = (pages / perMinute).toInt().coerceAtLeast(10)
+                    val s = at(day, hour, rnd.nextInt(50))
+                    Library.sit(
+                        dao, dao.book(id)!!, page, page + pages, s, s + minutes * 60_000L, timed = rnd.nextFloat() < 0.8f,
+                        stillSec = if (rnd.nextFloat() < 0.4f) minutes * 40 else 0, zone = zone,
+                    )
+                    page += pages
+                }
                 day = day.plusDays(1)
             }
         }
