@@ -11,6 +11,10 @@ plugins {
 // Without them the release build falls back to the debug key so it still installs.
 // `-Pdemo` builds app.familiar.demo with made-up sessions for screenshots, next to the real install.
 val demo = project.hasProperty("demo")
+// `-Pdrawn` with it: every demo book gets a drawn cover, for store screenshots without publishers' art.
+val drawn = project.hasProperty("drawn")
+// `-Pdemolang=en|ru` with it: the language the demo is written in, whatever the phone speaks.
+val demoLang = (project.findProperty("demolang") as String?).orEmpty()
 
 val releaseKeystore = System.getenv("SIGNING_KEYSTORE_PATH")?.let(::file)?.takeIf { it.exists() }
 
@@ -25,6 +29,8 @@ android {
         versionCode = (System.getenv("VERSION_CODE") ?: "1").toInt()
         versionName = System.getenv("VERSION_NAME") ?: "1.0.0"
         buildConfigField("boolean", "DEMO", demo.toString())
+        buildConfigField("boolean", "DRAWN_COVERS", drawn.toString())
+        buildConfigField("String", "DEMO_LANG", "\"$demoLang\"")
         if (demo) applicationIdSuffix = ".demo"
     }
 
@@ -62,6 +68,13 @@ android {
     }
     androidResources {
         generateLocaleConfig = true
+    }
+    // Play otherwise installs only the device's languages from the AAB,
+    // and the in-app switch to Russian would find no Russian strings.
+    bundle {
+        language {
+            enableSplit = false
+        }
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true

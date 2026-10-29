@@ -38,7 +38,7 @@ object DemoSeed {
     suspend fun seedIfEmpty(db: FamiliarDatabase, settings: SettingsStore) {
         val dao = db.dao()
         if (dao.pets().isNotEmpty()) return
-        val ru = Locale.getDefault().language == "ru"
+        val ru = app.familiar.BuildConfig.DEMO_LANG.ifEmpty { Locale.getDefault().language } == "ru"
         val zone = ZoneId.systemDefault()
         val today = LocalDate.now(zone)
         val rnd = Random(7)
@@ -48,7 +48,7 @@ object DemoSeed {
         val fox = dao.insertPet(Pet(species = Species.KITSUNE.name, name = if (ru) "Юзу" else "Yuzu", joined = at(start, 20, 0), active = true, trait = app.familiar.domain.Trait.CURIOUS.name))
         suspend fun insert(b: B, shelf: Shelf, added: LocalDate) = dao.insertBook(
             Book(title = if (ru) b.ru else b.en, author = if (ru) b.authorRu else b.authorEn, pages = b.pages, genre = b.genre.name, shelf = shelf.name, added = at(added, 19, 0),
-                cover = if (b.coverId > 0) "https://covers.openlibrary.org/b/id/${b.coverId}-L.jpg" else "",
+                cover = if (b.coverId > 0 && !app.familiar.BuildConfig.DRAWN_COVERS) "https://covers.openlibrary.org/b/id/${b.coverId}-L.jpg" else "",
                 series = if (ru) b.seriesRu else b.seriesEn, volume = b.volume, sub = if (ru) b.subRu else b.subEn),
         )
         want.forEachIndexed { i, b -> insert(b, Shelf.WANT, start.plusDays(i * 9L)) }

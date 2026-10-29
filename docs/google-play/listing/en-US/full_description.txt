@@ -1,0 +1,46 @@
+You are a reading mage, and every mage needs a familiar. Yours lives on mana, and mana comes from pages.
+
+Familiar is a reading tracker with a pixel-art pet. Read, and it hatches from an egg, grows through five stages and changes with what you read. Forget about books and it slowly turns to stone, until a few pages break the spell. Free, no ads, no account.
+
+🥚 FOURTEEN FAMILIARS
+• Mimic, kitsune, slime, dragon, phoenix, griffin, owlbear, moon moth, tanuki, sprout, ghost, bookworm, chimera and magpie
+• Each loves its own kind of reading: long books, night reading, streaks, audiobooks, horror, a new genre after the last
+• Three can hatch at the start; the rest are found by reading
+• A grown familiar takes one of five forms after the books it was fed on: astral, shadow, bloom, sage or wild
+• Every egg hatches with a nature of its own, and one in sixteen hatches shining, in a rare colouring
+
+🕯 THE RITUAL
+• A candle that burns down while you read, a big "turn the page" button, a fireplace or rain
+• Lay the phone face down and the familiar dozes on your lap: quiet time feeds a bonus
+• Read or listen: switch any book to its audio version, sitting by sitting
+• Read on the train? Log the page you reached, or just the minutes
+• After each sitting, a feast: pages, candlelight, stillness, its favourite, a finished book
+
+🏠 THE DEN
+• Every mana leaves a spark, and sparks buy furniture: a window with the real day or night, a bookshelf in the colours of your finished books, a cauldron, a telescope, fairy lights
+• Stroke your familiar and it purrs; after midnight it sleeps
+• Finds from the stories, dreams after evening reading, seasonal holidays
+
+📚 YOUR LIBRARY
+• Find books in Fantlab and Open Library with real covers, or type them in and pick your own picture
+• Shelves, cycles with volumes, your own genres and subgenres
+• Search, filter and sort the whole library
+• The familiar's draw when you can't choose what to read next
+
+📊 THE LEDGER AND THE SAGA
+• Your pace in pages an hour, overall and by genre
+• When you read most, and your best day of the week
+• Six months side by side, and the day you'll finish your current book
+• A goal for the year with your pace against it
+• The tree of stories: every finished book grows a glowing fruit
+• The saga: your year told as a legend, with a square for every day of reading
+
+ALSO
+• Monthly guild errands, guardian candles that keep a streak on a quiet day
+• Visits: show a QR code and your familiar stays in a friend's den for a day, phone to phone
+• A postcard of your familiar to share, an evening reminder, a home-screen widget
+• Backup to a file
+• English and Russian
+• Free and open source (MIT)
+
+Your reading stays on your phone. The app goes online only when you search for a book.
