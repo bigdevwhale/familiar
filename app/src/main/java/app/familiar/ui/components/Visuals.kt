@@ -39,6 +39,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.familiar.domain.Genre
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.rememberUpdatedState
+import app.familiar.domain.Species
+import app.familiar.domain.Stage
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.IntOffset
@@ -50,24 +54,57 @@ import kotlinx.coroutines.withContext
 import app.familiar.ui.theme.Cormorant
 import app.familiar.ui.theme.U
 import kotlinx.coroutines.launch
+import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
 
-/** Seconds since this first appeared, ticking every frame while it's on screen. */
+/**
+ * Seconds since this first appeared, ticking every frame while it's on screen. Read it only while drawing
+ * (`val t by rememberTime()` used inside a Canvas), so each frame redraws the picture, not the whole screen.
+ */
 @Composable
-fun rememberTime(): Float {
-    var t by remember { mutableFloatStateOf(0f) }
+fun rememberTime(): State<Float> {
+    val t = remember { mutableFloatStateOf(0f) }
     LaunchedEffect(Unit) {
         val start = withFrameMillis { it }
-        while (true) t = (withFrameMillis { it } - start) / 1000f
+        while (true) t.floatValue = (withFrameMillis { it } - start) / 1000f
     }
     return t
+}
+
+/**
+ * Beats of an idle loop played at [fps] beats a second. They add up frame by frame, so when the pace
+ * changes (a familiar starts chewing) the loop carries on from where it was instead of jumping.
+ */
+@Composable
+fun rememberBeats(fps: Float): State<Float> {
+    val pace by rememberUpdatedState(fps)
+    val beats = remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(Unit) {
+        var last = withFrameMillis { it }
+        while (true) {
+            val now = withFrameMillis { it }
+            if (pace > 0f) beats.floatValue = (beats.floatValue + (now - last) / 1000f * pace) % (Sprites.BEATS * 1000f)
+            last = now
+        }
+    }
+    return beats
+}
+
+/** The frame of a familiar's idle loop for [beats]. */
+fun List<ImageBitmap>.at(beats: Float): ImageBitmap = this[(beats * Sprites.STEP).toInt() % size]
+
+/** How much a familiar's breath stretches it [t] seconds in, as a share of its height; 0 if it doesn't breathe. */
+fun breath(look: Look, t: Float): Float {
+    if (look.stage == Stage.EGG || look.stone >= 0.5f || look.species == Species.MOTH || look.species == Species.GHOST) return 0f
+    val period = if (look.sleeping) 3.6f else 2.2f
+    return (0.5f - 0.5f * cos(t / period * 2 * Math.PI.toFloat())) * 0.016f
 }
 
 /** Painted frames are kept per look: drawing a familiar takes a few dozen milliseconds. */
 private object FrameCache {
     private val map = object : LinkedHashMap<Look, List<ImageBitmap>>(16, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Look, List<ImageBitmap>>?) = size > 24
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Look, List<ImageBitmap>>?) = size > 16
     }
 
     @Synchronized fun get(look: Look) = map[look]
@@ -76,15 +113,20 @@ private object FrameCache {
 
 fun framesOf(look: Look): List<ImageBitmap> = FrameCache.get(look) ?: Sprites.frames(look).map { it.bitmap() }.also { FrameCache.put(look, it) }
 
-/** Draws pixel frames scaled up in whole steps, crisp, centred and resting on the bottom. */
-fun androidx.compose.ui.graphics.drawscope.DrawScope.pixels(img: ImageBitmap, tint: androidx.compose.ui.graphics.ColorFilter? = null, bottom: Boolean = false) {
+/**
+ * Draws pixel frames scaled up in whole steps, crisp, centred and resting on the bottom. [stretch] makes it
+ * a little taller from the same bottom edge, for a breath.
+ */
+fun androidx.compose.ui.graphics.drawscope.DrawScope.pixels(img: ImageBitmap, tint: androidx.compose.ui.graphics.ColorFilter? = null, bottom: Boolean = false, stretch: Float = 0f) {
     val k = maxOf(1, minOf(size.width / img.width, size.height / img.height).toInt())
     val w = img.width * k
     val h = img.height * k
+    val tall = (h * (1f + stretch)).toInt()
+    val y = if (bottom) (size.height - h).toInt() else (size.height - h).toInt().coerceAtLeast(0) / 2
     drawImage(
         img,
-        dstOffset = IntOffset(((size.width - w) / 2).toInt(), if (bottom) (size.height - h).toInt() else (size.height - h).toInt().coerceAtLeast(0) / 2),
-        dstSize = IntSize(w, h),
+        dstOffset = IntOffset(((size.width - w) / 2).toInt(), y + h - tall),
+        dstSize = IntSize(w, tall),
         filterQuality = FilterQuality.None,
         colorFilter = tint,
     )
@@ -94,7 +136,8 @@ fun androidx.compose.ui.graphics.drawscope.DrawScope.pixels(img: ImageBitmap, ti
 @Composable
 fun FamiliarArt(look: Look, modifier: Modifier = Modifier, fps: Float = 6f, tint: androidx.compose.ui.graphics.ColorFilter? = null, onTap: (() -> Unit)? = null) {
     val frames by produceState(FrameCache.get(look), look) { value = withContext(Dispatchers.Default) { framesOf(look) } }
-    val t = rememberTime()
+    val t by rememberTime()
+    val beats by rememberBeats(fps)
     val hop = remember { Animatable(0f) }
     val love = remember { Animatable(1f) }
     val scope = rememberCoroutineScope()
@@ -116,7 +159,8 @@ fun FamiliarArt(look: Look, modifier: Modifier = Modifier, fps: Float = 6f, tint
             )
     ) {
         val f = frames ?: return@Canvas
-        pixels(f[((t * fps).toInt()) % f.size], tint)
+        // A still one (fps 0) doesn't breathe either.
+        pixels(f.at(beats), tint, stretch = if (fps > 0f) breath(look, t) else 0f)
         val l = love.value
         if (l < 1f) {
             val s = size.minDimension * 0.012f
@@ -138,7 +182,7 @@ fun Den(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit)
     val glow = U.c.denGlow
     val dark = U.c.denDark
     val mana = U.c.mana
-    val t = rememberTime()
+    val t by rememberTime()
     Box(
         modifier
             .clip(U.RXl)
@@ -150,7 +194,7 @@ fun Den(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit)
     }
 }
 
-/** Square mana sparks drifting up. */
+/** Square mana sparks drifting up, smoothly rather than from pixel to pixel. */
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.motes(t: Float, color: Color) {
     val px = size.minDimension / 90f
     for (i in 0 until 12) {
@@ -160,7 +204,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.motes(t: Float, col
         val y = size.height * (1f - ph)
         val a = sin(ph * Math.PI.toFloat()) * 0.8f
         val s = if (i % 3 == 0) px * 2 else px
-        drawRect(color.copy(alpha = a), Offset((x / s).toInt() * s, (y / s).toInt() * s), androidx.compose.ui.geometry.Size(s, s))
+        drawRect(color.copy(alpha = a), Offset(x, y), androidx.compose.ui.geometry.Size(s, s))
     }
 }
 

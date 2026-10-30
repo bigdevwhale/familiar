@@ -123,7 +123,7 @@ internal object Patchwork {
         ctx.look.patches.take(rim.size).forEachIndexed { i, color ->
             val x = rim[i]; val y = 76f + (i % 2) * 0.8f
             px.shade(pen.ell(x, y, 3f, 3f), pen.dome(x - 0.6f, y - 0.8f, 3f, 3f), R.around(color), spec = true, lo = 1)
-            if ((ctx.f + i * 3) % Sprites.FRAMES == 0) Sprites.stamp(px, Sprites.SPARK, pen.x(x).toInt() - 2, pen.y(y - 4f).toInt() - 2, WHITE, WHITE, 200)
+            if ((ctx.f + i * 3) % Sprites.BEATS == 0) Sprites.stamp(px, Sprites.SPARK, pen.x(x).toInt() - 2, pen.y(y - 4f).toInt() - 2, WHITE, WHITE, 200)
         }
         // An old gold key, the best of the hoard, once ancient.
         if (st == Stage.ANCIENT) {

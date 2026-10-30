@@ -65,7 +65,7 @@ fun DenScene(
     }
     val pet by produceState(null as List<ImageBitmap>?, look) { value = withContext(Dispatchers.Default) { framesOf(look) } }
     val visitor by produceState(null as List<ImageBitmap>?, guest) { value = guest?.let { withContext(Dispatchers.Default) { framesOf(it) } } }
-    val t = rememberTime()
+    val t by rememberTime()
     val hop = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     var stroked = 0f
@@ -97,21 +97,22 @@ fun DenScene(
         val k = maxOf(1, kotlin.math.ceil(maxOf(size.width / Room.W, size.height / Room.H)).toInt())
         val ox = ((size.width - Room.W * k) / 2).toInt()
         val oy = ((size.height - Room.H * k) / 2).toInt()
-        val f = frames[(t * 3).toInt() % frames.size]
+        val f = frames[(t * 3 * Room.STEP).toInt() % frames.size]
         drawRect(androidx.compose.ui.graphics.Color(0xFF2A2030), size = size)
         drawImage(f, dstOffset = IntOffset(ox, oy), dstSize = IntSize(Room.W * k, Room.H * k), filterQuality = FilterQuality.None)
+        // Familiars stand on the floor and breathe up from it; the hop lifts them smoothly, off the room's grid.
+        fun familiar(img: ImageBitmap, x: Int, y: Int, stretch: Float) {
+            val tall = (img.height * k * (1f + stretch)).toInt()
+            drawImage(img, dstOffset = IntOffset(x, y + img.height * k - tall), dstSize = IntSize(img.width * k, tall), filterQuality = FilterQuality.None)
+        }
         visitor?.let { v ->
             // The guest sits to the left, a little out of step with the host.
-            val img = v[((t * 5).toInt() + 3) % v.size]
-            val gx = ox + (Room.W / 2 - 44 - img.width / 2) * k
-            val gy = oy + (Room.FLOOR_Y - img.height + 1) * k
-            drawImage(img, dstOffset = IntOffset(gx, gy), dstSize = IntSize(img.width * k, img.height * k), filterQuality = FilterQuality.None)
+            val img = v.at(t * 5 + 3)
+            familiar(img, ox + (Room.W / 2 - 44 - img.width / 2) * k, oy + (Room.FLOOR_Y - img.height + 1) * k, guest?.let { breath(it, t + 0.8f) } ?: 0f)
         }
         pet?.let { p ->
-            val img = p[(t * 6).toInt() % p.size]
-            val px = ox + (Room.W - img.width) / 2 * k
-            val py = oy + (Room.FLOOR_Y - img.height + 3) * k - (hop.value * 6).toInt() * k
-            drawImage(img, dstOffset = IntOffset(px, py), dstSize = IntSize(img.width * k, img.height * k), filterQuality = FilterQuality.None)
+            val img = p.at(t * 6)
+            familiar(img, ox + (Room.W - img.width) / 2 * k, oy + (Room.FLOOR_Y - img.height + 3) * k - (hop.value * 6 * k).toInt(), breath(look, t))
         }
     }
 }

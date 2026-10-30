@@ -4,6 +4,7 @@ import app.familiar.domain.Item
 import app.familiar.domain.Season
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 /**
@@ -14,7 +15,11 @@ object Room {
     const val W = 144
     const val H = 108
     const val FLOOR_Y = 104
-    const val FRAMES = 4
+    /** Beats in the room's loop: flames, bulbs and glints flicker to these. */
+    const val BEATS = 4
+    /** Frames painted for it, so bats, leaves and bubbles move in small steps between the beats. */
+    const val FRAMES = BEATS * 4
+    const val STEP = FRAMES / BEATS
 
     private val plaster = Ramp(rgb(40, 30, 48), rgb(54, 42, 62), rgb(68, 54, 76), rgb(84, 68, 90), rgb(102, 84, 104))
     private val plasterDay = Ramp(rgb(96, 78, 82), rgb(122, 102, 102), rgb(148, 126, 120), rgb(172, 150, 138), rgb(194, 172, 156))
@@ -25,28 +30,30 @@ object Room {
     private val clay = Ramp(rgb(70, 30, 24), rgb(122, 58, 36), rgb(172, 92, 52), rgb(212, 132, 76), rgb(236, 176, 112))
     private val sea = Ramp(rgb(14, 36, 70), rgb(24, 64, 112), rgb(40, 98, 152), rgb(74, 140, 190), rgb(130, 190, 226))
 
-    /** One frame of the den. [books] colour the bookshelf; [night] shows the moon in the window. */
-    fun scene(placed: Set<Item>, books: List<Int>, night: Boolean, f: Int, season: Season = Season.NONE): Px {
+    /** Frame [at] of [FRAMES] of the den. [books] colour the bookshelf; [night] shows the moon in the window. */
+    fun scene(placed: Set<Item>, books: List<Int>, night: Boolean, at: Int, season: Season = Season.NONE): Px {
         val px = Px(W, H)
+        val f = at / STEP
+        val ph = at / FRAMES.toFloat()
         wall(px, night)
         if (Item.WINDOW_MOON in placed) windowMoon(px, night, f)
         if (Item.WINDOW_STAINED in placed) windowStained(px, night, f)
         if (Item.BOOKSHELF in placed) bookshelf(px, books)
         if (Item.PORTRAIT in placed) portrait(px)
-        if (Item.BANNER in placed) banner(px, f)
+        if (Item.BANNER in placed) banner(px, ph)
         if (Item.LANTERN in placed) lantern(px, f)
         floor(px)
         if (Item.RUG_RED in placed) rug(px, R.red, R.gold, false)
         if (Item.RUG_STARS in placed) rug(px, R.night, R.gold, true)
         if (Item.ARMCHAIR in placed) armchair(px)
-        if (Item.CAULDRON in placed) cauldron(px, f)
+        if (Item.CAULDRON in placed) cauldron(px, ph)
         if (Item.TELESCOPE in placed) telescope(px)
-        if (Item.MANDRAKE in placed) mandrake(px, f)
+        if (Item.MANDRAKE in placed) mandrake(px, ph)
         if (Item.TREASURE in placed) treasure(px, f)
         if (Item.GLOBE in placed) globe(px)
         if (Item.CANDLES in placed) candles(px, f)
         if (Item.GARLAND in placed) garland(px, f)
-        dress(px, season, placed, night, f)
+        dress(px, season, placed, night, f, ph)
         // Warm light around where the familiar sits, stronger with candles and lanterns.
         val warmth = 34 + (if (Item.CANDLES in placed) 18 else 0) + (if (Item.LANTERN in placed) 18 else 0)
         px.glow(72f, 74f, 70f, rgb(255, 190, 110), warmth, 5, onlyDrawn = true)
@@ -171,10 +178,10 @@ object Room {
         px.shade(ellipse(x0 + 16f, y0 + 6f, 2.5f, 2.5f), facing(), R.paper, outline = false, lo = 3)
     }
 
-    private fun banner(px: Px, f: Int) {
+    private fun banner(px: Px, ph: Float) {
         val x0 = 60f; val w = 24f
         px.hline(56, 87, 1, R.gold[2]); px.hline(56, 87, 2, R.gold[1])
-        val sway = if (f % 2 == 0) 0f else 0.6f
+        val sway = 0.4f + 0.6f * sin(ph * 2 * PI).toFloat()
         val cloth = poly(x0, 3f, x0 + w, 3f, x0 + w + sway, 24f, x0 + w / 2 + sway, 19f, x0 + sway, 24f)
         px.shade(cloth, { x, _ -> V3(((x - (x0 + w / 2)) / w) * 0.8f, 0f, 1f) }, R.violet, lo = 1, hi = 5)
         // A gold open book on it.
@@ -235,19 +242,21 @@ object Room {
         for (lx in listOf(5, 32)) px.rect(lx, 94, 2, 4, R.wood[1])
     }
 
-    private fun cauldron(px: Px, f: Int) {
+    private fun cauldron(px: Px, ph: Float) {
         // Fire under it.
         for (i in 0 until 3) {
             val fx = 12f + i * 5
-            val fl = if ((f + i) % 2 == 0) 4f else 5.5f
+            val fl = 4.75f + 0.9f * sin((ph * 4 + i * 0.37f) * 2 * PI).toFloat()
             px.shade(poly(fx - 2.5f, 100f, fx, 100f - fl, fx + 2.5f, 100f), facing(), R.ember, outline = false, lo = 2)
         }
         px.shade(ellipse(17f, 90f, 13f, 9f), dome(15f, 87f, 13f, 9f), R.iron, lo = 0, hi = 3, spec = true)
         px.shade(ellipse(17f, 82f, 12f, 3f), facing(0f, -1f, 0.4f), R.iron, lo = 1, hi = 3)
         px.shade(ellipse(17f, 82f, 10f, 2.2f), facing(), brew, outline = false, lo = 2, hi = 3)
+        // Bubbles rising off the brew, wobbling as they go.
         for (i in 0 until 3) {
-            val bx = 11 + i * 5 + (if (f % 2 == 0) 0 else 1)
-            val by = 79 - ((f + i * 2) % 4) * 3
+            val rise = (ph + i / 3f) % 1f
+            val bx = 11 + i * 5 + (0.5f + 0.7f * sin((rise * 2 + i * 0.3f) * 2 * PI)).roundToInt()
+            val by = 79 - (rise * 11).toInt()
             px.set(bx, by, brew[4]); px.set(bx + 1, by, brew[3]); px.set(bx, by - 1, brew[3])
         }
         px.glow(17f, 80f, 10f, brew[3], 60, 3)
@@ -264,11 +273,13 @@ object Room {
         px.set(17, 60, R.gold[1]); px.set(18, 60, R.gold[1])
     }
 
-    private fun mandrake(px: Px, f: Int) {
-        val sway = if (f % 2 == 0) 0f else 1f
+    private fun mandrake(px: Px, ph: Float) {
+        val sway = 0.5f + 1.1f * sin(ph * 2 * PI).toFloat()
         for ((ax, h) in listOf(-6f to 20f, 0f to 26f, 6f to 21f, -2f to 23f, 3f to 18f)) {
             val cx = 124f + ax
-            px.shade(poly(cx - 2, 80f, cx + sway, 80f - h, cx + 3, 80f), facing(ax / 10f, -0.3f, 1f), R.leaf, lo = 1)
+            // Taller leaves sway further, and a little behind the short ones.
+            val s = sway * h / 22f + 0.4f * sin((ph + ax / 30f) * 2 * PI).toFloat()
+            px.shade(poly(cx - 2, 80f, cx + s, 80f - h, cx + 3, 80f), facing(ax / 10f, -0.3f, 1f), R.leaf, lo = 1)
         }
         px.shade(poly(112f, 80f, 136f, 80f, 132f, 100f, 116f, 100f), { x, _ -> V3((x - 124f) / 14f, 0f, 1f) }, clay, spec = true)
         px.shade(rect(110f, 78f, 28f, 4f), facing(0f, -0.6f, 1f), clay, lo = 1)
@@ -303,7 +314,7 @@ object Room {
     }
 
     /** The den dressed for the days of a season. */
-    private fun dress(px: Px, season: Season, placed: Set<Item>, night: Boolean, f: Int) {
+    private fun dress(px: Px, season: Season, placed: Set<Item>, night: Boolean, f: Int, ph: Float) {
         when (season) {
             Season.SAMHAIN -> {
                 // Cobwebs in the corners, bats on the wall, two carved pumpkins by the familiar.
@@ -311,10 +322,14 @@ object Room {
                 px.line(0, 0, 14, 14, R.snow[2])
                 for (k in listOf(6, 11)) { px.line(0, k, k, k, R.snow[2]); px.line(k, 0, k, k, R.snow[2]) }
                 for (i in 0 until 2) {
-                    val bx = 56 + i * 26 + (f % 2) * 2; val by = 30 + i * 6 - (f % 2)
+                    // Each bat loops lazily about its spot, flapping three times a turn.
+                    val a = (ph + i * 0.4f) * 2 * PI
+                    val bx = (56 + i * 26 + 3 * kotlin.math.cos(a)).roundToInt(); val by = (30 + i * 6 + 1.5 * sin(2 * a)).roundToInt()
                     px.hline(bx - 1, bx + 1, by, EYE); px.set(bx, by + 1, EYE)
-                    val up = (f + i) % 2 == 0
-                    px.line(bx - 1, by, bx - 5, by + if (up) -2 else 1, EYE); px.line(bx + 1, by, bx + 5, by + if (up) -2 else 1, EYE)
+                    val tip = by + (-0.5 + 1.6 * sin(a * 3 + i)).roundToInt()
+                    val mid = (by + tip) / 2
+                    px.line(bx - 1, by, bx - 3, mid, EYE); px.line(bx - 3, mid, bx - 5, tip, EYE)
+                    px.line(bx + 1, by, bx + 3, mid, EYE); px.line(bx + 3, mid, bx + 5, tip, EYE)
                 }
                 for ((cx, r) in listOf(114f to 6f, 131f to 7.5f)) pumpkin(px, cx, 103f - r * 0.8f, r, f)
             }
@@ -334,7 +349,7 @@ object Room {
                 }
                 if (Item.WINDOW_MOON in placed || Item.WINDOW_STAINED in placed) for (i in 0 until 10) {
                     val sx = 11 + ((noise(i, 3, 94) + 0.5f) * 24).toInt()
-                    val sy = 12 + ((noise(i, 4, 94) + 0.5f) * 30 + f * 3).toInt() % 34
+                    val sy = 12 + ((noise(i, 4, 94) + 0.5f) * 30 + ph * 12).toInt() % 34
                     px.set(sx, sy, WHITE, 220)
                 } else {
                     // A wreath on the wall instead.
@@ -373,7 +388,7 @@ object Room {
             }
             Season.MIDSUMMER -> {
                 for (i in 0 until 7) {
-                    val a = (f / 4f + i / 7f) * 2 * PI
+                    val a = (ph + i / 7f) * 2 * PI
                     val x = (72 + kotlin.math.cos(a + i).toFloat() * 60).toInt()
                     val y = (44 + sin(a * 2 + i).toFloat() * 26).toInt()
                     if ((f + i) % 3 != 0) px.glow(x + 0.5f, y + 0.5f, 3f, rgb(220, 250, 140), 170, 2)

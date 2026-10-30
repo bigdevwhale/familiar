@@ -42,6 +42,7 @@ import app.familiar.BuildConfig
 import app.familiar.R
 import app.familiar.container
 import app.familiar.data.Backup
+import app.familiar.data.Covers
 import app.familiar.data.Settings
 import app.familiar.data.ThemeMode
 import app.familiar.notify.Alarms
@@ -102,7 +103,7 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
         if (uri == null) return@rememberLauncherForActivityResult
         container.scope.launch {
             val ok = runCatching {
-                val json = Backup.encode(container.db.dao().snapshot())
+                val json = Backup.encode(container.db.dao().snapshot()) { Covers.bytes(context, it) }
                 context.contentResolver.openOutputStream(uri, "wt")!!.use { it.write(json.toByteArray()) }
             }.isSuccess
             withContext(Dispatchers.Main) { Toast.makeText(context, if (ok) exported else failed, Toast.LENGTH_SHORT).show() }
@@ -214,7 +215,7 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
                 container.scope.launch {
                     val ok = runCatching {
                         val text = context.contentResolver.openInputStream(uri)!!.use { it.readBytes().decodeToString() }
-                        container.db.dao().replaceAll(Backup.decode(text))
+                        container.db.dao().replaceAll(Backup.decode(text) { url, bytes -> Covers.restore(context, url, bytes) })
                         container.changed()
                     }.isSuccess
                     withContext(Dispatchers.Main) { Toast.makeText(context, if (ok) restored else failed, Toast.LENGTH_SHORT).show() }

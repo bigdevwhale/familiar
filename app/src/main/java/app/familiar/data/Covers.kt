@@ -147,6 +147,25 @@ object Covers {
         }.getOrNull()
     }
 
+    /** The picture of a cover as it lies on the phone, to go into a backup; null if it isn't there. */
+    fun bytes(context: Context, url: String): ByteArray? {
+        if (url.isBlank()) return null
+        val f = if (url.startsWith(LOCAL)) File(url.removePrefix(LOCAL)) else file(context, url)
+        return f.takeIf { it.exists() }?.readBytes()
+    }
+
+    /** Puts a picture from a backup back on the phone; returns the address the book should use now. */
+    fun restore(context: Context, url: String, bytes: ByteArray): String {
+        val f = if (url.startsWith(LOCAL)) {
+            // The old path may belong to another phone or install; keep only the name.
+            File(File(context.filesDir, "covers").apply { mkdirs() }, File(url.removePrefix(LOCAL)).name)
+        } else file(context, url)
+        f.writeBytes(bytes)
+        val now = if (url.startsWith(LOCAL)) LOCAL + f.path else url
+        synchronized(memory) { memory.remove(url); memory.remove(now) }
+        return now
+    }
+
     private val memory = object : LinkedHashMap<String, ImageBitmap>(32, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, ImageBitmap>?) = size > 40
     }

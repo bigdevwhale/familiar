@@ -27,6 +27,6 @@ fun DreamArt(g: Genre, modifier: Modifier = Modifier, fps: Float = 3f) {
     val frames by produceState(null as List<ImageBitmap>?, g) {
         value = withContext(Dispatchers.Default) { List(Dreamscape.FRAMES) { Dreamscape.scene(g, it).bitmap() } }
     }
-    val t = rememberTime()
+    val t by rememberTime()
     Canvas(modifier) { frames?.let { pixels(it[(t * fps).toInt() % it.size]) } }
 }

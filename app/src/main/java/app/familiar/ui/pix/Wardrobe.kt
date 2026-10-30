@@ -58,10 +58,10 @@ internal object Wardrobe {
 
     /** Around the familiar: stars, fireflies, floating hearts. */
     fun around(out: Px, face: Face, look: Look, f: Int) {
-        val ph = f / Sprites.FRAMES.toFloat()
+        val ph = f / Sprites.BEATS.toFloat()
         when (look.form) {
             Form.ASTRAL -> for (i in 0 until 6) {
-                if ((f + i * 3) % Sprites.FRAMES >= 9) continue
+                if ((f + i * 3) % Sprites.BEATS >= 9) continue
                 val x = (out.w * (0.12f + 0.76f * (noise(i, 3, 61) + 0.5f))).toInt()
                 val y = (out.h * (0.1f + 0.55f * (noise(i, 5, 61) + 0.5f))).toInt()
                 star(out, x, y, if (i % 2 == 0) R.gold[5] else R.sky[5])

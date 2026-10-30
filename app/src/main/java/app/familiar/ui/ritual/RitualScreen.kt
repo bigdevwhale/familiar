@@ -268,7 +268,7 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
 @Composable
 private fun Gramophone(modifier: Modifier) {
     val frames = remember { List(4) { Scenes.gramophone(it).bitmap() } }
-    val t = rememberTime()
+    val t by rememberTime()
     Canvas(modifier) { pixels(frames[(t * 4).toInt() % frames.size], bottom = true) }
 }
 
@@ -277,6 +277,6 @@ private fun Candle(left: Float, modifier: Modifier) {
     val q = (left.coerceIn(0f, 1f) * 20).toInt() / 20f
     val lit = left > 0f
     val frames = remember(q, lit) { List(4) { Scenes.candle(q, it, lit).bitmap() } }
-    val t = rememberTime()
+    val t by rememberTime()
     Canvas(modifier) { pixels(frames[(t * 6).toInt() % frames.size], bottom = true) }
 }

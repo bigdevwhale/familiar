@@ -6,6 +6,16 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.4.1] - 2026-10-30
+
+- **Fix:** covers come back with a backup. The file now carries the pictures themselves, so covers picked from the gallery survive a reinstall or a move to another phone. Backups saved before this keep only the addresses: covers from the catalogues download again, gallery ones can't be recovered from them.
+- **Smoother pixels:** familiars sway, flap and float in twice as many steps, breathe in a slow rise and fall instead of a one-pixel jump, and hop smoothly when tapped in the den. Bats circle and beat their wings, the mandrake's leaves sway, the banner stirs and the cauldron's bubbles rise and wobble. Mana sparks and the tree's fireflies drift without stepping from pixel to pixel.
+
+<!-- tg
+Исправлено: обложки теперь восстанавливаются из бэкапа — картинки сохраняются прямо в файле, и обложки из галереи переживут переустановку и переезд на другой телефон.
+Анимация стала плавнее: фамильяры мягко дышат и покачиваются, летучие мыши кружат, мандрагора качает листьями, пузыри в котле поднимаются.
+-->
+
 ## [1.4.0] - 2026-10-28
 
 - **The ledger:** a new page under the saga with the plain numbers: pages a day, minutes a sitting, hours by the candle; your pace in pages an hour, overall and in each genre; when you read most (morning, day, evening or night) and your best day of the week; the last six months as columns, with the books finished in each and how this month compares with the last.

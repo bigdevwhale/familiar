@@ -56,9 +56,9 @@ object Postcard {
         cv.drawColor(paper)
         // The den, with the familiar (and a guest) in it.
         val hour = LocalTime.now().hour
-        val room = Room.scene(data.settings.placed.mapNotNull { Item.of(it) }.toSet(), data.stats.finished.map { Genre.of(it.genre).argb.toInt() }.takeLast(24), hour < 6 || hour >= 20, 1, data.season)
+        val room = Room.scene(data.settings.placed.mapNotNull { Item.of(it) }.toSet(), data.stats.finished.map { Genre.of(it.genre).argb.toInt() }.takeLast(24), hour < 6 || hour >= 20, Room.STEP, data.season)
         data.guestLook?.let { g ->
-            val img = Sprites.frame(g, 3)
+            val img = Sprites.frame(g, 3 * Sprites.STEP)
             room.blit(img, Room.W / 2 - 44 - img.w / 2, Room.FLOOR_Y - img.h + 1)
         }
         val look = data.look() ?: error("no look")

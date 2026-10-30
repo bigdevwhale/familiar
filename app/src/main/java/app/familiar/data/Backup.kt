@@ -2,12 +2,14 @@ package app.familiar.data
 
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.Base64
 
 /** Plain JSON backup: everything stays on the device unless the user exports it. */
 object Backup {
     private const val VERSION = 1
 
-    fun encode(s: Snapshot): String = JSONObject()
+    /** [picture] gives the bytes of a cover kept on the phone, so the backup carries the pictures too. */
+    fun encode(s: Snapshot, picture: (String) -> ByteArray? = { null }): String = JSONObject()
         .put("app", "familiar")
         .put("version", VERSION)
         .put("books", JSONArray(s.books.map {
@@ -27,18 +29,30 @@ object Backup {
         .put("finds", JSONArray(s.finds.map {
             JSONObject().put("id", it.id).put("kind", it.kind).put("at", it.at).put("petId", it.petId).put("readingId", it.readingId)
         }))
+        .put("covers", JSONObject().apply {
+            s.books.map { it.cover }.filter { it.isNotBlank() }.distinct().forEach { url ->
+                picture(url)?.let { put(url, Base64.getEncoder().encodeToString(it)) }
+            }
+        })
         .toString(2)
 
-    /** Throws [IllegalArgumentException] when the text is not a Familiar backup. */
-    fun decode(text: String): Snapshot {
+    /**
+     * Throws [IllegalArgumentException] when the text is not a Familiar backup. [restore] puts each cover picture
+     * the backup carries back on the phone and returns the address the book should use from now on.
+     */
+    fun decode(text: String, restore: (String, ByteArray) -> String = { url, _ -> url }): Snapshot {
         val root = runCatching { JSONObject(text) }.getOrNull()
         require(root != null && root.optString("app") == "familiar") { "Not a Familiar backup" }
+        val pictures = root.optJSONObject("covers")
+        val moved = pictures?.keys()?.asSequence()?.mapNotNull { url ->
+            runCatching { url to restore(url, Base64.getDecoder().decode(pictures.getString(url))) }.getOrNull()
+        }?.toMap().orEmpty()
         return Snapshot(
             books = root.list("books") {
                 Book(
                     id = getLong("id"), title = getString("title"), author = optString("author"), pages = getInt("pages"), genre = getString("genre"),
                     shelf = optString("shelf", Shelf.READING.name), page = optInt("page"), added = getLong("added"),
-                    started = optL("started"), finished = optL("finished"), rating = optI("rating"), cover = optString("cover"), audio = optBoolean("audio"), series = optString("series"), volume = optI("volume"), tags = optString("tags"), sub = optString("sub"),
+                    started = optL("started"), finished = optL("finished"), rating = optI("rating"), cover = optString("cover").let { moved[it] ?: it }, audio = optBoolean("audio"), series = optString("series"), volume = optI("volume"), tags = optString("tags"), sub = optString("sub"),
                 )
             },
             readings = root.list("readings") {

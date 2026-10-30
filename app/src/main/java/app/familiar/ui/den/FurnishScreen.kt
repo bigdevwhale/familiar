@@ -151,6 +151,6 @@ private fun Preview(item: Item, books: List<Int>, night: Boolean, modifier: Modi
     val frames by produceState(null as List<ImageBitmap>?, item, night) {
         value = withContext(Dispatchers.Default) { List(Room.FRAMES) { Room.preview(item, books, night, it).bitmap() } }
     }
-    val t = rememberTime()
-    Canvas(modifier) { frames?.let { pixels(it[(t * 3).toInt() % it.size]) } }
+    val t by rememberTime()
+    Canvas(modifier) { frames?.let { pixels(it[(t * 3 * Room.STEP).toInt() % it.size]) } }
 }

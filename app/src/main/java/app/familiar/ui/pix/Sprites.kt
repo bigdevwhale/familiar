@@ -54,7 +54,12 @@ class Face(val eyes: List<Pair<Int, Int>>, val eyeW: Int, val headX: Int, val he
 
 object Sprites {
     const val SIZE = 80
-    const val FRAMES = 12
+    /** Beats in the idle loop: blinks, sparkles and other things that switch on and off keep to these. */
+    const val BEATS = 12
+    /** Frames painted for it: twice the beats, so whatever sways, flaps or floats moves in finer steps. */
+    const val FRAMES = BEATS * 2
+    /** Frames to a beat. */
+    const val STEP = FRAMES / BEATS
 
     fun stageScale(s: Stage) = when (s) {
         Stage.EGG -> 0.86f
@@ -64,16 +69,19 @@ object Sprites {
         Stage.ANCIENT -> 1f
     }
 
-    /** One frame of the idle loop: a breath, a sway, a blink near the end. */
-    fun frame(look: Look, f: Int): Px {
+    /**
+     * One frame ([at] of [FRAMES]) of the idle loop: a sway, a blink near the end. Breathing is left to whoever
+     * draws it ([breath]), so it can rise and fall smoothly instead of a pixel at a time.
+     */
+    fun frame(look: Look, at: Int): Px {
         val body = Px(SIZE, SIZE)
-        val ph = f / FRAMES.toFloat()
-        val breath = if (f % 6 < 3) 0f else 1f
+        val ph = at / FRAMES.toFloat()
+        val f = at / STEP
         val stone = look.stone
         val eyes = when {
             look.sleeping || stone > 0.85f -> EyeState.CLOSED
             look.happy -> EyeState.HAPPY
-            f == FRAMES - 2 -> EyeState.BLINK
+            f == BEATS - 2 -> EyeState.BLINK
             look.mood == Mood.SCARED -> EyeState.SCARED
             look.mood == Mood.SUSPICIOUS -> EyeState.SQUINT
             else -> EyeState.OPEN
@@ -84,7 +92,7 @@ object Sprites {
             null
         } else {
             val floats = look.species == Species.MOTH || look.species == Species.GHOST
-            val pen = Pen(body, stageScale(look.stage), dy = if (floats) sin(ph * 2 * PI.toFloat()) * 1.5f - 2f else breath)
+            val pen = Pen(body, stageScale(look.stage), dy = if (floats) sin(ph * 2 * PI.toFloat()) * 1.5f - 2f else 0f)
             when (look.species) {
                 Species.MIMIC -> mimic(pen, ctx)
                 Species.KITSUNE -> kitsune(pen, ctx)
@@ -119,7 +127,7 @@ object Sprites {
         if (face != null && look.happy) stamp(out, HEART, face.headX + face.headR, face.headY - face.headR - (f % 6), R.pink[2], WHITE)
         if (face != null && look.sleeping && stone < 0.85f) snore(out, face, f)
         if (look.shiny && stone < 0.5f) for (i in 0 until 3) {
-            if ((f + i * 4) % FRAMES >= 4) continue
+            if ((f + i * 4) % BEATS >= 4) continue
             val x = (SIZE * (0.2f + 0.6f * (noise(i, f / 4, 44) + 0.5f))).toInt()
             val y = (SIZE * (0.15f + 0.6f * (noise(i, f / 4, 45) + 0.5f))).toInt()
             stamp(out, SPARK, x, y, rgb(230, 240, 255), WHITE, 220)
@@ -127,6 +135,7 @@ object Sprites {
         return out
     }
 
+    /** [f] is the beat, for what switches on and off; [ph] runs smoothly through the loop, for what moves. */
     class Ctx(val look: Look, val f: Int, val ph: Float, val eyes: EyeState) {
         val sw: Float get() = sin(ph * 2 * PI.toFloat())
         val cw: Float get() = kotlin.math.cos(ph * 2 * PI.toFloat())
@@ -286,7 +295,7 @@ object Sprites {
     }
 
     private fun marks(px: Px, f: Face, look: Look, frame: Int) {
-        val ph = frame / FRAMES.toFloat()
+        val ph = frame / BEATS.toFloat()
         when (look.mood) {
             Mood.HEARTS -> for (i in 0 until 2) {
                 val p = (ph + i * 0.5f) % 1f
@@ -295,7 +304,7 @@ object Sprites {
                 stamp(px, HEART, x, y, R.pink[2], WHITE, (255 * sin(p * PI).toFloat()).toInt().coerceAtLeast(60))
             }
             Mood.SPARKLE -> for (i in 0 until 3) {
-                val on = (frame + i * 4) % FRAMES < 6
+                val on = (frame + i * 4) % BEATS < 6
                 if (!on) continue
                 val x = f.headX + listOf(-f.headR - 6, f.headR + 2, -2)[i]
                 val y = f.headY - f.headR - listOf(0, 3, 9)[i]
@@ -320,7 +329,7 @@ object Sprites {
 
     private fun snore(px: Px, f: Face, frame: Int) {
         for (i in 0 until 2) {
-            val p = ((frame + i * 6) % FRAMES) / FRAMES.toFloat()
+            val p = ((frame + i * 6) % BEATS) / BEATS.toFloat()
             val x = f.headX + f.headR / 2 + (p * 8).toInt() + i * 3
             val y = f.headY - f.headR - (p * 14).toInt()
             stamp(px, ZED, x, y, R.sky[5], R.sky[5], (255 * sin(p * PI).toFloat()).toInt().coerceAtLeast(120))

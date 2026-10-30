@@ -79,7 +79,7 @@ fun TreeTab(data: FamiliarData, go: Go) {
             value = withContext(Dispatchers.Default) { List(12) { Scenes.tree(colors, it, dark) } }
         }
         val bitmaps = remember(frames) { frames?.map { it.first.bitmap() } }
-        val t = rememberTime()
+        val t by rememberTime()
         // Pale green-gold in the dark; deeper amber so they still show on the light ground.
         val fireflyCore = if (dark) Color(0xFFF6F7B0) else Color(0xFFD08A1E)
         val fireflyHalo = if (dark) Color(0xFFC9EE6A) else Color(0xFFF2C14E)
@@ -103,14 +103,14 @@ fun TreeTab(data: FamiliarData, go: Go) {
             val bm = bitmaps ?: return@Canvas
             val img = bm[(t * 4).toInt() % bm.size]
             pixels(img)
-            // Fireflies over the tree, snapped to its pixels but moving every frame.
+            // Fireflies over the tree, as big as its pixels, drifting smoothly between them.
             val k = maxOf(1, minOf(size.width / img.width, size.height / img.height).toInt()).toFloat()
             val ox = ((size.width - img.width * k) / 2).toInt()
             val oy = (size.height - img.height * k).toInt().coerceAtLeast(0) / 2
             Scenes.fireflies(finished.size, t).forEach { fly ->
                 if (fly.light < 0.05f) return@forEach
-                val x = ox + fly.x.toInt() * k
-                val y = oy + fly.y.toInt() * k
+                val x = ox + fly.x * k
+                val y = oy + fly.y * k
                 for ((dx, dy, a) in listOf(Triple(-1, 0, 0.5f), Triple(1, 0, 0.5f), Triple(0, -1, 0.5f), Triple(0, 1, 0.5f), Triple(-1, -1, 0.2f), Triple(1, -1, 0.2f), Triple(-1, 1, 0.2f), Triple(1, 1, 0.2f))) {
                     drawRect(fireflyHalo.copy(alpha = a * fly.light), Offset(x + dx * k, y + dy * k), Size(k, k))
                 }
