@@ -9,6 +9,7 @@
 *A reading tracker with a pixel-art pet. Every page you read is mana; your familiar eats it, hatches, grows and learns. Free, no ads, no account.*
 
 [![Android CI](https://github.com/bigdevwhale/familiar/actions/workflows/android.yml/badge.svg)](https://github.com/bigdevwhale/familiar/actions/workflows/android.yml)
+[![Google Play](https://img.shields.io/badge/Google_Play-get_it-34A853?logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=app.familiar)
 [![Release](https://img.shields.io/github/v/release/bigdevwhale/familiar?color=AE93FF&label=download&logo=android)](https://github.com/bigdevwhale/familiar/releases/latest)
 ![Android 8.0+](https://img.shields.io/badge/Android-8.0%2B-15121C?logo=android&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?logo=kotlin&logoColor=white)
@@ -113,7 +114,9 @@ Stroke the familiar sideways and it squeezes its eyes shut and purrs. After midn
 
 ## Download
 
-Get **Familiar.apk** from the [latest release](https://github.com/bigdevwhale/familiar/releases/latest) and open it on your phone (allow installing from your browser or file manager when asked). Android 8.0 or newer.
+**[Get it on Google Play](https://play.google.com/store/apps/details?id=app.familiar)**.
+
+Or get **Familiar.apk** from the [latest release](https://github.com/bigdevwhale/familiar/releases/latest) and open it on your phone (allow installing from your browser or file manager when asked). Android 8.0 or newer.
 
 Some phones (Xiaomi, Huawei, Samsung) stop apps in the background: allow autostart and lift battery limits for Familiar so the evening reminder arrives.
 

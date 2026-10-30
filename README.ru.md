@@ -8,6 +8,8 @@
 
 *Трекер чтения с пиксельным питомцем. Каждая прочитанная страница — мана; фамильяр её ест, вылупляется, растёт и учится. Бесплатно, без рекламы и аккаунта.*
 
+[![Google Play](https://img.shields.io/badge/Google_Play-скачать-34A853?logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=app.familiar)
+
 [English](README.md) · **Русский** · [Сайт](https://bigdevwhale.github.io/stillcraft/apps/familiar/) · [Изменения](CHANGELOG.md)
 
 <img src="docs/screenshots/overview.ru.png" alt="Фамильяр на телефоне: логово с кицунэ, свеча ритуала, обустройство логова и сага года" width="100%" />
@@ -102,7 +104,9 @@
 
 ## Скачать
 
-**Familiar.apk** в [последнем релизе](https://github.com/bigdevwhale/familiar/releases/latest). Android 8.0 и новее. На Xiaomi, Huawei и Samsung разреши автозапуск и сними ограничения батареи, чтобы приходило вечернее напоминание.
+**[Скачать в Google Play](https://play.google.com/store/apps/details?id=app.familiar)**.
+
+Или **Familiar.apk** в [последнем релизе](https://github.com/bigdevwhale/familiar/releases/latest). Android 8.0 и новее. На Xiaomi, Huawei и Samsung разреши автозапуск и сними ограничения батареи, чтобы приходило вечернее напоминание.
 
 ## Приватность
 
