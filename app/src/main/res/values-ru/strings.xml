@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Фамильяр</string>
     <string name="back">Назад</string>
     <string name="cancel">Отмена</string>
@@ -872,13 +872,13 @@
         <item quantity="many">Прочитана за %d дней</item>
         <item quantity="other">Прочитана за %d дня</item>
     </plurals>
-    <plurals name="card_l_streak">
+    <plurals name="card_l_streak" tools:ignore="ImpliedQuantity">
         <item quantity="one">день подряд</item>
         <item quantity="few">дня подряд</item>
         <item quantity="many">дней подряд</item>
         <item quantity="other">дня подряд</item>
     </plurals>
-    <plurals name="card_l_streak_best">
+    <plurals name="card_l_streak_best" tools:ignore="ImpliedQuantity">
         <item quantity="one">день — лучшая серия</item>
         <item quantity="few">дня — лучшая серия</item>
         <item quantity="many">дней — лучшая серия</item>
@@ -890,25 +890,25 @@
         <item quantity="many">книг за %d</item>
         <item quantity="other">книги за %d</item>
     </plurals>
-    <plurals name="card_l_books">
+    <plurals name="card_l_books" tools:ignore="ImpliedQuantity">
         <item quantity="one">книга</item>
         <item quantity="few">книги</item>
         <item quantity="many">книг</item>
         <item quantity="other">книги</item>
     </plurals>
-    <plurals name="card_l_pages">
+    <plurals name="card_l_pages" tools:ignore="ImpliedQuantity">
         <item quantity="one">страница</item>
         <item quantity="few">страницы</item>
         <item quantity="many">страниц</item>
         <item quantity="other">страницы</item>
     </plurals>
-    <plurals name="card_l_hours">
+    <plurals name="card_l_hours" tools:ignore="ImpliedQuantity">
         <item quantity="one">час</item>
         <item quantity="few">часа</item>
         <item quantity="many">часов</item>
         <item quantity="other">часа</item>
     </plurals>
-    <plurals name="card_l_days">
+    <plurals name="card_l_days" tools:ignore="ImpliedQuantity">
         <item quantity="one">день чтения</item>
         <item quantity="few">дня чтения</item>
         <item quantity="many">дней чтения</item>

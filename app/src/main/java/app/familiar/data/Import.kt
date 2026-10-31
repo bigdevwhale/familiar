@@ -30,7 +30,7 @@ object Import {
 
     /** The books in [text] that aren't already among [have]. Throws [IllegalArgumentException] when it isn't such a file. */
     fun parse(text: String, have: List<Book>, now: Long = System.currentTimeMillis(), zone: ZoneId = ZoneId.systemDefault()): Result {
-        val rows = csv(text.removePrefix("﻿"))
+        val rows = csv(text.removePrefix(Char(0xFEFF).toString()))
         val head = rows.firstOrNull()?.map { it.trim() }.orEmpty()
         val col = head.withIndex().associate { (i, name) -> name to i }
         require("Title" in col && "Author" in col) { "Not a Goodreads or LiveLib export" }
