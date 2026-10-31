@@ -6,6 +6,21 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.5.0] - 2026-10-31
+
+- **Share cards:** pictures of your reading for stories and posts, in a candlelit night or warm parchment, 9:16 or 4:5. The book you're on (its real cover, progress and the day you'll finish it), or every book on the go at once; your month (books, pages, hours, the covers you finished and a square for every day); your year (the numbers, the goal, six months in columns, your favourite genre and pace); and the den. Each card carries a code that opens Familiar on Google Play. Share them from the den, a book, the feast after a sitting, the tree, the ledger and the saga, or save them to the gallery.
+- **Import from LiveLib or Goodreads** (Settings → Books from LiveLib or Goodreads): shelves, dates, ratings, pages, genres and cycles; covers are found for a Goodreads export and keep loading after the app is closed. A LiveLib export script is on the website.
+- **The tree, this year or all:** the tree can show this year's books or every book you have finished.
+- **A clearer den:** the book you're reading and the candle sit right under the familiar, the streak shows beside its name, and notices are slim strips you can close.
+- **A lighter guild:** a reward waiting is a small button beside its errand.
+
+<!-- tg
+Новое: красивые карточки для сторис и постов — что ты читаешь, твой месяц и год в книгах, с обложками и статистикой.
+Импорт книг из LiveLib и Goodreads: полки, оценки, даты и циклы переедут сами, к Goodreads подберутся обложки.
+Древо может показывать книги за этот год или все прочитанные.
+Логово стало проще: книга и свеча сразу под фамильяром, серия дней — рядом с его именем.
+-->
+
 ## [1.4.1] - 2026-10-30
 
 - **Fix:** covers come back with a backup. The file now carries the pictures themselves, so covers picked from the gallery survive a reinstall or a move to another phone. Backups saved before this keep only the addresses: covers from the catalogues download again, gallery ones can't be recovered from them.

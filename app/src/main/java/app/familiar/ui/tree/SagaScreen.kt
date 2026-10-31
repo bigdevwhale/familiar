@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.HistoryEdu
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -65,7 +66,12 @@ fun SagaScreen(data: FamiliarData, go: Go) {
     }
     val text = parts.joinToString(" ")
     Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding()) {
-        TopBar(stringResource(R.string.saga_title, y.year), { go.back() })
+        TopBar(stringResource(R.string.saga_title, y.year), { go.back() }) {
+            // The legend itself, as words.
+            androidx.compose.material3.IconButton(onClick = {
+                context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text + "\n\n" + context.getString(R.string.share_text, app.familiar.ui.share.Cards.PLAY)), null))
+            }) { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.HistoryEdu, stringResource(R.string.share_as_text), tint = U.c.muted) }
+        }
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 18.dp)) {
             Den(Modifier.fillMaxWidth().height(220.dp)) {
                 data.look()?.let { FamiliarArt(it, Modifier.fillMaxSize().padding(16.dp)) }
@@ -91,9 +97,7 @@ fun SagaScreen(data: FamiliarData, go: Go) {
             Spacer(Modifier.height(16.dp))
         }
         PrimaryButton(
-            stringResource(R.string.share), {
-                context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text), null))
-            },
+            stringResource(R.string.share), { go.share(app.familiar.ui.share.Cards.Kind.YEAR) },
             Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 12.dp).navigationBarsPadding(), icon = Icons.Rounded.Share,
         )
     }

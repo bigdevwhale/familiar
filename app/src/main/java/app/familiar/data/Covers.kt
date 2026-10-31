@@ -59,6 +59,30 @@ object Covers {
         }
     }
 
+    /**
+     * A cover for a book that came without one: Open Library's for its [isbn] if it has one, else the first
+     * catalogue match whose title is the book's. Null when nothing fits.
+     */
+    suspend fun find(title: String, author: String, isbn: String = ""): String? = withContext(Dispatchers.IO) {
+        if (isbn.isNotEmpty()) {
+            // default=false makes Open Library answer 404 instead of a blank picture.
+            val url = "https://covers.openlibrary.org/b/isbn/$isbn-L.jpg?default=false"
+            if (get(url) != null) return@withContext url
+        }
+        // Store titles carry "(Russian Edition)" or a subtitle in brackets that no catalogue knows.
+        val plain = title.replace(Regex("""\s*\([^()]*\)\s*$"""), "").trim().ifEmpty { title }
+        val name = plain.lowercase().filter { it.isLetterOrDigit() }
+        fun List<Found>?.fitting() = this?.firstOrNull { f ->
+            val other = f.title.lowercase().filter { it.isLetterOrDigit() }
+            f.cover.isNotEmpty() && name.isNotEmpty() && other.isNotEmpty() && (other.startsWith(name) || name.startsWith(other))
+        }?.cover
+        // Title and author asked apart find the book itself rather than box sets; the author in another
+        // alphabet than the title (Boris Akunin) is why the title alone comes last.
+        openLibrary(plain, author).fitting()
+            ?: search("$plain $author".trim()).fitting()
+            ?: search(plain).fitting()
+    }
+
     /** Kinds of Fantlab works that are books one reads, not poems, articles or reviews. */
     private val BOOKS = setOf("novel", "story", "collection", "epic", "popular", "monography", "documental", "anthology", "graphicnovel", "comix", "tale", "reference")
 
@@ -89,8 +113,13 @@ object Covers {
         }.awaitAll()
     }
 
-    private fun openLibrary(q: String): List<Found>? {
-        val body = get("https://openlibrary.org/search.json?q=${enc(q)}&limit=12&fields=title,author_name,number_of_pages_median,cover_i,first_publish_year")
+    private fun openLibrary(q: String): List<Found>? = openLibraryAt("q=${enc(q)}")
+
+    private fun openLibrary(title: String, author: String): List<Found>? =
+        openLibraryAt("title=${enc(title)}" + if (author.isNotBlank()) "&author=${enc(author)}" else "")
+
+    private fun openLibraryAt(query: String): List<Found>? {
+        val body = get("https://openlibrary.org/search.json?$query&limit=12&fields=title,author_name,number_of_pages_median,cover_i,first_publish_year")
             ?: return null
         val docs = runCatching { JSONObject(body.decodeToString()).getJSONArray("docs") }.getOrNull() ?: return null
         return (0 until docs.length()).map { docs.getJSONObject(it) }.map { d ->
@@ -109,7 +138,7 @@ object Covers {
     private fun google(q: String): List<Found>? {
         val body = get("https://www.googleapis.com/books/v1/volumes?q=${enc(q)}&maxResults=12&printType=books") ?: return null
         val items = runCatching { JSONObject(body.decodeToString()).optJSONArray("items") }.getOrNull() ?: return emptyList()
-        return (0 until items.length()).map { items.getJSONObject(it).getJSONObject("volumeInfo") }.map { v ->
+        return (0 until items.length()).mapNotNull { items.optJSONObject(it)?.optJSONObject("volumeInfo") }.map { v ->
             val img = v.optJSONObject("imageLinks")?.optString("thumbnail").orEmpty().replace("http://", "https://")
             Found(
                 title = v.optString("title"),

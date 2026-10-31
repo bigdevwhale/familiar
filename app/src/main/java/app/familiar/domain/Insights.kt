@@ -103,3 +103,21 @@ class Insights(private val s: Stats) {
         }
     }
 }
+
+/** One month of reading in full: what was finished, what was opened, and every day of it. */
+class MonthSummary(private val s: Stats, val month: YearMonth) {
+    private fun date(t: Long) = Instant.ofEpochMilli(t).atZone(s.zone).toLocalDate()
+    private val mine = s.readings.filter { it.counts && YearMonth.from(date(it.end)) == month }
+    private val bookOf = s.books.associateBy { it.id }
+
+    val finished: List<Book> = s.finished.filter { it.finished != null && YearMonth.from(date(it.finished)) == month }
+    /** Books with a sitting this month, the latest first. */
+    val opened: List<Book> = mine.sortedByDescending { it.end }.mapNotNull { bookOf[it.bookId] }.distinctBy { it.id }
+    /** Pages (and minutes listened) on each day of the month. */
+    val days: Map<LocalDate, Int> = mine.groupBy { date(it.end) }.mapValues { (_, rs) -> rs.sumOf { it.amount } }
+    val pages: Int = mine.sumOf { it.pages }
+    val minutes: Int = mine.filter { it.timed }.sumOf { it.minutes }
+    val bestStreak: Int = longestRun(days.keys)
+    val genre: Genre? = (finished.ifEmpty { opened }).groupBy { Genre.of(it.genre) }.maxByOrNull { it.value.size }?.key
+    val empty: Boolean get() = mine.isEmpty() && finished.isEmpty()
+}

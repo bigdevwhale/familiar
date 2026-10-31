@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,7 +50,11 @@ import java.time.format.TextStyle
 fun StatsScreen(data: FamiliarData, go: Go) {
     val n = remember(data) { Insights(data.stats) }
     Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding()) {
-        TopBar(stringResource(R.string.stats_title), { go.back() })
+        TopBar(stringResource(R.string.stats_title), { go.back() }) {
+            androidx.compose.material3.IconButton(onClick = { go.share(app.familiar.ui.share.Cards.Kind.YEAR) }) {
+                androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.Share, stringResource(R.string.share), tint = U.c.muted)
+            }
+        }
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).navigationBarsPadding().padding(bottom = 24.dp)) {
             UCard {
                 Row {
@@ -87,7 +92,7 @@ fun StatsScreen(data: FamiliarData, go: Go) {
                     Spacer(Modifier.height(4.dp))
                 }
                 n.bestWeekday?.let {
-                    Text(stringResource(R.string.stats_weekday, it.getDisplayName(TextStyle.FULL_STANDALONE, locale()).lowercase(locale())), style = UType.Muted)
+                    Text(stringResource(R.string.stats_weekday, it.getDisplayName(TextStyle.FULL_STANDALONE, locale())), style = UType.Muted)
                 }
                 if (n.bestPart == null) Text(stringResource(R.string.stats_empty), style = UType.Muted)
                 DayPart.entries.forEach { p ->

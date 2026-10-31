@@ -6,6 +6,7 @@ import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatDelegate
 import app.familiar.data.DemoSeed
 import app.familiar.data.FamiliarDatabase
+import app.familiar.data.Import
 import app.familiar.data.SettingsStore
 import app.familiar.notify.Alarms
 import app.familiar.widget.DenWidget
@@ -54,6 +55,8 @@ class FamiliarApp : Application() {
             }
             container.changed()
         }
+        // Covers still being looked up for imported books when the app was last closed.
+        container.scope.launch { runCatching { Import.covers(filesDir, container.db.dao()) { container.changed() } } }
     }
 }
 

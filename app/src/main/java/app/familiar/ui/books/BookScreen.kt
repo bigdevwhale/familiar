@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import app.familiar.R
 import app.familiar.container
 import app.familiar.data.Shelf
+import androidx.compose.material.icons.rounded.Share
 import app.familiar.ui.FamiliarData
 import app.familiar.ui.Go
 import app.familiar.ui.components.Bar
@@ -75,6 +76,9 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
     val sittings = data.readings.filter { it.bookId == id }.sortedByDescending { it.end }
     Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding()) {
         TopBar("", { go.back() }) {
+            if (book.shelfOf != Shelf.WANT) IconButton(onClick = { go.share(app.familiar.ui.share.Cards.Kind.BOOK, id) }) {
+                Icon(Icons.Rounded.Share, stringResource(R.string.share), tint = U.c.muted)
+            }
             IconButton(onClick = { go.editBook(id) }) { Icon(Icons.Rounded.Edit, stringResource(R.string.edit), tint = U.c.muted) }
             IconButton(onClick = { deleting = true }) { Icon(Icons.Rounded.Delete, stringResource(R.string.delete), tint = U.c.muted) }
         }

@@ -3,6 +3,7 @@ package app.familiar.ui.tree
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -47,6 +48,7 @@ import app.familiar.ui.FamiliarData
 import app.familiar.ui.Go
 import app.familiar.ui.books
 import app.familiar.ui.components.Bar
+import app.familiar.ui.components.Chip
 import app.familiar.ui.components.SectionTitle
 import app.familiar.ui.components.SoftButton
 import app.familiar.ui.components.UCard
@@ -61,6 +63,7 @@ import app.familiar.ui.theme.UType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Instant
 import java.time.format.TextStyle
 import kotlin.math.hypot
 
@@ -68,10 +71,18 @@ import kotlin.math.hypot
 fun TreeTab(data: FamiliarData, go: Go) {
     val container = LocalContext.current.container
     val s = data.stats
-    val finished = s.finished
+    val thisYear = data.settings.treeYear
+    // Every book ever finished, imported ones too, or only this year's.
+    val finished = if (thisYear) s.finished.filter { b -> b.finished?.let { Instant.ofEpochMilli(it).atZone(s.zone).year == s.today.year } == true } else s.finished
     Column(Modifier.fillMaxSize().statusBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).padding(bottom = 24.dp)) {
         Text(stringResource(R.string.tab_tree), style = UType.Display, modifier = Modifier.padding(top = 14.dp))
         Text(if (finished.isEmpty()) stringResource(R.string.tree_empty) else stringResource(R.string.tree_count, books(finished.size)), style = UType.Sub)
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            fun show(year: Boolean) { container.scope.launch { container.settings.update { it.copy(treeYear = year) } } }
+            Chip(stringResource(R.string.tree_this_year), thisYear, { show(true) })
+            Chip(stringResource(R.string.tree_all), !thisYear, { show(false) })
+        }
         Spacer(Modifier.height(12.dp))
         val colors = finished.map { Genre.of(it.genre).argb.toInt() }
         val dark = U.c.dark
@@ -118,6 +129,8 @@ fun TreeTab(data: FamiliarData, go: Go) {
             }
         }
         Text(stringResource(R.string.tree_hint), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 6.dp))
+        Spacer(Modifier.height(14.dp))
+        app.familiar.ui.share.ShareBanner({ go.share(app.familiar.ui.share.Cards.Kind.MONTH) })
 
         YearGoal(data)
 
@@ -134,19 +147,25 @@ fun TreeTab(data: FamiliarData, go: Go) {
                         Text(questText(q.quest), style = UType.Muted)
                     }
                     if (claimed) Icon(Icons.Rounded.CheckCircle, null, tint = U.c.leaf)
-                }
-                Spacer(Modifier.height(8.dp))
-                if (q.done && !claimed) SoftButton(stringResource(R.string.claim, Mana.QUEST), {
-                    container.scope.launch {
-                        Library.reward(container.db.dao(), Mana.QUEST)
-                        container.settings.update { it.copy(claimed = it.claimed + q.key) }
-                        container.changed()
+                    // A reward waiting is a small gold button beside the errand, not a bar across the card.
+                    else if (q.done) {
+                        Spacer(Modifier.width(10.dp))
+                        SoftButton(stringResource(R.string.mana_plus, Mana.QUEST), {
+                            container.scope.launch {
+                                Library.reward(container.db.dao(), Mana.QUEST)
+                                container.settings.update { it.copy(claimed = it.claimed + q.key) }
+                                container.changed()
+                            }
+                        }, Modifier.height(40.dp), color = U.c.gold, soft = U.c.goldSoft)
                     }
-                }, Modifier.fillMaxWidth(), color = U.c.gold, soft = U.c.goldSoft)
-                else Row(verticalAlignment = Alignment.CenterVertically) {
-                    Bar(q.progress / q.quest.target.toFloat(), Modifier.weight(1f), color = U.c.gold, track = U.c.goldSoft)
-                    Spacer(Modifier.width(10.dp))
-                    Text("${q.progress} / ${q.quest.target}", style = UType.Small)
+                }
+                if (!q.done) {
+                    Spacer(Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Bar(q.progress / q.quest.target.toFloat(), Modifier.weight(1f), color = U.c.gold, track = U.c.goldSoft)
+                        Spacer(Modifier.width(10.dp))
+                        Text("${q.progress} / ${q.quest.target}", style = UType.Small)
+                    }
                 }
             }
         }

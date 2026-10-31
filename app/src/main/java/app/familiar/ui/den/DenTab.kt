@@ -23,6 +23,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Casino
 import androidx.compose.material.icons.rounded.Chair
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Inventory2
 import androidx.compose.material.icons.rounded.LocalFireDepartment
@@ -113,9 +114,17 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
                 Text((if (data.settings.name.isBlank()) hello else "$hello, ${data.settings.name}").uppercase(), style = UType.Eyebrow)
                 Text(pet?.name ?: stringResource(R.string.app_name), style = UType.Display)
             }
+            if (s.streak > 0) Row(
+                Modifier.clip(U.RSm).background(U.c.emberSoft).padding(horizontal = 10.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Rounded.LocalFireDepartment, stringResource(R.string.streak_line, days(s.streak)), tint = U.c.ember, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(4.dp))
+                Text(s.streak.toString(), style = UType.Strong.copy(color = U.c.ember))
+            }
             if (pet != null) {
                 IconButton(onClick = { go.visit() }) { Icon(Icons.Rounded.QrCode2, stringResource(R.string.visit), tint = U.c.muted) }
-                IconButton(onClick = { Postcard.share(context, data) }) { Icon(Icons.Rounded.Share, stringResource(R.string.postcard), tint = U.c.muted) }
+                IconButton(onClick = { go.share(app.familiar.ui.share.Cards.Kind.DEN) }) { Icon(Icons.Rounded.Share, stringResource(R.string.share), tint = U.c.muted) }
             }
             IconButton(onClick = { go.settings() }) { Icon(Icons.Rounded.Settings, stringResource(R.string.settings), tint = U.c.muted) }
         }
@@ -182,6 +191,57 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
                     Text(nudgeText(n, pet.name), style = UType.Small.copy(color = U.c.ink))
                 }
             }
+        }
+        // A familiar turning to stone matters more than anything else on the page.
+        if (pet != null && s.stone > 0f) {
+            Spacer(Modifier.height(10.dp))
+            Notice(
+                stringResource(if (sp == Species.PHOENIX) R.string.ash_title else R.string.stone_title),
+                stringResource(if (sp == Species.PHOENIX) R.string.ash_text else R.string.stone_text, pet.name),
+                U.c.accent,
+            )
+        }
+        val book = data.reading.firstOrNull()
+        val wanted = data.books.any { it.shelfOf == Shelf.WANT }
+        Spacer(Modifier.height(10.dp))
+        if (book != null) {
+            UCard(onClick = { go.book(book.id) }) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    BookCover(book, Modifier.width(54.dp).height(78.dp), small = true)
+                    Spacer(Modifier.width(14.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.now_reading).uppercase(), style = UType.Eyebrow)
+                        Text(book.title, style = UType.Strong, maxLines = 2)
+                        if (book.author.isNotBlank()) Text(book.author, style = UType.Muted, maxLines = 1)
+                        Spacer(Modifier.height(6.dp))
+                        if (book.pages > 0) Bar(book.fraction, color = U.c.accent, track = U.c.accentSoft)
+                        Spacer(Modifier.height(4.dp))
+                        Text(app.familiar.ui.progressLabel(book), style = UType.Small)
+                    }
+                }
+                Spacer(Modifier.height(14.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PrimaryButton(stringResource(R.string.ritual_start), { go.ritual(book.id) }, Modifier.weight(1.5f), icon = Icons.Rounded.LocalFireDepartment)
+                    SoftButton(stringResource(R.string.log_short), { go.log(book.id) }, Modifier.weight(1f).height(54.dp), icon = Icons.Rounded.Edit)
+                }
+            }
+        } else {
+            UCard {
+                Text(stringResource(R.string.no_book_title), style = UType.Strong)
+                Spacer(Modifier.height(4.dp))
+                Text(stringResource(R.string.no_book_text), style = UType.Muted)
+                Spacer(Modifier.height(12.dp))
+                PrimaryButton(stringResource(R.string.book_add), { go.editBook() }, Modifier.fillMaxWidth(), icon = Icons.Rounded.Add)
+                if (wanted) {
+                    Spacer(Modifier.height(8.dp))
+                    SoftButton(stringResource(R.string.lottery_short), { go.lottery() }, Modifier.fillMaxWidth(), color = U.c.gold, soft = U.c.goldSoft, icon = Icons.Rounded.Casino)
+                    Spacer(Modifier.height(8.dp))
+                    SoftButton(stringResource(R.string.from_shelf), { onTab(Tab.SHELF) }, Modifier.fillMaxWidth())
+                }
+            }
+        }
+        if (pet != null && sp != null) {
+            val sparks = Den.sparks(data.pets, data.settings.spent)
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SoftButton(
@@ -195,29 +255,26 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
             }
         }
         if (data.settings.burnedNews.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            UCard {
-                Text(stringResource(R.string.guard_burned_title), style = UType.Strong.copy(color = U.c.ember))
-                Spacer(Modifier.height(4.dp))
-                val days = data.settings.burnedNews.sorted().mapNotNull { runCatching { java.time.LocalDate.parse(it) }.getOrNull() }
-                    .map { dateShort(it.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()) }
-                Text(stringResource(R.string.guard_burned_text, days.joinToString(", ")), style = UType.Muted)
-                TextButton(onClick = { container.scope.launch { container.settings.update { it.copy(burnedNews = emptySet()) } } }) {
-                    Text(stringResource(R.string.nice), color = U.c.accent, style = UType.Button)
-                }
-            }
+            Spacer(Modifier.height(10.dp))
+            val days = data.settings.burnedNews.sorted().mapNotNull { runCatching { java.time.LocalDate.parse(it) }.getOrNull() }
+                .map { dateShort(it.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()) }
+            Notice(
+                stringResource(R.string.guard_burned_title), stringResource(R.string.guard_burned_text, days.joinToString(", ")), U.c.ember,
+                onClose = { container.scope.launch { container.settings.update { it.copy(burnedNews = emptySet()) } } },
+            )
         }
         data.guest?.let { g -> GuestCard(data, g) }
         if (data.season != Season.NONE) data.season.trinket?.let { t ->
-            Spacer(Modifier.height(12.dp))
-            UCard(onClick = { go.casket() }) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    TrinketArt(t, Modifier.size(44.dp), dim = t !in data.owned)
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(stringResource(R.string.season_title, seasonName(data.season)), style = UType.Strong.copy(color = U.c.gold))
-                        Text(stringResource(R.string.season_text, trinketName(t).lowercase(locale())), style = UType.Muted)
-                    }
+            Spacer(Modifier.height(10.dp))
+            Row(
+                Modifier.fillMaxWidth().clip(U.RMd).background(U.c.goldSoft).clickable { go.casket() }.padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TrinketArt(t, Modifier.size(32.dp), dim = t !in data.owned)
+                Spacer(Modifier.width(10.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.season_title, seasonName(data.season)), style = UType.Small.copy(color = U.c.gold))
+                    Text(stringResource(R.string.season_text, trinketName(t).lowercase(locale())), style = UType.Small.copy(color = U.c.ink))
                 }
             }
         }
@@ -244,68 +301,12 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
                     Text(stringResource(R.string.fed_of, s.todayPages, data.settings.dailyGoal), style = UType.Muted)
                 }
                 Spacer(Modifier.height(8.dp))
-                Bar(s.fed, color = U.c.ember, track = U.c.emberSoft)
-                if (s.streak > 0 || data.settings.candles > 0) {
-                    Spacer(Modifier.height(8.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (s.streak > 0) {
-                            Icon(Icons.Rounded.LocalFireDepartment, null, tint = U.c.ember, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text(stringResource(R.string.streak_line, days(s.streak)), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.weight(1f))
-                        } else Spacer(Modifier.weight(1f))
-                        // Guardian candles waiting to keep the streak.
-                        if (data.settings.candles > 0) Text(
-                            stringResource(R.string.guard_n, data.settings.candles), style = UType.Small.copy(color = U.c.gold),
-                            modifier = Modifier.clip(U.RSm).clickable { go.furnish() }.padding(4.dp),
-                        )
-                    }
-                }
-            }
-            if (s.stone > 0f) {
-                Spacer(Modifier.height(12.dp))
-                UCard {
-                    Text(stringResource(if (sp == Species.PHOENIX) R.string.ash_title else R.string.stone_title), style = UType.Strong.copy(color = U.c.accent))
-                    Spacer(Modifier.height(4.dp))
-                    Text(stringResource(if (sp == Species.PHOENIX) R.string.ash_text else R.string.stone_text, pet.name), style = UType.Muted)
-                }
-            }
-        }
-        val book = data.reading.firstOrNull()
-        val wanted = data.books.any { it.shelfOf == Shelf.WANT }
-        Spacer(Modifier.height(12.dp))
-        if (book != null) {
-            UCard(onClick = { go.book(book.id) }) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    BookCover(book, Modifier.width(54.dp).height(78.dp), small = true)
-                    Spacer(Modifier.width(14.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(stringResource(R.string.now_reading).uppercase(), style = UType.Eyebrow)
-                        Text(book.title, style = UType.Strong, maxLines = 2)
-                        if (book.author.isNotBlank()) Text(book.author, style = UType.Muted, maxLines = 1)
-                        Spacer(Modifier.height(6.dp))
-                        if (book.pages > 0) Bar(book.fraction, color = U.c.accent, track = U.c.accentSoft)
-                        Spacer(Modifier.height(4.dp))
-                        Text(app.familiar.ui.progressLabel(book), style = UType.Small)
-                    }
-                }
-                Spacer(Modifier.height(14.dp))
-                PrimaryButton(stringResource(R.string.ritual_start), { go.ritual(book.id) }, Modifier.fillMaxWidth(), icon = Icons.Rounded.LocalFireDepartment)
-                Spacer(Modifier.height(8.dp))
-                SoftButton(stringResource(R.string.log_pages), { go.log(book.id) }, Modifier.fillMaxWidth(), icon = Icons.Rounded.Edit)
-            }
-        } else {
-            UCard {
-                Text(stringResource(R.string.no_book_title), style = UType.Strong)
-                Spacer(Modifier.height(4.dp))
-                Text(stringResource(R.string.no_book_text), style = UType.Muted)
-                Spacer(Modifier.height(12.dp))
-                PrimaryButton(stringResource(R.string.book_add), { go.editBook() }, Modifier.fillMaxWidth(), icon = Icons.Rounded.Add)
-                if (wanted) {
-                    Spacer(Modifier.height(8.dp))
-                    SoftButton(stringResource(R.string.lottery_short), { go.lottery() }, Modifier.fillMaxWidth(), color = U.c.gold, soft = U.c.goldSoft, icon = Icons.Rounded.Casino)
-                    Spacer(Modifier.height(8.dp))
-                    SoftButton(stringResource(R.string.from_shelf), { onTab(Tab.SHELF) }, Modifier.fillMaxWidth())
-                }
+                Bar(s.fed, color = U.c.ember, track = U.c.line)
+                // Guardian candles waiting to keep the streak.
+                if (data.settings.candles > 0) Text(
+                    stringResource(R.string.guard_n, data.settings.candles), style = UType.Small.copy(color = U.c.gold),
+                    modifier = Modifier.padding(top = 6.dp).clip(U.RSm).clickable { go.furnish() }.padding(4.dp),
+                )
             }
         }
         Spacer(Modifier.height(12.dp))
@@ -387,6 +388,21 @@ private fun GuestCard(data: FamiliarData, g: app.familiar.domain.Visit) {
         TextButton(onClick = { container.scope.launch { container.settings.update { it.copy(guest = "", guestUntil = 0) } } }) {
             Text(stringResource(R.string.guest_bye), color = U.c.muted, style = UType.Button)
         }
+    }
+}
+
+/** A short message on a tinted strip, with a cross to put it away when [onClose] is given. */
+@Composable
+private fun Notice(title: String, text: String, color: Color, onClose: (() -> Unit)? = null) {
+    Row(
+        Modifier.fillMaxWidth().clip(U.RMd).background(color.copy(alpha = 0.14f)).padding(start = 12.dp, top = 8.dp, bottom = 8.dp, end = if (onClose != null) 0.dp else 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = UType.Small.copy(color = color))
+            Text(text, style = UType.Small.copy(color = U.c.ink))
+        }
+        if (onClose != null) IconButton(onClick = onClose) { Icon(Icons.Rounded.Close, stringResource(R.string.nice), tint = U.c.muted, modifier = Modifier.size(18.dp)) }
     }
 }
 

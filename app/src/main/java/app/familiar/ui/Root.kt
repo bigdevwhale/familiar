@@ -149,6 +149,7 @@ class Go(private val nav: NavHostController) {
     fun casket() = nav.navigate("casket")
     fun lottery() = nav.navigate("lottery")
     fun visit() = nav.navigate("visit")
+    fun share(kind: app.familiar.ui.share.Cards.Kind, bookId: Long = 0) = nav.navigate("share/${kind.name}?book=$bookId")
     fun back() = nav.popBackStack()
 }
 
@@ -245,6 +246,10 @@ fun FamiliarRoot(settings: Settings, dim: (Boolean) -> Unit) {
         composable("casket") { app.familiar.ui.den.CasketScreen(data, go) }
         composable("lottery") { app.familiar.ui.books.LotteryScreen(data, go) }
         composable("visit") { app.familiar.ui.den.VisitScreen(data, go) }
+        composable("share/{kind}?book={book}", arguments = listOf(navArgument("kind") { type = NavType.StringType }, navArgument("book") { type = NavType.LongType; defaultValue = 0L })) { e ->
+            val kind = app.familiar.ui.share.Cards.Kind.entries.firstOrNull { it.name == e.arguments?.getString("kind") } ?: app.familiar.ui.share.Cards.Kind.MONTH
+            if (loaded) app.familiar.ui.share.ShareScreen(kind, e.arguments?.getLong("book") ?: 0L, data, go)
+        }
     }
 
     if (settings.onboarded && loaded && route == "main") Celebrations(data)

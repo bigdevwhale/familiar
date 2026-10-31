@@ -207,6 +207,8 @@
 
     <string name="tree_empty">Каждая дочитанная книга вырастает здесь светящимся плодом.</string>
     <string name="tree_count">На древе выросло: %s</string>
+    <string name="tree_this_year">За этот год</string>
+    <string name="tree_all">Все</string>
     <string name="tree_hint">Нажми на плод, чтобы открыть его книгу.</string>
     <string name="guild">Гильдия: %s</string>
     <string name="guild_text">Три поручения на месяц, одни для всех читателей. Ни одно не обязательно. За каждое — %d маны.</string>
@@ -358,6 +360,12 @@
     <string name="backup_done">Копия сохранена</string>
     <string name="backup_restored">Восстановлено</string>
     <string name="backup_failed">Не удалось прочитать или записать файл</string>
+    <string name="import_books">Книги из LiveLib или Goodreads</string>
+    <string name="import_text">Перенеси прочитанное с другого сайта: экспорт Goodreads или LiveLib, сделанный на нашем сайте. Книги встанут на полки, а фамильяр ест только то, что ты читаешь здесь.</string>
+    <string name="import_pick">Выбрать CSV-файл</string>
+    <string name="import_how">Как выгрузить</string>
+    <string name="import_done">Добавлено книг: %1$d. Уже были на полке: %2$d.</string>
+    <string name="import_failed">Это не экспорт Goodreads или LiveLib</string>
     <string name="about">О приложении</string>
     <string name="about_text">Фамильяр бесплатный, без рекламы и аккаунта. В интернет он ходит только за книгой и её обложкой; визиты передаются с телефона на телефон QR-кодом. Часть Stillcraft.</string>
     <string name="about_version">Версия %s</string>
@@ -828,4 +836,93 @@
     <string name="stats_month_same">Столько же, сколько в прошлом</string>
     <string name="stats_month_first">В прошлом месяце сравнить не с чем</string>
     <string name="forecast">Если так же, дочитаешь около %s</string>
+
+    <!-- Карточки, чтобы поделиться -->
+    <string name="share_title">Поделиться</string>
+    <string name="share_as_text">Поделиться текстом</string>
+    <string name="share_cards_title">Поделись чтением</string>
+    <string name="share_cards_sub">Что читаешь, твой месяц и год — карточками для сторис и постов</string>
+    <string name="share_kind_book">Книга</string>
+    <string name="share_kind_month">Месяц</string>
+    <string name="share_kind_year">Год</string>
+    <string name="share_story">Сторис</string>
+    <string name="share_post">Пост</string>
+    <string name="share_night">Ночь</string>
+    <string name="share_parchment">Пергамент</string>
+    <string name="share_save">Сохранить</string>
+    <string name="share_saved">Сохранено в «Изображения»</string>
+    <string name="share_text">Фамильяр — трекер чтения с пиксельным питомцем, который растёт от прочитанных страниц. Бесплатно и без рекламы: %s</string>
+    <string name="card_now_reading">Сейчас читаю</string>
+    <string name="card_finished">Прочитано</string>
+    <string name="card_page_of">Страница %1$d из %2$d</string>
+    <string name="card_minute_of">%1$s из %2$s</string>
+    <string name="card_page">Страница %d</string>
+    <string name="card_l_with_book">часов с книгой</string>
+    <string name="card_month_title">Мой месяц в книгах</string>
+    <string name="card_finished_books">ПРОЧИТАНЫ</string>
+    <string name="card_opened_books">НА ТУМБОЧКЕ</string>
+    <string name="card_calendar">ДНИ ЧТЕНИЯ</string>
+    <string name="card_year_eyebrow">Мой год чтения</string>
+    <string name="card_genre">Любимый жанр: %s</string>
+    <string name="card_cta_line">Трекер чтения с пиксельным питомцем</string>
+    <string name="card_cta_free">Бесплатно в Google Play · без рекламы</string>
+    <plurals name="card_read_in">
+        <item quantity="one">Прочитана за %d день</item>
+        <item quantity="few">Прочитана за %d дня</item>
+        <item quantity="many">Прочитана за %d дней</item>
+        <item quantity="other">Прочитана за %d дня</item>
+    </plurals>
+    <plurals name="card_l_streak">
+        <item quantity="one">день подряд</item>
+        <item quantity="few">дня подряд</item>
+        <item quantity="many">дней подряд</item>
+        <item quantity="other">дня подряд</item>
+    </plurals>
+    <plurals name="card_l_streak_best">
+        <item quantity="one">день — лучшая серия</item>
+        <item quantity="few">дня — лучшая серия</item>
+        <item quantity="many">дней — лучшая серия</item>
+        <item quantity="other">дня — лучшая серия</item>
+    </plurals>
+    <plurals name="card_l_books_year">
+        <item quantity="one">книга за %d</item>
+        <item quantity="few">книги за %d</item>
+        <item quantity="many">книг за %d</item>
+        <item quantity="other">книги за %d</item>
+    </plurals>
+    <plurals name="card_l_books">
+        <item quantity="one">книга</item>
+        <item quantity="few">книги</item>
+        <item quantity="many">книг</item>
+        <item quantity="other">книги</item>
+    </plurals>
+    <plurals name="card_l_pages">
+        <item quantity="one">страница</item>
+        <item quantity="few">страницы</item>
+        <item quantity="many">страниц</item>
+        <item quantity="other">страницы</item>
+    </plurals>
+    <plurals name="card_l_hours">
+        <item quantity="one">час</item>
+        <item quantity="few">часа</item>
+        <item quantity="many">часов</item>
+        <item quantity="other">часа</item>
+    </plurals>
+    <plurals name="card_l_days">
+        <item quantity="one">день чтения</item>
+        <item quantity="few">дня чтения</item>
+        <item quantity="many">дней чтения</item>
+        <item quantity="other">дня чтения</item>
+    </plurals>
+
+    <string name="card_and_more">и ещё %d в процессе</string>
+    <string name="card_l_pace">страниц в час</string>
+    <string name="share_all">Все</string>
+    <plurals name="card_at_once">
+        <item quantity="one">%d книга сразу</item>
+        <item quantity="few">%d книги сразу</item>
+        <item quantity="many">%d книг сразу</item>
+        <item quantity="other">%d книги сразу</item>
+    </plurals>
+    <string name="log_short">Отметить</string>
 </resources>

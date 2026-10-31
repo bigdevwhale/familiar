@@ -77,6 +77,8 @@ data class Settings(
     /** How the shelf is sorted ([app.familiar.ui.books.Sort] name), and shown as a list rather than covers. */
     val shelfSort: String = "",
     val shelfList: Boolean = false,
+    /** The tree bears only this year's books rather than every book ever finished. */
+    val treeYear: Boolean = false,
 ) {
     val guardedDays: Set<java.time.LocalDate> get() = guarded.mapNotNull { runCatching { java.time.LocalDate.parse(it) }.getOrNull() }.toSet()
 }
@@ -120,6 +122,7 @@ class SettingsStore(context: Context) {
         genres = (this[GENRES] ?: "").split('\n').mapNotNull { app.familiar.domain.OwnGenre.decode(it) },
         shelfSort = this[SHELF_SORT] ?: "",
         shelfList = this[SHELF_LIST] ?: false,
+        treeYear = this[TREE_YEAR] ?: false,
     )
 
     suspend fun now(): Settings = settings.first()
@@ -164,6 +167,7 @@ class SettingsStore(context: Context) {
             it[GENRES] = s.genres.joinToString("\n") { g -> g.encode() }
             it[SHELF_SORT] = s.shelfSort
             it[SHELF_LIST] = s.shelfList
+            it[TREE_YEAR] = s.treeYear
         }
     }
 
@@ -204,5 +208,6 @@ class SettingsStore(context: Context) {
         val GENRES = stringPreferencesKey("genres")
         val SHELF_SORT = stringPreferencesKey("shelf_sort")
         val SHELF_LIST = booleanPreferencesKey("shelf_list")
+        val TREE_YEAR = booleanPreferencesKey("tree_year")
     }
 }

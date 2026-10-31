@@ -85,7 +85,8 @@ Stroke the familiar sideways and it squeezes its eyes shut and purrs. After midn
 | 🕯️ | **Guardian candles** | Bought with sparks; one burns by itself on a day you didn't read, so the streak lives on. |
 | 🎃 | **Seasons** | Samhain, the winter holidays, Valentine's days, World Book Day and midsummer dress up the den and the familiar, with a find you can only get then. |
 | 🤝 | **Visits** | Show a QR code to a friend (or send it as a picture): your familiar stays in their den for a day, recommends a book and leaves a gift. Phone to phone, no server. |
-| 💌 | **Postcard** | A picture of the familiar in its den with your book and streak, to share. |
+| 💌 | **Share cards** | Pictures for stories and posts: the book you're on with its cover and progress (or every book on the go), your month in books with a square for every day, your year in numbers, and the den. Night or parchment, 9:16 or 4:5. |
+| 📥 | **Import** | Bring your books from LiveLib or Goodreads: shelves, dates, ratings, pages, genres and cycles. |
 | 🔎 | **Find a book** | Search Fantlab (Russian books and translations) and Open Library (Google Books as a fallback) by title or author: the title, author, pages and the real cover fill in. Covers are kept on the phone. Or pick your own picture from the gallery, or get a cover drawn in the genre's colour. The length is optional. |
 | 📚 | **Shelves and cycles** | Make your own shelves and put books on several. Give books a cycle and a volume number; the volumes gather together, and reading the whole cycle earns a reward. |
 | 🏷️ | **Your own genres** | Add subgenres to any genre (Fantasy · Dark fantasy) or genres of your own (Manga). They colour the cover and sort the shelf; the built-in genre still sets the mood and the magic. |

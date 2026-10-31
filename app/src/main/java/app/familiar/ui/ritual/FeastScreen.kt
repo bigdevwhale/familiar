@@ -2,7 +2,11 @@ package app.familiar.ui.ritual
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Share
+import app.familiar.ui.components.SoftButton
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -114,7 +118,14 @@ fun FeastScreen(data: FamiliarData, go: Go) {
             Spacer(Modifier.height(20.dp))
         }
         Box(Modifier.navigationBarsPadding().padding(horizontal = 18.dp, vertical = 12.dp)) {
-            PrimaryButton(stringResource(R.string.done), { go.back() }, Modifier.fillMaxWidth())
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                // Straight to a card of the book just read, while the moment is fresh.
+                SoftButton(
+                    stringResource(R.string.share), { go.back(); go.share(app.familiar.ui.share.Cards.Kind.BOOK, r.reading.bookId) },
+                    Modifier.weight(1f).height(54.dp), icon = Icons.Rounded.Share,
+                )
+                PrimaryButton(stringResource(R.string.done), { go.back() }, Modifier.weight(1.4f))
+            }
         }
     }
 }

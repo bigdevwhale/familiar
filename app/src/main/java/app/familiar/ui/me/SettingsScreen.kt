@@ -43,6 +43,7 @@ import app.familiar.R
 import app.familiar.container
 import app.familiar.data.Backup
 import app.familiar.data.Covers
+import app.familiar.data.Import
 import app.familiar.data.Settings
 import app.familiar.data.ThemeMode
 import app.familiar.notify.Alarms
@@ -69,6 +70,9 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+
+/** Where the website explains exporting from LiveLib (and that a Goodreads export works too). */
+private const val EXPORT_HOWTO = "https://bigdevwhale.github.io/stillcraft/apps/familiar/livelib/"
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -110,6 +114,26 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
         }
     }
     val import = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> pendingImport = uri }
+    val importDone = stringResource(R.string.import_done)
+    val importFailed = stringResource(R.string.import_failed)
+    val books = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        container.scope.launch {
+            val result = runCatching {
+                val text = context.contentResolver.openInputStream(uri)!!.use { it.readBytes().decodeToString() }
+                val dao = container.db.dao()
+                val found = Import.parse(text, dao.books())
+                dao.addBooks(found.books)
+                Import.wantCovers(context.filesDir, dao, found)
+                container.changed()
+                found
+            }
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, result.map { importDone.format(it.books.size, it.skipped) }.getOrElse { importFailed }, Toast.LENGTH_LONG).show()
+            }
+            if (result.isSuccess) runCatching { Import.covers(context.filesDir, container.db.dao()) { container.changed() } }
+        }
+    }
 
     Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding()) {
         TopBar(stringResource(R.string.settings), onBack)
@@ -189,6 +213,20 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
                     }
                     TextButton(onClick = { import.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }) {
                         Text(stringResource(R.string.backup_import), color = U.c.accent, style = UType.Button)
+                    }
+                }
+            }
+
+            SectionTitle(stringResource(R.string.import_books))
+            UCard {
+                Text(stringResource(R.string.import_text), style = UType.Muted)
+                Spacer(Modifier.height(8.dp))
+                Row {
+                    TextButton(onClick = { books.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream")) }) {
+                        Text(stringResource(R.string.import_pick), color = U.c.accent, style = UType.Button)
+                    }
+                    TextButton(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(EXPORT_HOWTO))) }) {
+                        Text(stringResource(R.string.import_how), color = U.c.accent, style = UType.Button)
                     }
                 }
             }

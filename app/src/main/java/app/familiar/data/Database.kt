@@ -200,6 +200,10 @@ abstract class FamiliarDao {
     @Insert protected abstract suspend fun insertReadings(l: List<Reading>)
     @Insert protected abstract suspend fun insertPets(l: List<Pet>)
 
+    /** Books brought from another site, all or none. */
+    @Transaction
+    open suspend fun addBooks(l: List<Book>) = insertBooks(l)
+
     @Transaction
     open suspend fun replaceAll(s: Snapshot) {
         clearBooks(); clearReadings(); clearPets(); clearFinds()

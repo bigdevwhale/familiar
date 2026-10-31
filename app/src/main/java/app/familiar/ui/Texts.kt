@@ -43,7 +43,9 @@ fun bookGenre(b: app.familiar.data.Book): String {
 }
 
 @Composable
-fun genreName(g: Genre): String = stringResource(
+fun genreName(g: Genre): String = stringResource(genreRes(g))
+
+fun genreRes(g: Genre): Int = (
     when (g) {
         Genre.FANTASY -> R.string.g_fantasy
         Genre.SCIFI -> R.string.g_scifi

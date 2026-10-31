@@ -209,6 +209,8 @@
     <!-- Tree -->
     <string name="tree_empty">Every finished book grows a glowing fruit here.</string>
     <string name="tree_count">%s grew on the tree</string>
+    <string name="tree_this_year">This year</string>
+    <string name="tree_all">All</string>
     <string name="tree_hint">Tap a fruit to open its book.</string>
     <string name="guild">The guild in %s</string>
     <string name="guild_text">Three errands for the month, the same for every reader. None is a must. Each one done is worth %d mana.</string>
@@ -344,6 +346,12 @@
     <string name="backup_done">Backup saved</string>
     <string name="backup_restored">Restored</string>
     <string name="backup_failed">Couldn\'t read or write the file</string>
+    <string name="import_books">Books from LiveLib or Goodreads</string>
+    <string name="import_text">Bring the books you have read from another site: a Goodreads export, or a LiveLib one made on our website. They go on your shelves; your familiar only eats what you read here.</string>
+    <string name="import_pick">Pick a CSV file</string>
+    <string name="import_how">How to export</string>
+    <string name="import_done">Books added: %1$d. Already on the shelf: %2$d.</string>
+    <string name="import_failed">That isn\'t a Goodreads or LiveLib export</string>
     <string name="about">About</string>
     <string name="about_text">Familiar is free, has no ads and no account. It goes online only to find a book and its cover; visits go from phone to phone as a QR code. Part of Stillcraft.</string>
     <string name="about_version">Version %s</string>
@@ -793,4 +801,75 @@
     <string name="stats_month_same">Just as much as last month</string>
     <string name="stats_month_first">Nothing last month to compare with</string>
     <string name="forecast">At this pace, done around %s</string>
+
+    <!-- Share cards -->
+    <string name="share_title">Share</string>
+    <string name="share_as_text">Share as text</string>
+    <string name="share_cards_title">Share your reading</string>
+    <string name="share_cards_sub">The book you\'re on, your month and your year, as cards for stories and posts</string>
+    <string name="share_kind_book">Book</string>
+    <string name="share_kind_month">Month</string>
+    <string name="share_kind_year">Year</string>
+    <string name="share_story">Story</string>
+    <string name="share_post">Post</string>
+    <string name="share_night">Night</string>
+    <string name="share_parchment">Parchment</string>
+    <string name="share_save">Save</string>
+    <string name="share_saved">Saved to Pictures</string>
+    <string name="share_text">Familiar is a reading tracker with a pixel pet that grows on the pages you read. Free, no ads: %s</string>
+    <string name="card_now_reading">Now reading</string>
+    <string name="card_finished">Just finished</string>
+    <string name="card_page_of">Page %1$d of %2$d</string>
+    <string name="card_minute_of">%1$s of %2$s</string>
+    <string name="card_page">Page %d</string>
+    <string name="card_l_with_book">hours with it</string>
+    <string name="card_month_title">My month in books</string>
+    <string name="card_finished_books">FINISHED</string>
+    <string name="card_opened_books">ON THE NIGHTSTAND</string>
+    <string name="card_calendar">DAYS OF READING</string>
+    <string name="card_year_eyebrow">My year of reading</string>
+    <string name="card_genre">Favourite genre: %s</string>
+    <string name="card_cta_line">A reading tracker with a pixel pet</string>
+    <string name="card_cta_free">Free on Google Play · no ads</string>
+    <plurals name="card_read_in">
+        <item quantity="one">Read in %d day</item>
+        <item quantity="other">Read in %d days</item>
+    </plurals>
+    <plurals name="card_l_streak">
+        <item quantity="one">day in a row</item>
+        <item quantity="other">days in a row</item>
+    </plurals>
+    <plurals name="card_l_streak_best">
+        <item quantity="one">day, best run</item>
+        <item quantity="other">days, best run</item>
+    </plurals>
+    <plurals name="card_l_books_year">
+        <item quantity="one">book in %d</item>
+        <item quantity="other">books in %d</item>
+    </plurals>
+    <plurals name="card_l_books">
+        <item quantity="one">book</item>
+        <item quantity="other">books</item>
+    </plurals>
+    <plurals name="card_l_pages">
+        <item quantity="one">page</item>
+        <item quantity="other">pages</item>
+    </plurals>
+    <plurals name="card_l_hours">
+        <item quantity="one">hour</item>
+        <item quantity="other">hours</item>
+    </plurals>
+    <plurals name="card_l_days">
+        <item quantity="one">day of reading</item>
+        <item quantity="other">days of reading</item>
+    </plurals>
+
+    <string name="card_and_more">and %d more on the go</string>
+    <string name="card_l_pace">pages an hour</string>
+    <string name="share_all">All</string>
+    <plurals name="card_at_once">
+        <item quantity="one">%d book at once</item>
+        <item quantity="other">%d books at once</item>
+    </plurals>
+    <string name="log_short">Log</string>
 </resources>
