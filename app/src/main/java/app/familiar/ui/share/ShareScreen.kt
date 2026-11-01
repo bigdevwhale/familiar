@@ -78,7 +78,7 @@ fun ShareScreen(start: Cards.Kind, bookId: Long, data: FamiliarData, go: Go) {
     val s = data.stats
     // The book asked for, then the ones on the go, then the last ones finished.
     val books = (listOfNotNull(data.book(bookId)) + data.reading + s.finished.takeLast(4).reversed())
-        .filter { it.shelfOf != Shelf.WANT }.distinctBy { it.id }
+        .filter { it.shelfOf != Shelf.WANT && it.shelfOf != Shelf.ABANDONED }.distinctBy { it.id }
     val kinds = Cards.Kind.entries.filter {
         when (it) {
             Cards.Kind.BOOK -> books.isNotEmpty()

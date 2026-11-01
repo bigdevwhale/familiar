@@ -81,6 +81,8 @@ import app.familiar.ui.shelfName
 import app.familiar.ui.theme.U
 import app.familiar.ui.theme.UType
 import kotlinx.coroutines.launch
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontStyle
 
 @Composable
 fun ShelfTab(data: FamiliarData, go: Go) {
@@ -92,8 +94,10 @@ fun ShelfTab(data: FamiliarData, go: Go) {
     var genreKeys by rememberSaveable { mutableStateOf("") }
     var format by rememberSaveable { mutableStateOf(Format.ANY) }
     var stars by rememberSaveable { mutableIntStateOf(0) }
-    val browse = Browse.sorted(data.settings.shelfSort).copy(query = query, genres = genreKeys.split('\n').filter { it.isNotEmpty() }.toSet(), format = format, stars = stars)
-    fun reset() { query = ""; genreKeys = ""; format = Format.ANY; stars = 0 }
+    // The cycle filtered by, its volumes then in order; empty for any.
+    var cycle by rememberSaveable { mutableStateOf("") }
+    val browse = Browse.sorted(data.settings.shelfSort).copy(query = query, genres = genreKeys.split('\n').filter { it.isNotEmpty() }.toSet(), format = format, stars = stars, series = cycle)
+    fun reset() { query = ""; genreKeys = ""; format = Format.ANY; stars = 0; cycle = "" }
 
     // A shelf just made may not be in settings for a moment yet; it's still the one to show.
     val own = view.removePrefix(OWN).takeIf { view.startsWith(OWN) }
@@ -144,7 +148,9 @@ fun ShelfTab(data: FamiliarData, go: Go) {
                     Spacer(Modifier.height(12.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         item { Chip(stringResource(R.string.lib_all), view == ALL, { view = ALL }) }
-                        items(listOf(Shelf.READING, Shelf.WANT, Shelf.DONE)) { sh -> Chip(shelfName(sh), view == sh.name, { view = sh.name }) }
+                        // The abandoned shelf only once a book has been put down.
+                        val shelves = listOf(Shelf.READING, Shelf.WANT, Shelf.DONE) + listOfNotNull(Shelf.ABANDONED.takeIf { a -> view == a.name || data.books.any { it.shelfOf == a } })
+                        items(shelves) { sh -> Chip(shelfName(sh), view == sh.name, { view = sh.name }) }
                         item { Chip(stringResource(R.string.cycles), view == CYCLES, { view = CYCLES }) }
                         items(data.shelves) { n -> Chip(n, own == n, { view = OWN + n }, U.c.gold) }
                         item { Chip("+ " + stringResource(R.string.shelf_new), false, { adding = true }, U.c.gold) }
@@ -163,6 +169,7 @@ fun ShelfTab(data: FamiliarData, go: Go) {
                                 val g = Genre.entries.firstOrNull { Browse.genreKey(it) == k }
                                 Chip("✕ " + (o?.name ?: g?.let { genreName(it) } ?: k), true, { genreKeys = (browse.genres - k).joinToString("\n") }, o?.let { Color(it.argb) } ?: g?.let { genreColor(it) } ?: U.c.accent)
                             }
+                            if (cycle.isNotBlank()) item { Chip("✕ " + cycle.take(28), true, { cycle = "" }, U.c.gold) }
                         }
                     }
                     val narrowed = browse.filters > 0 || query.isNotBlank()
@@ -186,9 +193,10 @@ fun ShelfTab(data: FamiliarData, go: Go) {
                         Modifier.fillMaxWidth().padding(top = 12.dp), color = U.c.gold, soft = U.c.goldSoft, icon = Icons.Rounded.Casino,
                     )
                     if (all.isEmpty() && own == null && view != CYCLES) Text(
-                        stringResource(when (shelf) { Shelf.READING -> R.string.empty_reading; Shelf.WANT -> R.string.empty_want; Shelf.DONE -> R.string.empty_done; else -> R.string.empty_all }),
+                        stringResource(when (shelf) { Shelf.READING -> R.string.empty_reading; Shelf.WANT -> R.string.empty_want; Shelf.DONE -> R.string.empty_done; Shelf.ABANDONED -> R.string.empty_abandoned; else -> R.string.empty_all }),
                         style = UType.Sub, modifier = Modifier.padding(top = 24.dp),
                     )
+                    if (shelf == Shelf.ABANDONED && all.isNotEmpty()) Text(stringResource(R.string.graveyard), style = UType.Sub.copy(fontStyle = FontStyle.Italic), modifier = Modifier.padding(top = 8.dp))
                     if (all.isNotEmpty() && list.isEmpty()) Text(stringResource(R.string.lib_nothing), style = UType.Sub, modifier = Modifier.padding(top = 24.dp))
                 }
             }
@@ -196,9 +204,11 @@ fun ShelfTab(data: FamiliarData, go: Go) {
             else if (listMode) items(list, key = { it.id }, span = { GridItemSpan(3) }) { b -> BookRow(b, view == ALL) { go.book(b.id) } }
             else items(list, key = { it.id }) { b ->
                 Column(Modifier.clickable { go.book(b.id) }) {
-                    BookCover(b, Modifier.fillMaxWidth().aspectRatio(0.68f))
+                    // An abandoned book fades like an old gravestone, its epitaph the reader's reason.
+                    BookCover(b, Modifier.fillMaxWidth().aspectRatio(0.68f).graphicsLayer { alpha = if (b.shelfOf == Shelf.ABANDONED) FADED else 1f })
                     Spacer(Modifier.height(6.dp))
                     Text(b.title, style = UType.Small.copy(color = U.c.ink), maxLines = 2)
+                    if (b.shelfOf == Shelf.ABANDONED && b.note.isNotBlank()) Text(b.note, style = UType.Small.copy(fontStyle = FontStyle.Italic), maxLines = 2)
                     if (b.shelfOf == Shelf.READING || b.shelfOf == Shelf.PAUSED) {
                         Spacer(Modifier.height(4.dp))
                         if (b.pages > 0) Bar(b.fraction, Modifier.height(5.dp), color = if (b.shelfOf == Shelf.PAUSED) U.c.faint else U.c.accent, track = U.c.accentSoft)
@@ -217,7 +227,7 @@ fun ShelfTab(data: FamiliarData, go: Go) {
     }
     if (filtering) FilterSheet(
         data, all, browse,
-        onChange = { b -> genreKeys = b.genres.joinToString("\n"); format = b.format; stars = b.stars },
+        onChange = { b -> genreKeys = b.genres.joinToString("\n"); format = b.format; stars = b.stars; cycle = b.series },
         onDismiss = { filtering = false },
     )
     if (adding) ShelfNameDialog(onDismiss = { adding = false }) { n ->
@@ -285,6 +295,7 @@ private fun sortName(s: Sort): String = stringResource(
         Sort.RATING -> R.string.sort_rating
         Sort.PROGRESS -> R.string.sort_progress
         Sort.LENGTH -> R.string.sort_length
+        Sort.SERIES -> R.string.sort_series
     }
 )
 
@@ -292,7 +303,7 @@ private fun sortName(s: Sort): String = stringResource(
 @Composable
 private fun BookRow(b: Book, withShelf: Boolean, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().clickable(onClick = onClick), verticalAlignment = Alignment.CenterVertically) {
-        BookCover(b, Modifier.width(46.dp).height(66.dp), small = true)
+        BookCover(b, Modifier.width(46.dp).height(66.dp).graphicsLayer { alpha = if (b.shelfOf == Shelf.ABANDONED) FADED else 1f }, small = true)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(b.title, style = UType.Strong, maxLines = 2)
@@ -303,6 +314,7 @@ private fun BookRow(b: Book, withShelf: Boolean, onClick: () -> Unit) {
             }
             when {
                 b.shelfOf == Shelf.DONE -> if (b.rating != null) Text("★".repeat(b.rating), style = UType.Small.copy(color = U.c.gold))
+                b.shelfOf == Shelf.ABANDONED -> if (b.note.isNotBlank()) Text("«" + b.note + "»", style = UType.Small.copy(fontStyle = FontStyle.Italic), maxLines = 2, modifier = Modifier.padding(top = 2.dp))
                 b.shelfOf == Shelf.READING || b.shelfOf == Shelf.PAUSED -> {
                     if (b.pages > 0) Bar(b.fraction, Modifier.padding(top = 4.dp).height(4.dp), color = if (b.shelfOf == Shelf.PAUSED) U.c.faint else U.c.accent, track = U.c.accentSoft)
                     Text(progressLabel(b) + if (b.shelfOf == Shelf.PAUSED) " · " + shelfName(Shelf.PAUSED) else "", style = UType.Small, modifier = Modifier.padding(top = 2.dp))
@@ -345,6 +357,17 @@ private fun FilterSheet(data: FamiliarData, shown: List<Book>, browse: Browse, o
                 owns.forEach { o -> Chip(o.name, Browse.genreKey(o) in browse.genres, { toggle(Browse.genreKey(o)) }, Color(o.argb)) }
                 Chip("+ " + stringResource(R.string.genre_own), false, { adding = true }, U.c.gold)
             }
+            // The cycles on this shelf, one at a time: picking one shows its volumes in order.
+            val cycles = remember(shown) { Series.all(shown).map { it.name }.sortedWith(java.text.Collator.getInstance(java.util.Locale.getDefault()).apply { strength = java.text.Collator.PRIMARY }) }
+            if (cycles.isNotEmpty() || browse.series.isNotBlank()) {
+                SectionTitle(stringResource(R.string.lib_cycle))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    (cycles + listOfNotNull(browse.series.takeIf { it.isNotBlank() && cycles.none { c -> c.equals(it, true) } })).forEach { c ->
+                        val on = c.equals(browse.series, true)
+                        Chip(c.take(28), on, { onChange(browse.copy(series = if (on) "" else c)) }, U.c.gold)
+                    }
+                }
+            }
             SectionTitle(stringResource(R.string.lib_format))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(Format.ANY to R.string.lib_any, Format.PAPER to R.string.lib_paper, Format.AUDIO to R.string.lib_audio).forEach { (f, res) ->
@@ -359,7 +382,7 @@ private fun FilterSheet(data: FamiliarData, shown: List<Book>, browse: Browse, o
         }
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { onChange(browse.copy(genres = emptySet(), format = Format.ANY, stars = 0)) }) { Text(stringResource(R.string.lib_reset), color = U.c.muted, style = UType.Button) }
+                TextButton(onClick = { onChange(browse.copy(genres = emptySet(), format = Format.ANY, stars = 0, series = "")) }) { Text(stringResource(R.string.lib_reset), color = U.c.muted, style = UType.Button) }
                 Spacer(Modifier.weight(1f))
                 PrimaryButton(stringResource(R.string.lib_show, books(shown.count { b -> browse.matches(b, names) })), {
                     ui.launch { sheet.hide() }.invokeOnCompletion { onDismiss() }
@@ -392,3 +415,6 @@ fun CycleCard(c: Series, onClick: () -> Unit) {
         }
     }
 }
+
+/** How much of an abandoned book's cover still shows. */
+private const val FADED = 0.45f

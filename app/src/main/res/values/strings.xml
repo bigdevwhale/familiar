@@ -82,6 +82,17 @@
     <string name="shelf_want">Want to read</string>
     <string name="shelf_done">Read</string>
     <string name="shelf_paused">Paused</string>
+    <string name="shelf_abandoned">Abandoned</string>
+    <string name="abandon">Not going to finish it</string>
+    <string name="abandon_title">Put the book down?</string>
+    <string name="abandon_text">It goes to the abandoned shelf, a quiet little graveyard. You can always come back to it.</string>
+    <string name="abandon_hint">Why? A few words for future you (optional)</string>
+    <string name="abandon_undo">Give it another chance</string>
+    <string name="abandoned_on">Put down on %s</string>
+    <string name="note_title">A note for yourself</string>
+    <string name="note_hint">What it was like, what stayed with you</string>
+    <string name="empty_abandoned">Books you decide not to finish rest here, with a word on why.</string>
+    <string name="graveyard">Here lie the books that weren\'t meant to be.</string>
 
     <!-- Den -->
     <string name="hello_morning">Good morning</string>
@@ -440,6 +451,12 @@
     <string name="volume_n">Volume %d</string>
     <string name="f_series">Cycle</string>
     <string name="f_series_hint">Optional</string>
+    <string name="f_series_all">All cycles · %d</string>
+    <string name="lib_cycle">Cycle</string>
+    <string name="sort_series">By cycle</string>
+    <string name="f_read_before">Read before Familiar: it goes on the tree and in the stats, but your familiar only eats what you read here.</string>
+    <string name="step_less">Less (hold for ten at a time)</string>
+    <string name="step_more">More (hold for ten at a time)</string>
     <string name="f_volume">Volume</string>
     <string name="heat_title">Every day of the year</string>
     <string name="heat_less">Less</string>

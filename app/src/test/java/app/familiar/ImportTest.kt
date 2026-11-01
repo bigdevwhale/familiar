@@ -137,7 +137,7 @@ class ImportTest {
         val (solaris, ulysses, dune) = Import.parse(csv, emptyList(), now = 0, zone = utc).books
         assertEquals(Shelf.DONE.name, solaris.shelf)
         assertEquals(Genre.SCIFI.name, solaris.genre)
-        assertEquals(Shelf.PAUSED.name, ulysses.shelf)
+        assertEquals(Shelf.ABANDONED.name, ulysses.shelf)
         assertEquals("", ulysses.tags)
         assertEquals(Shelf.WANT.name, dune.shelf)
     }

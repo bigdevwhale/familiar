@@ -57,7 +57,8 @@ object Bookmory {
                 read == null -> Shelf.WANT
                 status == "DONE" -> Shelf.DONE
                 status.startsWith("READ") -> Shelf.READING
-                listOf("GIVE", "STOP", "PAUS", "HOLD", "DROP").any { it in status } -> Shelf.PAUSED
+                listOf("GIVE", "STOP", "DROP", "ABANDON").any { it in status } -> Shelf.ABANDONED
+                listOf("PAUS", "HOLD").any { it in status } -> Shelf.PAUSED
                 else -> Shelf.WANT
             }
             // Pages only when counted in pages: an e-book in percent or an audiobook in time says nothing of length.
@@ -65,7 +66,11 @@ object Bookmory {
             val pages = if (inPages) b.optDouble("total_page", 0.0).toInt().coerceAtLeast(0) else 0
             val start = read?.time("start")
             val end = read?.time("end")
-            val finished = if (shelf == Shelf.DONE) end ?: start ?: b.time("last_read_done_date") ?: now else null
+            val finished = when (shelf) {
+                Shelf.DONE -> end ?: start ?: b.time("last_read_done_date") ?: now
+                Shelf.ABANDONED -> end ?: b.time("last_give_up_date")
+                else -> null
+            }
             val star = read?.optDouble("star", 0.0)?.takeIf { !it.isNaN() } ?: 0.0
             Book(
                 title = title,
@@ -76,7 +81,7 @@ object Bookmory {
                 shelf = shelf.name,
                 page = when (shelf) {
                     Shelf.DONE -> pages
-                    Shelf.READING, Shelf.PAUSED -> if (inPages) b.optDouble("cur_page", 0.0).toInt().coerceIn(0, pages.takeIf { it > 0 } ?: Int.MAX_VALUE) else 0
+                    Shelf.READING, Shelf.PAUSED, Shelf.ABANDONED -> if (inPages) b.optDouble("cur_page", 0.0).toInt().coerceIn(0, pages.takeIf { it > 0 } ?: Int.MAX_VALUE) else 0
                     else -> 0
                 },
                 added = b.time("created_at") ?: start ?: finished ?: now,
@@ -86,6 +91,8 @@ object Bookmory {
                 cover = b.optString("image").takeIf { it.startsWith("https://") }.orEmpty(),
                 audio = (b.strings("book_types") + b.optString("book_type")).any { it.contains("audio", ignoreCase = true) },
                 // The reader's own collections ("Favorite") become their shelves.
+                // What the reader wrote of this read: a review, or why it was given up.
+                note = read?.optString("comment").orEmpty().trim(),
                 tags = b.strings("collection_keys").mapNotNull { collections[it]?.trim()?.takeIf(String::isNotEmpty) }.distinct().joinToString("\n"),
             )
         }

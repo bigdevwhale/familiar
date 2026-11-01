@@ -98,6 +98,17 @@ class BookmoryTest {
         assertNull(dune.started)
     }
 
+    @Test fun givenUpGoesToAbandonedWithItsReason() {
+        val dropped = """{"title":"Улисс","authors":["Джеймс Джойс"],"page_type":"PAGE","total_page":730.0,"cur_page":120.0,
+            "reads":[{"nth":1,"start":1790000000000,"end":1791000000000,"star":0.0,"status":"GIVE_UP","comment":"Поток сознания не мой"}]}"""
+        val b = Bookmory.parse(backup(Triple("books", "1", dropped)), emptyList(), tmp.newFolder(), now = 0).books.single()
+        assertEquals(Shelf.ABANDONED.name, b.shelf)
+        assertEquals(1791000000000, b.finished)
+        assertEquals(120, b.page)
+        assertEquals("Поток сознания не мой", b.note)
+        assertNull(b.rating)
+    }
+
     @Test fun skipsBooksAlreadyThere() {
         val have = listOf(Book(title = "mistborn the final empire", author = "Brandon Sanderson", pages = 0, genre = "OTHER", added = 0))
         val r = Bookmory.parse(backup(Triple("books", "1", mistborn)), have, tmp.newFolder(), now = 0)

@@ -66,7 +66,7 @@ object Import {
             val shelf = when {
                 exclusive == "read" -> Shelf.DONE
                 exclusive == "currently-reading" -> Shelf.READING
-                exclusive == "unread" -> Shelf.PAUSED
+                exclusive == "unread" -> Shelf.ABANDONED
                 // A shelf of the reader's own on Goodreads: read if it says when.
                 exclusive != "to-read" && of("Date Read").isNotEmpty() -> Shelf.DONE
                 else -> Shelf.WANT
@@ -74,7 +74,12 @@ object Import {
             val pages = of("Number of Pages").toIntOrNull()?.coerceAtLeast(0) ?: 0
             val read = date(of("Date Read"), zone)
             val added = date(of("Date Added"), zone)
-            val finished = if (shelf == Shelf.DONE) read ?: added ?: now else null
+            val finished = when (shelf) {
+                Shelf.DONE -> read ?: added ?: now
+                // The day it was put down, when the file knows it.
+                Shelf.ABANDONED -> read
+                else -> null
+            }
             Book(
                 title = title,
                 author = author,

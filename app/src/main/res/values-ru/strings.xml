@@ -86,6 +86,17 @@
     <string name="shelf_want">Хочу прочитать</string>
     <string name="shelf_done">Прочитано</string>
     <string name="shelf_paused">На паузе</string>
+    <string name="shelf_abandoned">Брошено</string>
+    <string name="abandon">Не буду дочитывать</string>
+    <string name="abandon_title">Отложить книгу насовсем?</string>
+    <string name="abandon_text">Она уйдёт на полку «Брошено», в маленькое тихое кладбище. Вернуться к ней можно в любой момент.</string>
+    <string name="abandon_hint">Почему? Пара слов для себя на будущее (необязательно)</string>
+    <string name="abandon_undo">Дать ещё один шанс</string>
+    <string name="abandoned_on">Брошена %s</string>
+    <string name="note_title">Заметка для себя</string>
+    <string name="note_hint">Какой была книга, что запомнилось</string>
+    <string name="empty_abandoned">Здесь покоятся книги, которые ты решишь не дочитывать, — с парой слов о том, почему.</string>
+    <string name="graveyard">Здесь покоятся книги, которым не суждено было дочитаться.</string>
 
     <string name="hello_morning">Доброе утро</string>
     <string name="hello_day">Добрый день</string>
@@ -455,6 +466,12 @@
     <string name="volume_n">Том %d</string>
     <string name="f_series">Цикл</string>
     <string name="f_series_hint">Необязательно</string>
+    <string name="f_series_all">Все циклы · %d</string>
+    <string name="lib_cycle">Цикл</string>
+    <string name="sort_series">По циклам</string>
+    <string name="f_read_before">Прочитана до Фамильяра: встанет на древо и в статистику, но фамильяр ест только то, что ты читаешь здесь.</string>
+    <string name="step_less">Меньше (удерживай, чтобы по десять)</string>
+    <string name="step_more">Больше (удерживай, чтобы по десять)</string>
     <string name="f_volume">Том</string>
     <string name="heat_title">Каждый день года</string>
     <string name="heat_less">Меньше</string>

@@ -27,13 +27,28 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.familiar.R
@@ -62,24 +77,53 @@ fun HoursMinutesField(minutes: Int?, onChange: (Int?) -> Unit, modifier: Modifie
     }
 }
 
-/** − value + */
+/** − value +; [onStep] gets −1 or +1 for a tap, and ±[holdStep] again and again while a button is held. */
 @Composable
-fun Stepper(label: String, value: String, onMinus: () -> Unit, onPlus: () -> Unit, modifier: Modifier = Modifier, color: Color = U.c.accent) {
+fun Stepper(label: String, value: String, onStep: (Int) -> Unit, modifier: Modifier = Modifier, color: Color = U.c.accent, holdStep: Int = 10) {
     Row(modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, style = UType.Body, modifier = Modifier.weight(1f))
-        RoundIcon(Icons.Rounded.Remove, color, onMinus)
+        RoundIcon(Icons.Rounded.Remove, stringResource(R.string.step_less), color) { long -> onStep(if (long) -holdStep else -1) }
         Text(value, style = UType.Number.copy(textAlign = TextAlign.Center), modifier = Modifier.width(96.dp))
-        RoundIcon(Icons.Rounded.Add, color, onPlus)
+        RoundIcon(Icons.Rounded.Add, stringResource(R.string.step_more), color) { long -> onStep(if (long) holdStep else 1) }
     }
 }
 
+/** A round button that answers a tap with [onStep] (false), and a hold with [onStep] (true) every moment until let go. */
 @Composable
-private fun RoundIcon(icon: ImageVector, color: Color, onClick: () -> Unit) {
+private fun RoundIcon(icon: ImageVector, label: String, color: Color, onStep: (Boolean) -> Unit) {
+    val scope = rememberCoroutineScope()
+    val haptics = LocalHapticFeedback.current
+    val step by rememberUpdatedState(onStep)
+    var pressed by remember { mutableStateOf(false) }
     Box(
-        Modifier.size(40.dp).clip(CircleShape).background(color.copy(alpha = 0.14f)).clickable(onClick = onClick),
+        Modifier.size(40.dp).clip(CircleShape).background(color.copy(alpha = if (pressed) 0.3f else 0.14f))
+            .semantics { role = Role.Button; contentDescription = label; onClick { step(false); true } }
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    awaitFirstDown()
+                    pressed = true
+                    var held = false
+                    val repeat = scope.launch {
+                        delay(HOLD_MS)
+                        held = true
+                        while (true) {
+                            step(true)
+                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            delay(REPEAT_MS)
+                        }
+                    }
+                    val up = waitForUpOrCancellation()
+                    repeat.cancel()
+                    pressed = false
+                    if (up != null && !held) step(false)
+                }
+            },
         contentAlignment = Alignment.Center,
     ) { Icon(icon, null, Modifier.size(20.dp), tint = color) }
 }
+
+private const val HOLD_MS = 400L
+private const val REPEAT_MS = 220L
 
 @Composable
 fun SwitchRow(title: String, sub: String?, checked: Boolean, onChange: (Boolean) -> Unit, color: Color = U.c.accent) {

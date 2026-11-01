@@ -37,6 +37,7 @@ class MigrationTest {
         val books = db.dao().books()
         assertEquals(listOf("Dune"), books.map { it.title })
         assertEquals("", books.single().sub)
+        assertEquals("", books.single().note)
         assertEquals(900, db.dao().pets().single().mana)
         db.close()
     }

@@ -360,6 +360,29 @@ class FamiliarTest {
     }
 
     @Test
+    fun theShelfShowsACycleInVolumeOrder() {
+        val b = listOf(
+            book(1).copy(title = "Children of Dune", series = "Dune", volume = 3, added = 3),
+            book(2).copy(title = "Hobbit", added = 9),
+            book(3).copy(title = "Dune", series = "Dune", volume = 1, added = 1),
+            book(4).copy(title = "Dune Messiah", series = " dune ", volume = 2, added = 5),
+            book(5).copy(title = "Mort", series = "Discworld", volume = 4, added = 2),
+            book(6).copy(title = "Guards! Guards!", series = "Discworld", volume = null, added = 7),
+        )
+        fun titles(br: app.familiar.ui.books.Browse) = br.apply(b, emptyList(), locale = Locale.ENGLISH).map { it.title }
+        // One cycle: its volumes in order whatever the sort, case and spaces aside.
+        val dune = app.familiar.ui.books.Browse(series = "DUNE")
+        assertEquals(listOf("Dune", "Dune Messiah", "Children of Dune"), titles(dune))
+        assertEquals(listOf("Dune", "Dune Messiah", "Children of Dune"), titles(dune.copy(sort = app.familiar.ui.books.Sort.TITLE, reverse = true)))
+        assertEquals(1, dune.filters)
+        // By cycle: cycles by name, each in volume order (unnumbered last), books outside a cycle at the end.
+        assertEquals(
+            listOf("Mort", "Guards! Guards!", "Dune", "Dune Messiah", "Children of Dune", "Hobbit"),
+            titles(app.familiar.ui.books.Browse(sort = app.familiar.ui.books.Sort.SERIES)),
+        )
+    }
+
+    @Test
     fun percentToPageAndBack() {
         assertEquals(150, Book.atPercent(300, 50))
         assertEquals(0, Book.atPercent(300, 0))

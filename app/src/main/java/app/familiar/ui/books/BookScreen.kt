@@ -39,6 +39,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.material3.AlertDialog
+import app.familiar.ui.components.UTextField
 import app.familiar.R
 import app.familiar.container
 import app.familiar.data.Shelf
@@ -69,6 +72,7 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
     val container = LocalContext.current.container
     val book = data.book(id)
     var deleting by remember { mutableStateOf(false) }
+    var abandoning by remember { mutableStateOf(false) }
     if (book == null) {
         LaunchedEffect(Unit) { go.back() }
         return
@@ -76,7 +80,7 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
     val sittings = data.readings.filter { it.bookId == id }.sortedByDescending { it.end }
     Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding()) {
         TopBar("", { go.back() }) {
-            if (book.shelfOf != Shelf.WANT) IconButton(onClick = { go.share(app.familiar.ui.share.Cards.Kind.BOOK, id) }) {
+            if (book.shelfOf != Shelf.WANT && book.shelfOf != Shelf.ABANDONED) IconButton(onClick = { go.share(app.familiar.ui.share.Cards.Kind.BOOK, id) }) {
                 Icon(Icons.Rounded.Share, stringResource(R.string.share), tint = U.c.muted)
             }
             IconButton(onClick = { go.editBook(id) }) { Icon(Icons.Rounded.Edit, stringResource(R.string.edit), tint = U.c.muted) }
@@ -117,11 +121,23 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
                             { container.write { dao().updateBook(book.copy(shelf = if (book.shelfOf == Shelf.PAUSED) Shelf.READING.name else Shelf.PAUSED.name)) } },
                             Modifier.fillMaxWidth(), color = U.c.muted, soft = U.c.surface2,
                         )
+                        SoftButton(stringResource(R.string.abandon), { abandoning = true }, Modifier.fillMaxWidth(), color = U.c.muted, soft = U.c.surface2)
                     }
                 }
                 Shelf.WANT -> PrimaryButton(stringResource(R.string.start_reading), {
                     container.write { dao().updateBook(book.copy(shelf = Shelf.READING.name, started = System.currentTimeMillis())) }
                 }, Modifier.fillMaxWidth())
+                // Put down for good: the day and the reader's reason, and a way back.
+                Shelf.ABANDONED -> {
+                    UCard {
+                        Text(book.finished?.let { stringResource(R.string.abandoned_on, dateShort(it)) } ?: stringResource(R.string.shelf_abandoned), style = UType.Strong)
+                        if (book.note.isNotBlank()) Text("«" + book.note + "»", style = UType.Sub.copy(fontStyle = FontStyle.Italic), modifier = Modifier.padding(top = 6.dp))
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    SoftButton(stringResource(R.string.abandon_undo), {
+                        container.write { dao().updateBook(book.copy(shelf = Shelf.READING.name, finished = null)) }
+                    }, Modifier.fillMaxWidth(), icon = Icons.Rounded.LocalFireDepartment)
+                }
                 Shelf.DONE -> {
                     UCard {
                         Text(stringResource(R.string.finished_on, dateShort(book.finished ?: book.added)), style = UType.Strong)
@@ -138,6 +154,12 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
                         }
                     }
                 }
+            }
+
+            // A note for later: what the book was like, why it was put down.
+            if (book.shelfOf == Shelf.DONE || book.shelfOf == Shelf.ABANDONED) {
+                SectionTitle(stringResource(R.string.note_title))
+                NoteField(book.note) { n -> container.write { dao().updateBook(book.copy(note = n)) } }
             }
 
             SectionTitle(stringResource(R.string.f_shelves))
@@ -170,13 +192,19 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
             if (book.shelfOf != Shelf.DONE) {
                 SectionTitle(stringResource(R.string.move_to))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Back from the abandoned shelf, the day it was put down goes.
                     listOf(Shelf.READING, Shelf.WANT, Shelf.PAUSED).filter { it != book.shelfOf }.forEach { sh ->
-                        Chip(shelfName(sh), false, { container.write { dao().updateBook(book.copy(shelf = sh.name)) } })
+                        Chip(shelfName(sh), false, { container.write { dao().updateBook(book.copy(shelf = sh.name, finished = if (book.shelfOf == Shelf.ABANDONED) null else book.finished)) } })
                     }
+                    if (book.shelfOf != Shelf.ABANDONED) Chip(shelfName(Shelf.ABANDONED), false, { abandoning = true })
                     Chip(stringResource(R.string.mark_done), false, { go.log(id) })
                 }
             }
         }
+    }
+    if (abandoning) AbandonDialog({ abandoning = false }) { why ->
+        container.write { dao().updateBook(book.copy(shelf = Shelf.ABANDONED.name, finished = System.currentTimeMillis(), note = why.ifBlank { book.note })) }
+        abandoning = false
     }
     if (deleting) ConfirmDialog(
         title = stringResource(R.string.delete_book_title),
@@ -189,3 +217,36 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
 }
 
 private const val NL = "\n"
+
+/** "Not going to finish it": asks, gently and without insisting, why, for the reader's own memory. */
+@Composable
+private fun AbandonDialog(onDismiss: () -> Unit, onAbandon: (String) -> Unit) {
+    var why by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = U.c.bg,
+        title = { Text(stringResource(R.string.abandon_title), style = UType.Strong) },
+        text = {
+            Column {
+                Text(stringResource(R.string.abandon_text), style = UType.Sub)
+                Spacer(Modifier.height(10.dp))
+                UTextField(why, { why = it.take(NOTE_MAX) }, placeholder = stringResource(R.string.abandon_hint), minLines = 2)
+            }
+        },
+        confirmButton = { TextButton(onClick = { onAbandon(why.trim()) }) { Text(stringResource(R.string.abandon), color = U.c.accent, style = UType.Button) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = U.c.muted, style = UType.Button) } },
+    )
+}
+
+/** The reader's note on a book, kept once they say so. */
+@Composable
+private fun NoteField(note: String, onSave: (String) -> Unit) {
+    var text by remember(note) { mutableStateOf(note) }
+    UTextField(text, { text = it.take(NOTE_MAX) }, placeholder = stringResource(R.string.note_hint), minLines = 2)
+    if (text.trim() != note) Row {
+        Spacer(Modifier.weight(1f))
+        TextButton(onClick = { onSave(text.trim()) }) { Text(stringResource(R.string.save), color = U.c.accent, style = UType.Button) }
+    }
+}
+
+private const val NOTE_MAX = 500

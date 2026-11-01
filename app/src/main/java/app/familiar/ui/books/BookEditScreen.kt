@@ -1,6 +1,9 @@
 package app.familiar.ui.books
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -67,6 +70,11 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
     var volume by remember {
         mutableStateOf(old?.volume?.toString() ?: if (newSeries.isBlank()) "" else ((data.books.filter { it.series.equals(newSeries, true) }.mapNotNull { it.volume }.maxOrNull() ?: 0) + 1).toString())
     }
+    // For a book added as already read: the day it was finished and its stars (0 for none yet).
+    var finished by remember { mutableStateOf(System.currentTimeMillis()) }
+    var rating by remember { mutableIntStateOf(0) }
+    var pickingDate by remember { mutableStateOf(false) }
+    var allCycles by remember { mutableStateOf(false) }
     // The length is optional: 0 means not known yet.
     val total = pages.toIntOrNull()?.takeIf { it in 1..20000 } ?: 0
     val ok = title.isNotBlank() && (pages.isBlank() || pages.toIntOrNull()?.let { it in 1..20000 } == true)
@@ -128,9 +136,13 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
                     UTextField(volume, { volume = it.filter(Char::isDigit).take(3) }, number = true, placeholder = "1")
                 }
             }
+            // The cycles on the shelves, the latest first: the ones that match what's typed, or all of them on request.
             val known = remember(data.books) { app.familiar.domain.Series.all(data.books).map { it.name } }
-            if (known.isNotEmpty() && series.isBlank()) FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                known.take(6).forEach { n -> Chip(n.take(28), false, { series = n }) }
+            val typed = series.trim()
+            val fits = if (typed.isEmpty()) known else known.filter { it.contains(typed, true) && !it.equals(typed, true) }
+            if (fits.isNotEmpty()) FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                (if (allCycles) fits else fits.take(CYCLES_SHOWN)).forEach { n -> Chip(n.take(28), false, { series = n; allCycles = false }) }
+                if (!allCycles && fits.size > CYCLES_SHOWN) Chip(stringResource(R.string.f_series_all, fits.size), false, { allCycles = true }, U.c.gold)
             }
             SectionTitle(stringResource(R.string.f_genre))
             GenrePicker(genre, sub, data.genres) { g, s -> genre = g; sub = s }
@@ -140,7 +152,24 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
             if (old == null) {
                 SectionTitle(stringResource(R.string.f_shelf))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(Shelf.READING, Shelf.WANT).forEach { s -> Chip(shelfName(s), shelf == s, { shelf = s }) }
+                    listOf(Shelf.READING, Shelf.WANT, Shelf.DONE).forEach { s -> Chip(shelfName(s), shelf == s, { shelf = s }) }
+                }
+                // A book read before Familiar: when it was finished and how it was. It feeds nobody, but counts on the tree.
+                if (shelf == Shelf.DONE) {
+                    Text(stringResource(R.string.f_read_before), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 6.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.finished_on, app.familiar.ui.dateShort(finished)), style = UType.Strong, modifier = Modifier.weight(1f))
+                        TextButton(onClick = { pickingDate = true }) { Text(stringResource(R.string.edit), color = U.c.accent, style = UType.Button) }
+                    }
+                    Text(stringResource(R.string.your_rating), style = UType.Muted)
+                    Row {
+                        (1..5).forEach { r ->
+                            Text(
+                                if (rating >= r) "★" else "☆", fontSize = 30.sp, color = U.c.gold,
+                                modifier = Modifier.clickable { rating = if (rating == r) 0 else r }.padding(4.dp),
+                            )
+                        }
+                    }
                 }
             }
             Spacer(Modifier.height(20.dp))
@@ -149,11 +178,14 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
             stringResource(R.string.save),
             {
                 val now = System.currentTimeMillis()
-                val p = (page.toIntOrNull() ?: 0).coerceIn(0, if (total > 0) total else 99_999)
-                val b = (old ?: Book(title = "", pages = total, genre = genre.name, added = now)).copy(
+                val read = old == null && shelf == Shelf.DONE
+                val p = if (read) total else (page.toIntOrNull() ?: 0).coerceIn(0, if (total > 0) total else 99_999)
+                val b = (old ?: Book(title = "", pages = total, genre = genre.name, added = if (read) finished else now)).copy(
                     title = title.trim(), author = author.trim(), pages = total, genre = genre.name, sub = sub.trim(), page = p, cover = cover, audio = audio, tags = tags.joinToString("\n"), series = series.trim(), volume = volume.toIntOrNull()?.takeIf { series.isNotBlank() },
                     shelf = if (old == null) shelf.name else old.shelf,
                     started = old?.started ?: if (shelf == Shelf.READING) now else null,
+                    finished = if (read) finished else old?.finished,
+                    rating = if (read) rating.takeIf { it in 1..5 } else old?.rating,
                 )
                 container.write { if (old == null) dao().insertBook(b) else dao().updateBook(b) }
                 go.back()
@@ -162,4 +194,8 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
             enabled = ok,
         )
     }
+    if (pickingDate) app.familiar.ui.components.DateTimeDialog(finished, { pickingDate = false }, time = false) { finished = it; pickingDate = false }
 }
+
+/** How many of the cycles show as chips before "All cycles". */
+private const val CYCLES_SHOWN = 6

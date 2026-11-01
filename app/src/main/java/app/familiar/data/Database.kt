@@ -16,7 +16,8 @@ import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
-enum class Shelf { READING, WANT, DONE, PAUSED }
+/** [ABANDONED]: put down for good, with [Book.finished] the day it was and [Book.note] why. */
+enum class Shelf { READING, WANT, DONE, PAUSED, ABANDONED }
 
 /** A book on the shelf. [page] is the last page read. */
 @Entity(tableName = "books")
@@ -47,6 +48,8 @@ data class Book(
     @ColumnInfo(defaultValue = "") val tags: String = "",
     /** The reader's own genre or subgenre ([app.familiar.domain.OwnGenre] name); empty for none. */
     @ColumnInfo(defaultValue = "") val sub: String = "",
+    /** A few words of the reader's own about the book: why it was put down, what it was like. */
+    @ColumnInfo(defaultValue = "") val note: String = "",
 ) {
     val tagList: List<String> get() = tags.split('\n').map { it.trim() }.filter { it.isNotEmpty() }
     /** The last page you can reach: the book's end, or no limit when its length isn't known. */
@@ -214,9 +217,9 @@ abstract class FamiliarDao {
 // Every schema change gets a new version and a migration that keeps what's there (1.1.0 lost data without one).
 @Database(
     entities = [Book::class, Reading::class, Pet::class, Find::class],
-    version = 4,
+    version = 5,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4)],
+    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5)],
 )
 abstract class FamiliarDatabase : RoomDatabase() {
     abstract fun dao(): FamiliarDao

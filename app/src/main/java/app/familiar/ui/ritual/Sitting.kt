@@ -57,7 +57,8 @@ fun SittingForm(book: Book, fromPage: Int, startPage: Int, slime: Boolean, butto
             if (!noPage) {
                 Stepper(
                     if (book.audio) stringResource(R.string.minute_at, app.familiar.ui.hm(page)) else stringResource(R.string.page_n, page), "+${page - fromPage}",
-                    { moved(page - 1); typed = ""; typedTime = null; percent = "" }, { moved(page + 1); typed = ""; typedTime = null; percent = "" }, color = U.c.accent,
+                    // A hold goes by tens: ten minutes of an audiobook, ten pages of a book.
+                    { d -> moved(page + d); typed = ""; typedTime = null; percent = "" }, color = U.c.accent,
                 )
                 Text(
                     when {

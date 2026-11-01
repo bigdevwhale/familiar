@@ -350,10 +350,13 @@ fun CelebrateDialog(color: Color, eyebrow: String, title: String, text: String, 
     }
 }
 
-/** Date, then time. [initial] and the result are epoch millis; future days can't be picked unless [future]. */
+/**
+ * Date, then time (or, without [time], the day alone, at noon). [initial] and the result are epoch
+ * millis; future days can't be picked unless [future].
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DateTimeDialog(initial: Long, onDismiss: () -> Unit, future: Boolean = false, onPicked: (Long) -> Unit) {
+fun DateTimeDialog(initial: Long, onDismiss: () -> Unit, future: Boolean = false, time: Boolean = true, onPicked: (Long) -> Unit) {
     val zone = java.time.ZoneId.systemDefault()
     val start = java.time.Instant.ofEpochMilli(initial).atZone(zone)
     var date by remember { mutableStateOf<java.time.LocalDate?>(null) }
@@ -371,8 +374,9 @@ fun DateTimeDialog(initial: Long, onDismiss: () -> Unit, future: Boolean = false
             onDismissRequest = onDismiss,
             confirmButton = {
                 TextButton(onClick = {
-                    date = state.selectedDateMillis?.let { java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneOffset.UTC).toLocalDate() } ?: start.toLocalDate()
-                }) { Text(stringResource(R.string.next), color = U.c.accent) }
+                    val day = state.selectedDateMillis?.let { java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneOffset.UTC).toLocalDate() } ?: start.toLocalDate()
+                    if (time) date = day else onPicked(day.atTime(12, 0).atZone(zone).toInstant().toEpochMilli())
+                }) { Text(stringResource(if (time) R.string.next else R.string.done), color = U.c.accent) }
             },
             dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = U.c.muted) } },
             colors = androidx.compose.material3.DatePickerDefaults.colors(containerColor = U.c.bg),

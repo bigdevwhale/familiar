@@ -313,6 +313,7 @@ fun shelfName(s: Shelf): String = stringResource(
         Shelf.WANT -> R.string.shelf_want
         Shelf.DONE -> R.string.shelf_done
         Shelf.PAUSED -> R.string.shelf_paused
+        Shelf.ABANDONED -> R.string.shelf_abandoned
     }
 )
 
