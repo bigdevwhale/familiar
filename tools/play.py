@@ -25,12 +25,12 @@ INK, GOLD, LILAC = (246, 238, 222), (233, 194, 106), (214, 200, 255)
 SHOTS = [
     ("den", ("Read, and your", "familiar grows"), ("Читай — и твой", "фамильяр растёт")),
     ("ritual", ("A candle burns", "while you read"), ("Свеча горит,", "пока ты читаешь")),
-    ("feast", ("Every page", "is a feast"), ("Каждая страница", "— это пир")),
-    ("ledger", ("Your pace, habits", "and months"), ("Скорость, привычки", "и месяцы")),
-    ("bestiary", ("Fourteen familiars", "to find"), ("Четырнадцать", "фамильяров")),
+    ("shelf", ("Your books,", "spine by spine"), ("Книги на полке", "корешками")),
+    ("calendar", ("Every day", "in covers"), ("Каждый день", "в обложках")),
+    ("ledger", ("Your reading", "in numbers"), ("Чтение", "в цифрах")),
     ("tree", ("A glowing fruit", "for every book"), ("Светящийся плод", "за каждую книгу")),
+    ("bestiary", ("Fourteen familiars", "to find"), ("Четырнадцать", "фамильяров")),
     ("furnish", ("Furnish the den", "with sparks"), ("Обставь логово", "на искры")),
-    ("shelf", ("Shelves, cycles", "and your own genres"), ("Полки, циклы", "и свои жанры")),
 ]
 
 

@@ -210,8 +210,9 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.motes(t: Float, col
 
 /** A book's cover, drawn in the colour of its own genre if it has one. */
 @Composable
-fun BookCover(b: app.familiar.data.Book, modifier: Modifier = Modifier, small: Boolean = false) =
-    BookCover(b.title, Genre.of(b.genre), modifier, small, b.cover, app.familiar.domain.OwnGenre.of(b)?.argb)
+fun BookCover(b: app.familiar.data.Book, modifier: Modifier = Modifier, small: Boolean = false, bare: Boolean = false) =
+    // [bare]: a drawn cover too small to letter keeps its colour and bands but leaves the title off.
+    BookCover(if (bare) "" else b.title, Genre.of(b.genre), modifier, small, b.cover, app.familiar.domain.OwnGenre.of(b)?.argb)
 
 /** A cover drawn from the genre colour (or [argb]), with the title on it. */
 @Composable

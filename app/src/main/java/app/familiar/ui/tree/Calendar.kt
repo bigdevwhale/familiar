@@ -124,7 +124,7 @@ private fun DayCell(n: Int, book: Book?, finished: Boolean, ahead: Boolean, toda
             .then(if (today) Modifier.border(1.5.dp, U.c.accent, shape) else Modifier)
             .then(if (book != null) Modifier.clickable(onClickLabel = book.title) { onBook(book.id) } else Modifier),
     ) {
-        if (book != null) BookCover(book, Modifier.fillMaxSize(), small = true)
+        if (book != null) BookCover(book, Modifier.fillMaxSize(), small = true, bare = true)
         // The day's number: on a cover it sits in a little dark disc so it still reads.
         Box(
             Modifier.align(Alignment.TopStart).padding(2.dp)
@@ -151,9 +151,10 @@ fun YearCovers(s: Stats, year: Int, onBook: (Long) -> Unit, modifier: Modifier =
     }
     Column(modifier) {
         if (byMonth.isEmpty()) Text(stringResource(R.string.cal_year_empty), style = UType.Muted)
-        // Every month so far, the empty ones too, so a quiet month shows as a gap.
+        // From the first month with a book to this one, the quiet ones too, so a gap shows as a gap.
+        val first = byMonth.keys.minOrNull() ?: 1
         val last = if (byMonth.isEmpty()) 0 else if (year == s.today.year) s.today.monthValue else 12
-        for (m in 1..last) {
+        for (m in first..last) {
             val list = byMonth[m].orEmpty()
             Row(Modifier.padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(
@@ -166,7 +167,7 @@ fun YearCovers(s: Stats, year: Int, onBook: (Long) -> Unit, modifier: Modifier =
                 ) {
                     list.forEach { b ->
                         Box(Modifier.width(33.dp).fillMaxSize().clickable(onClickLabel = b.title) { onBook(b.id) }) {
-                            BookCover(b, Modifier.fillMaxSize(), small = true)
+                            BookCover(b, Modifier.fillMaxSize(), small = true, bare = true)
                         }
                     }
                 }

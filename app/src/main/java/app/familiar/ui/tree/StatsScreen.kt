@@ -192,7 +192,7 @@ private fun FinishedBooks(data: FamiliarData) {
                         Box(
                             Modifier.fillMaxWidth().height((96 * (n / top)).coerceAtLeast(3f).dp)
                                 .clip(RoundedCornerShape(4.dp))
-                                .background(if (i == current) U.c.leaf else U.c.leafSoft)
+                                .background(if (n == 0) U.c.line else if (i == current) U.c.gold else U.c.leaf)
                         )
                     }
                 }

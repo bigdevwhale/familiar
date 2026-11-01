@@ -243,7 +243,7 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
                                     .border(if (on) 2.dp else 1.dp, if (on) U.c.accent else U.c.line, U.RSm)
                                     .clickable(onClickLabel = b.title) { picked = b.id }
                                     .padding(2.dp),
-                            ) { BookCover(b, Modifier.fillMaxSize(), small = true) }
+                            ) { BookCover(b, Modifier.fillMaxSize(), small = true, bare = true) }
                         }
                     }
                 }

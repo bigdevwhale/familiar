@@ -52,7 +52,7 @@
 ```bash
 ./gradlew installDebug -Pdemo -Pdrawn -Pdemolang=ru   # затем очистить данные app.familiar.demo и снять 8 экранов
 ./gradlew installDebug -Pdemo -Pdrawn -Pdemolang=en   # то же, язык приложения переключить на English в настройках
-python tools/play.py <папка со снимками>              # den, ritual, feast, ledger, bestiary, tree, furnish, shelf (+ .ru)
+python tools/play.py <папка со снимками>              # den, ritual, shelf (корешками), calendar, ledger, tree, bestiary, furnish (+ .ru)
 ```
 
 ## 3. Store settings
