@@ -6,24 +6,24 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
-## [Unreleased]
+## [1.6.0] - 2026-11-01
 
 - **Import from Yandex Books:** `tools/yandex_books.js` (paste it in the browser console on a profile page) or `tools/yandex_books.py` saves a reader's books as a CSV Familiar imports: finished, reading and wanted, with covers, genres, audiobooks and comics.
-- **Import from Livelib Backup:** its CSV, JSON and Goodreads files are read as they are; the shelf comes from the file's name, "Didn't finish" goes to Paused.
+- **Import from Livelib Backup:** its CSV, JSON and Goodreads files are read as they are; the shelf comes from the file's name.
 - **Import from Bookmory:** its backup file (.bookmory) is read as it is: shelves, dates, ratings, pages, covers, audiobooks and your collections as shelves.
 - **A book you read before:** a new book can go straight to Read, with the day you finished it and your stars. It counts on the tree and in the stats; your familiar still eats only what you read here.
 - **Every cycle when adding a book:** the cycles that match what you type, and "All cycles" when there are more than six.
 - **Not going to finish it:** a book can be put down for good, with a few words on why. It goes to the new Abandoned shelf, a quiet graveyard of faded covers with their epitaphs, and can always have another chance. Finished and abandoned books keep a note of your own. "Didn't finish" from Livelib Backup and Bookmory lands there too.
 - **Shelves by cycle:** the filter can show one cycle, its volumes in order, and the shelf can be sorted by cycle.
+- **A clearer shelf:** shelves are tabs with how many books each holds, the order and the filter are small buttons beside the count, and covers show the author, the percent read and a mark for audiobooks. The filter sheet no longer jumps when dragged.
 - **Hold + or −** where you stopped to go by ten minutes or ten pages at a time.
 - The import is now Settings → Books from another app, and takes JSON too.
 
 <!-- tg
-Импорт из Яндекс Книг: скрипт для браузера сохранит твои полки в файл для Фамильяра.
-Файлы Livelib Backup (CSV и JSON) и бэкап Bookmory теперь открываются сразу.
-Уже прочитанную книгу можно добавить сразу на полку «Прочитано» с датой и оценкой; при добавлении видны все циклы; удержание плюса листает по десять минут.
-В фильтре полки можно выбрать цикл — тома встанут по порядку; есть и сортировка по циклам.
+Импорт из Яндекс Книг, Livelib Backup и Bookmory: полки переедут вместе с датами, оценками и обложками.
 Кнопка «Не буду дочитывать»: книга уходит на полку «Брошено» с парой слов о том, почему.
+Уже прочитанную книгу можно добавить сразу с датой и оценкой, а полку — отфильтровать по циклу, тома встанут по порядку.
+Полка стала понятнее: вкладки с числом книг, автор и процент на обложках; удержание плюса листает по десять.
 -->
 
 ## [1.5.0] - 2026-10-31

@@ -81,6 +81,22 @@ import app.familiar.ui.shelfName
 import app.familiar.ui.theme.U
 import app.familiar.ui.theme.UType
 import kotlinx.coroutines.launch
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.automirrored.rounded.Sort
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontStyle
 
@@ -145,23 +161,28 @@ fun ShelfTab(data: FamiliarData, go: Go) {
                         }
                     }
                     if (searching) UTextField(query, { query = it.take(60) }, Modifier.padding(top = 6.dp), placeholder = stringResource(R.string.lib_search_hint))
-                    Spacer(Modifier.height(12.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        item { Chip(stringResource(R.string.lib_all), view == ALL, { view = ALL }) }
+                    Spacer(Modifier.height(8.dp))
+                    // Which shelf: tabs, underlined when open, so they never look like the filters below.
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                        fun count(sh: Shelf) = data.books.count { it.shelfOf == sh || sh == Shelf.READING && it.shelfOf == Shelf.PAUSED }
+                        item { ShelfTabLabel(stringResource(R.string.lib_all), view == ALL, count = data.books.size) { view = ALL } }
                         // The abandoned shelf only once a book has been put down.
                         val shelves = listOf(Shelf.READING, Shelf.WANT, Shelf.DONE) + listOfNotNull(Shelf.ABANDONED.takeIf { a -> view == a.name || data.books.any { it.shelfOf == a } })
-                        items(shelves) { sh -> Chip(shelfName(sh), view == sh.name, { view = sh.name }) }
-                        item { Chip(stringResource(R.string.cycles), view == CYCLES, { view = CYCLES }) }
-                        items(data.shelves) { n -> Chip(n, own == n, { view = OWN + n }, U.c.gold) }
-                        item { Chip("+ " + stringResource(R.string.shelf_new), false, { adding = true }, U.c.gold) }
+                        items(shelves) { sh -> ShelfTabLabel(shelfName(sh), view == sh.name, count = count(sh)) { view = sh.name } }
+                        item { ShelfTabLabel(stringResource(R.string.cycles), view == CYCLES, count = cycles.size.takeIf { query.isBlank() }) { view = CYCLES } }
+                        items(data.shelves) { n -> ShelfTabLabel(n, own == n, U.c.gold, count = data.books.count { n in it.tagList }) { view = OWN + n } }
+                        item { ShelfTabLabel("+ " + stringResource(R.string.shelf_new), false, U.c.gold) { adding = true } }
                     }
+                    HorizontalDivider(color = U.c.line)
                     if (view != CYCLES) {
-                        Spacer(Modifier.height(8.dp))
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Spacer(Modifier.height(10.dp))
+                        // How the shelf is shown: plain buttons with icons, then the filters that are on, as chips to take off.
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        LazyRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                             item { SortChip(browse) { s -> container.scope.launch { container.settings.update { it.copy(shelfSort = s.saved) } } } }
                             item {
                                 val n = browse.filters
-                                Chip(stringResource(R.string.lib_filter) + if (n > 0) " · $n" else "", n > 0, { filtering = true })
+                                ToolButton(Icons.Rounded.Tune, stringResource(R.string.lib_filter) + if (n > 0) " · $n" else "", n > 0) { filtering = true }
                             }
                             // The genres filtered by, each one tap away from going.
                             items(browse.genres.toList()) { k ->
@@ -170,13 +191,18 @@ fun ShelfTab(data: FamiliarData, go: Go) {
                                 Chip("✕ " + (o?.name ?: g?.let { genreName(it) } ?: k), true, { genreKeys = (browse.genres - k).joinToString("\n") }, o?.let { Color(it.argb) } ?: g?.let { genreColor(it) } ?: U.c.accent)
                             }
                             if (cycle.isNotBlank()) item { Chip("✕ " + cycle.take(28), true, { cycle = "" }, U.c.gold) }
+                            if (browse.filters > 1 || browse.filters > 0 && query.isNotBlank()) item { TextButton(onClick = { reset() }) { Text(stringResource(R.string.lib_reset), color = U.c.accent, style = UType.Button) } }
+                        }
+                        Text(
+                            if (browse.filters > 0 || query.isNotBlank()) stringResource(R.string.lib_of, list.size, all.size) else books(list.size),
+                            style = UType.Small.copy(color = U.c.muted), maxLines = 1, modifier = Modifier.padding(start = 8.dp),
+                        )
                         }
                     }
                     val narrowed = browse.filters > 0 || query.isNotBlank()
-                    if (view != CYCLES && (all.isNotEmpty() || own != null)) Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(if (narrowed) stringResource(R.string.lib_of, list.size, all.size) else books(list.size), style = UType.Muted, modifier = Modifier.weight(1f))
-                        if (narrowed) TextButton(onClick = { reset() }) { Text(stringResource(R.string.lib_reset), color = U.c.accent, style = UType.Button) }
-                        if (own != null) {
+                    if (own != null) Row(Modifier.padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Spacer(Modifier.weight(1f))
+                        run {
                             TextButton(onClick = { renaming = own }) { Text(stringResource(R.string.shelf_rename), color = U.c.accent, style = UType.Button) }
                             TextButton(onClick = { removing = own }) { Text(stringResource(R.string.delete), color = U.c.muted, style = UType.Button) }
                         }
@@ -203,16 +229,27 @@ fun ShelfTab(data: FamiliarData, go: Go) {
             if (view == CYCLES) items(cycles, key = { it.key }, span = { GridItemSpan(3) }) { c -> CycleCard(c) { go.series(c.name) } }
             else if (listMode) items(list, key = { it.id }, span = { GridItemSpan(3) }) { b -> BookRow(b, view == ALL) { go.book(b.id) } }
             else items(list, key = { it.id }) { b ->
-                Column(Modifier.clickable { go.book(b.id) }) {
-                    // An abandoned book fades like an old gravestone, its epitaph the reader's reason.
-                    BookCover(b, Modifier.fillMaxWidth().aspectRatio(0.68f).graphicsLayer { alpha = if (b.shelfOf == Shelf.ABANDONED) FADED else 1f })
+                Column(Modifier.clip(RoundedCornerShape(8.dp)).clickable { go.book(b.id) }) {
+                    Box {
+                        // An abandoned book fades like an old gravestone, its epitaph the reader's reason.
+                        BookCover(b, Modifier.fillMaxWidth().aspectRatio(0.68f).graphicsLayer { alpha = if (b.shelfOf == Shelf.ABANDONED) FADED else 1f })
+                        if (b.audio) Box(
+                            Modifier.align(Alignment.TopEnd).padding(5.dp).size(22.dp).clip(CircleShape).background(U.c.bg.copy(alpha = 0.85f)),
+                            contentAlignment = Alignment.Center,
+                        ) { Icon(Icons.Rounded.Headphones, stringResource(R.string.f_audio), tint = U.c.ink, modifier = Modifier.size(13.dp)) }
+                    }
                     Spacer(Modifier.height(6.dp))
-                    Text(b.title, style = UType.Small.copy(color = U.c.ink), maxLines = 2)
-                    if (b.shelfOf == Shelf.ABANDONED && b.note.isNotBlank()) Text(b.note, style = UType.Small.copy(fontStyle = FontStyle.Italic), maxLines = 2)
+                    Text(b.title, style = UType.Small.copy(color = U.c.ink, fontWeight = FontWeight.SemiBold), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    if (b.author.isNotBlank()) Text(b.author, style = UType.Small.copy(color = U.c.muted), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    if (b.shelfOf == Shelf.ABANDONED && b.note.isNotBlank()) Text(b.note, style = UType.Small.copy(fontStyle = FontStyle.Italic), maxLines = 2, overflow = TextOverflow.Ellipsis)
                     if (b.shelfOf == Shelf.READING || b.shelfOf == Shelf.PAUSED) {
                         Spacer(Modifier.height(4.dp))
-                        if (b.pages > 0) Bar(b.fraction, Modifier.height(5.dp), color = if (b.shelfOf == Shelf.PAUSED) U.c.faint else U.c.accent, track = U.c.accentSoft)
-                        if (b.shelfOf == Shelf.PAUSED) Text(shelfName(Shelf.PAUSED), style = UType.Small)
+                        val paused = b.shelfOf == Shelf.PAUSED
+                        if (b.pages > 0) Row(verticalAlignment = Alignment.CenterVertically) {
+                            Bar(b.fraction, Modifier.weight(1f).height(5.dp), color = if (paused) U.c.faint else U.c.accent, track = U.c.accentSoft)
+                            Text("${Book.percentOf(b.pages, b.page)}%", style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(start = 6.dp))
+                        }
+                        if (paused) Text(shelfName(Shelf.PAUSED), style = UType.Small.copy(color = U.c.muted))
                     }
                     if (b.shelfOf == Shelf.DONE && b.rating != null) Text("★".repeat(b.rating), style = UType.Small.copy(color = U.c.gold))
                 }
@@ -272,7 +309,7 @@ private const val ALL = "all"
 private fun SortChip(browse: Browse, onSort: (Browse) -> Unit) {
     var open by remember { mutableStateOf(false) }
     Box {
-        Chip((if (browse.reverse) "↑ " else "↓ ") + sortName(browse.sort), false, { open = true })
+        ToolButton(Icons.AutoMirrored.Rounded.Sort, sortName(browse.sort) + if (browse.reverse) " ↑" else "", false) { open = true }
         DropdownMenu(open, { open = false }, containerColor = U.c.bg) {
             Sort.entries.forEach { s ->
                 val on = s == browse.sort
@@ -282,6 +319,40 @@ private fun SortChip(browse: Browse, onSort: (Browse) -> Unit) {
                 )
             }
         }
+    }
+}
+
+/** A shelf to open: its name, underlined in [color] while it's the one shown. */
+@Composable
+private fun ShelfTabLabel(text: String, selected: Boolean, color: Color = U.c.accent, count: Int? = null, onClick: () -> Unit) {
+    Column(
+        Modifier.width(IntrinsicSize.Max).clip(RoundedCornerShape(6.dp)).clickable(onClick = onClick).padding(top = 8.dp)
+            .semantics { this.selected = selected; role = Role.Tab },
+    ) {
+        Row(Modifier.padding(horizontal = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(text, maxLines = 1, style = if (selected) UType.Strong.copy(color = color) else UType.Body.copy(color = if (color == U.c.accent) U.c.muted else color.copy(alpha = 0.8f)))
+            if (count != null && count > 0) Text(
+                count.toString(), maxLines = 1,
+                style = UType.Small.copy(color = if (selected) color else U.c.faint, fontWeight = FontWeight.SemiBold),
+                modifier = Modifier.padding(start = 5.dp),
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        Box(Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)).background(if (selected) color else Color.Transparent))
+    }
+}
+
+/** How the shelf is shown (order, filters): a small icon button, tinted while something is on. */
+@Composable
+private fun ToolButton(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, on: Boolean, onClick: () -> Unit) {
+    val tint = if (on) U.c.accent else U.c.muted
+    Row(
+        Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onClick).padding(horizontal = 6.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, null, tint = tint, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(text, style = UType.Small.copy(color = tint, fontWeight = FontWeight.SemiBold), maxLines = 1)
     }
 }
 
@@ -340,9 +411,10 @@ private fun FilterSheet(data: FamiliarData, shown: List<Book>, browse: Browse, o
     val present = shown.map { Genre.of(it.genre) }.toSet()
     val ownPresent = shown.mapNotNull { OwnGenre.of(it)?.key }.toSet()
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet, containerColor = U.c.bg) {
-        // The filters scroll; the buttons stay at the bottom.
-        Column(Modifier.padding(horizontal = 18.dp).navigationBarsPadding().padding(bottom = 12.dp)) {
-        Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+        // The filters scroll; the buttons stay at the bottom. A fixed height: a sheet sized by what it holds
+        // measures itself again as it's dragged, and jumps against the scroll inside.
+        Column(Modifier.fillMaxHeight(SHEET_HEIGHT).padding(horizontal = 18.dp).navigationBarsPadding().padding(bottom = 12.dp)) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             Text(stringResource(R.string.lib_filter), style = UType.Title)
             SectionTitle(stringResource(R.string.f_genre))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -418,3 +490,6 @@ fun CycleCard(c: Series, onClick: () -> Unit) {
 
 /** How much of an abandoned book's cover still shows. */
 private const val FADED = 0.45f
+
+/** How much of the screen the filter sheet takes, whatever is in it. */
+private const val SHEET_HEIGHT = 0.85f

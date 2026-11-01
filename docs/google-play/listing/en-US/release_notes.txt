@@ -1,1 +1,7 @@
-New in 1.5: share cards for stories and posts: the book you're reading with its cover, your month in books and your year in numbers, each with a code that opens the app. Import your books from LiveLib or Goodreads with shelves, ratings, dates and covers. The tree can show this year's books or all of them. A clearer den: your book and the candle right under the familiar, the streak beside its name.
+New in 1.6:
+• Import from Yandex Books, Livelib Backup and Bookmory.
+• "Not going to finish it": the book goes to the new Abandoned shelf with a few words on why.
+• Add a book you read before, with its date and stars.
+• Filter the shelf by cycle, volumes in order, or sort by cycle.
+• A clearer shelf: tabs with counts, author and percent on covers, an audiobook mark.
+• Hold + or − to step by ten.
