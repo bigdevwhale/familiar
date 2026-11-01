@@ -427,4 +427,71 @@ class FamiliarTest {
         assertNull(Insights.forecast(b.copy(shelf = Shelf.PAUSED.name), stats(listOf(read(0, 30)), listOf(b))))
         assertNull(Insights.forecast(b.copy(pages = 0), stats(listOf(read(0, 30)), listOf(b))))
     }
+
+    @Test
+    fun finishedBooksAddUp() {
+        val books = listOf(
+            book(1, pages = 150, done = 10).copy(author = "Le Guin", rating = 5, started = at(14)),
+            book(2, Genre.HORROR, pages = 450, done = 3).copy(author = "le guin ", rating = 4),
+            book(3, pages = 800, done = 400).copy(author = "King", rating = 3),
+            book(4, pages = 600).copy(audio = true, shelf = Shelf.DONE.name, finished = at(1)),
+            book(5),
+        )
+        val year = app.familiar.domain.Finished(stats(emptyList(), books), today.year)
+        assertEquals(3, year.books.size)
+        assertEquals(600, year.pages)
+        assertEquals(300, year.avgLength)
+        assertEquals(4.5f, year.avgRating!!, 0.01f)
+        assertEquals(5, year.avgDays)
+        assertEquals(listOf(1, 0, 1, 0), year.lengths)
+        assertEquals(listOf("Le Guin" to 2), year.authors)
+        assertEquals(1, year.authorCount)
+        assertEquals(12, year.byMonth.size)
+        assertEquals(3, year.byMonth[today.monthValue - 1])
+        assertTrue(year.byYear.isEmpty())
+
+        val all = app.familiar.domain.Finished(stats(emptyList(), books), null)
+        assertEquals(4, all.books.size)
+        assertEquals(listOf(1, 0, 1, 1), all.lengths)
+        assertEquals(listOf(today.year - 1 to 1, today.year to 3), all.byYear)
+        assertEquals(Genre.FANTASY to 3, all.genres.first())
+    }
+
+    @Test
+    fun theDayShowsTheBookFinishedOrReadMost() {
+        val books = listOf(book(1), book(2), book(3, done = 2))
+        val s = stats(listOf(read(1, 10, book = 1), read(1, 40, book = 2), read(2, 5, book = 1)), books)
+        val days = app.familiar.domain.dayBooks(s, YearMonth.from(today))
+        assertEquals(2L, days[today.minusDays(1)]!!.book.id)
+        assertFalse(days[today.minusDays(1)]!!.finished)
+        assertEquals(3L, days[today.minusDays(2)]!!.book.id)
+        assertTrue(days[today.minusDays(2)]!!.finished)
+        assertTrue(app.familiar.domain.dayBooks(s, YearMonth.from(today).minusMonths(1)).isEmpty())
+    }
+
+    @Test
+    fun theNextVolumeIsTheFirstUnread() {
+        val cycle = listOf(
+            book(1, done = 9).copy(series = "Earthsea", volume = 1),
+            book(2).copy(series = "Earthsea", volume = 3, shelf = Shelf.WANT.name),
+            book(3).copy(series = "earthsea", volume = 2, shelf = Shelf.ABANDONED.name),
+        )
+        assertEquals(2L, app.familiar.domain.Series.all(cycle).single().next?.id)
+        assertNull(app.familiar.domain.Series.all(cycle.take(1)).single().next)
+    }
+
+    @Test
+    fun spinesFillThePlanks() {
+        val thin = book(1, pages = 0)
+        val thick = book(2, pages = 2000)
+        assertEquals(22, app.familiar.ui.books.Spines.width(thin))
+        assertEquals(44, app.familiar.ui.books.Spines.width(thick))
+        assertEquals(16, app.familiar.ui.books.Spines.width(book(3, pages = 10)))
+        val h = app.familiar.ui.books.Spines.height(thick)
+        assertTrue(h in 132..164)
+        assertEquals(h, app.familiar.ui.books.Spines.height(thick))
+        // 22 + 2 + 44 = 68 fits in 70; the next book goes on a new plank.
+        val rows = app.familiar.ui.books.Spines.rows(listOf(thin, thick, thin), room = 70)
+        assertEquals(listOf(listOf(1L, 2L), listOf(1L)), rows.map { r -> r.map { it.id } })
+    }
 }

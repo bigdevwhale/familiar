@@ -6,6 +6,22 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.7.0] - 2026-11-01
+
+- **The shelf as spines:** besides covers and a list, the shelf can stand as spines on wooden planks. Thick books are thick, each keeps its own height, the spine takes the colours of its cover (or its genre's, with gold bands), the title runs down it, a book being read has its ribbon sticking out and an abandoned one fades. Cycles stand on planks of their own, volumes in order.
+- **The month in covers:** a calendar where each day shows the book finished that day (with a star) or the one read most; go back month by month and tap a cover to open its book. Beside it, the year in covers: a row of finished books for every month.
+- **Books finished, in numbers:** the ledger now counts this year's books or all of them: how many, pages, the average length, stars and days a book, authors; month by month or year by year; genres, your stars, how long the books were, and the authors you come back to.
+- **The tree in three pages:** Overview (the tree, the goal, the saga and the guild), Calendar and the ledger, a tap away at the top instead of at the bottom of a long page.
+- **A clearer den:** mana and today's feeding sit right under the familiar; with several books open, pick the one the candle is for; the den, the casket, the bestiary and visits are one row of tiles.
+- **The next volume:** a cycle shows which book comes next.
+
+<!-- tg
+Полку можно показать корешками на деревянных полках: толщина по страницам, цвет от обложки, у читаемой — закладка.
+Новый календарь: каждый день с обложкой книги, которую ты читал или дочитал, и год в обложках по месяцам.
+Счётная книга считает дочитанное за год или за всё время: жанры, оценки, длину книг, любимых авторов.
+Древо и логово стали удобнее: вкладки «Обзор / Календарь / Счётная книга», мана и сытость сразу под фамильяром.
+-->
+
 ## [1.6.0] - 2026-11-01
 
 - **Import from Yandex Books:** `tools/yandex_books.js` (paste it in the browser console on a profile page) or `tools/yandex_books.py` saves a reader's books as a CSV Familiar imports: finished, reading and wanted, with covers, genres, audiobooks and comics.

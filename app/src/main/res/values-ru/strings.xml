@@ -128,8 +128,6 @@
     <string name="book_edit">Книга</string>
     <string name="from_shelf">Выбрать с полки</string>
     <string name="bestiary">Бестиарий</string>
-    <string name="bestiary_count">Найдено фамильяров: %1$d из %2$d</string>
-    <string name="bestiary_eggs">Тебя ждут яйца: %d</string>
     <string name="bestiary_text">На этих страницах живут четырнадцать фамильяров. Читай, и они придут к тебе один за другим, яйцами. Читаешь всегда с одним; остальные отдыхают в логове со всем, что успели съесть.</string>
     <string name="bestiary_note">Мана достаётся тому, с кем ты читаешь. Сменить можно когда угодно.</string>
     <string name="with_you">с тобой</string>
@@ -409,7 +407,6 @@
     <string name="it_candles">Свечи</string>
     <string name="it_lantern">Фонарь</string>
     <string name="furnish">Обустроить логово</string>
-    <string name="furnish_short">Логово · ✦ %d</string>
     <string name="sparks_n">✦ %d искр</string>
     <string name="furnish_text">Каждая мана, съеденная фамильярами, оставляет искру. Трать их на логово: росту это не мешает.</string>
     <string name="furnish_note">Одна вещь на место: новое окно заменит старое. Купленное остаётся твоим.</string>
@@ -573,7 +570,6 @@
 
     <!-- Находки и шкатулка -->
     <string name="casket">Шкатулка</string>
-    <string name="casket_short">Шкатулка · %1$d/%2$d</string>
     <string name="casket_text">Вещицы, которые фамильяры приносят из историй. В каждом жанре прячется своя, а некоторые попадаются только в особые дни года.</string>
     <string name="casket_count">Найдено %1$d из %2$d</string>
     <string name="find_title">%s что-то приносит!</string>
@@ -827,7 +823,6 @@
     <string name="community_chat">Чат StillCraft</string>
     <string name="community_chat_sub">все приложения и люди</string>
     <string name="stats_title">Счётная книга</string>
-    <string name="stats_sub">Скорость, привычки и месяцы в цифрах</string>
     <string name="stats_per_day">страниц в день</string>
     <string name="stats_per_sitting">минут за раз</string>
     <string name="stats_hours">часов со свечой</string>
@@ -852,6 +847,40 @@
     <string name="stats_month_less">−%s к прошлому месяцу</string>
     <string name="stats_month_same">Столько же, сколько в прошлом</string>
     <string name="stats_month_first">В прошлом месяце сравнить не с чем</string>
+    <string name="lib_view">Вид полки</string>
+    <string name="lib_as_spines">Показать корешками</string>
+    <string name="cycle_next">Дальше: %s</string>
+    <string name="cycle_next_short">Читать дальше</string>
+    <string name="cal_title">Месяц в обложках</string>
+    <string name="cal_earlier">Месяц назад</string>
+    <string name="cal_later">Месяц вперёд</string>
+    <string name="cal_empty">В этом месяце пока ничего не прочитано: первое чтение положит обложку на свой день.</string>
+    <string name="cal_finished">дочитано: %s</string>
+    <string name="cal_days">дней с книгой: %d</string>
+    <string name="cal_done">Дочитана в этот день</string>
+    <string name="cal_year_title">Год в обложках</string>
+    <string name="cal_year_empty">В этом году пока ни одной дочитанной книги.</string>
+    <string name="den_tile">Логово</string>
+    <string name="also_reading">Открытые книги</string>
+    <string name="eggs_short">яиц: %d</string>
+    <string name="tree_page_tree">Обзор</string>
+    <string name="tree_page_calendar">Календарь</string>
+    <string name="stats_books">Дочитанные книги</string>
+    <string name="stats_books_done">книг</string>
+    <string name="stats_books_pages">страниц в них</string>
+    <string name="stats_avg_length">страниц в книге</string>
+    <string name="stats_avg_rating">звёзд в среднем</string>
+    <string name="stats_avg_days">дней на книгу</string>
+    <string name="stats_authors_count">авторов</string>
+    <string name="stats_by_month">По месяцам</string>
+    <string name="stats_by_year">По годам</string>
+    <string name="stats_genres">Жанры</string>
+    <string name="stats_ratings">Твои звёзды</string>
+    <string name="stats_lengths">Какой длины</string>
+    <string name="stats_len_short">до %d страниц</string>
+    <string name="stats_len_mid">%1$d–%2$d страниц</string>
+    <string name="stats_len_long">%d страниц и больше</string>
+    <string name="stats_authors">Авторы, к которым ты возвращаешься</string>
     <string name="forecast">Если так же, дочитаешь около %s</string>
 
     <!-- Карточки, чтобы поделиться -->

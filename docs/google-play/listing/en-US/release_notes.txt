@@ -1,7 +1,7 @@
-New in 1.6:
-• Import from Yandex Books, Livelib Backup and Bookmory.
-• "Not going to finish it": the book goes to the new Abandoned shelf with a few words on why.
-• Add a book you read before, with its date and stars.
-• Filter the shelf by cycle, volumes in order, or sort by cycle.
-• A clearer shelf: tabs with counts, author and percent on covers, an audiobook mark.
-• Hold + or − to step by ten.
+New in 1.7:
+• The shelf as spines on wooden planks, cycles too.
+• The month in covers: a calendar with the book of each day, and the year in covers.
+• The ledger counts finished books: genres, stars, lengths, authors, month by month.
+• The tree in three pages: Overview, Calendar, the ledger.
+• A clearer den: mana and feeding under the familiar, pick which open book to read.
+• A cycle shows the next volume.

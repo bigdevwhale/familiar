@@ -1,5 +1,11 @@
 package app.familiar.ui.den
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material.icons.rounded.Pets
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -123,7 +129,6 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
                 Text(s.streak.toString(), style = UType.Strong.copy(color = U.c.ember))
             }
             if (pet != null) {
-                IconButton(onClick = { go.visit() }) { Icon(Icons.Rounded.QrCode2, stringResource(R.string.visit), tint = U.c.muted) }
                 IconButton(onClick = { go.share(app.familiar.ui.share.Cards.Kind.DEN) }) { Icon(Icons.Rounded.Share, stringResource(R.string.share), tint = U.c.muted) }
             }
             IconButton(onClick = { go.settings() }) { Icon(Icons.Rounded.Settings, stringResource(R.string.settings), tint = U.c.muted) }
@@ -192,6 +197,11 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
                 }
             }
         }
+        // How it's doing, right under it: growth and today's feeding side by side.
+        if (pet != null) {
+            Spacer(Modifier.height(10.dp))
+            Vitals(data, go)
+        }
         // A familiar turning to stone matters more than anything else on the page.
         if (pet != null && s.stone > 0f) {
             Spacer(Modifier.height(10.dp))
@@ -201,7 +211,9 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
                 U.c.accent,
             )
         }
-        val book = data.reading.firstOrNull()
+        // With several books open, the card shows the one picked on it (the latest by default).
+        var picked by rememberSaveable { mutableLongStateOf(-1L) }
+        val book = data.reading.firstOrNull { it.id == picked } ?: data.reading.firstOrNull()
         val wanted = data.books.any { it.shelfOf == Shelf.WANT }
         Spacer(Modifier.height(10.dp))
         if (book != null) {
@@ -217,6 +229,22 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
                         if (book.pages > 0) Bar(book.fraction, color = U.c.accent, track = U.c.accentSoft)
                         Spacer(Modifier.height(4.dp))
                         Text(app.familiar.ui.progressLabel(book), style = UType.Small)
+                    }
+                }
+                if (data.reading.size > 1) {
+                    Spacer(Modifier.height(12.dp))
+                    Text(stringResource(R.string.also_reading).uppercase(), style = UType.Eyebrow)
+                    Spacer(Modifier.height(6.dp))
+                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        data.reading.forEach { b ->
+                            val on = b.id == book.id
+                            Box(
+                                Modifier.width(34.dp).height(49.dp).clip(U.RSm)
+                                    .border(if (on) 2.dp else 1.dp, if (on) U.c.accent else U.c.line, U.RSm)
+                                    .clickable(onClickLabel = b.title) { picked = b.id }
+                                    .padding(2.dp),
+                            ) { BookCover(b, Modifier.fillMaxSize(), small = true) }
+                        }
                     }
                 }
                 Spacer(Modifier.height(14.dp))
@@ -241,18 +269,8 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
             }
         }
         if (pet != null && sp != null) {
-            val sparks = Den.sparks(data.pets, data.settings.spent)
             Spacer(Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                SoftButton(
-                    stringResource(R.string.furnish_short, sparks), { go.furnish() },
-                    Modifier.weight(1f), color = U.c.gold, soft = U.c.goldSoft, icon = Icons.Rounded.Chair,
-                )
-                SoftButton(
-                    stringResource(R.string.casket_short, data.owned.size, Trinket.entries.size), { go.casket() },
-                    Modifier.weight(1f), icon = Icons.Rounded.Inventory2,
-                )
-            }
+            Rooms(data, go)
         }
         if (data.settings.burnedNews.isNotEmpty()) {
             Spacer(Modifier.height(10.dp))
@@ -275,53 +293,6 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.season_title, seasonName(data.season)), style = UType.Small.copy(color = U.c.gold))
                     Text(stringResource(R.string.season_text, trinketName(t).lowercase(locale())), style = UType.Small.copy(color = U.c.ink))
-                }
-            }
-        }
-        if (pet != null) {
-            Spacer(Modifier.height(12.dp))
-            UCard {
-                val next = s.stage.next
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Rounded.AutoAwesome, null, tint = U.c.mana, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.mana_title), style = UType.Strong, modifier = Modifier.weight(1f))
-                    Text(if (next == null) stringResource(R.string.mana_n, pet.mana) else stringResource(R.string.mana_of, pet.mana, next.from), style = UType.Muted)
-                }
-                Spacer(Modifier.height(8.dp))
-                Bar(Stage.progress(pet.mana), color = U.c.mana, track = U.c.manaSoft)
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    if (next == null) stringResource(R.string.mana_max) else if (s.stage == Stage.EGG) stringResource(R.string.mana_to_hatch, next.from - pet.mana) else stringResource(R.string.mana_to_next, stageName(next), next.from - pet.mana),
-                    style = UType.Small.copy(color = U.c.muted),
-                )
-                Spacer(Modifier.height(14.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.fed_title), style = UType.Strong, modifier = Modifier.weight(1f))
-                    Text(stringResource(R.string.fed_of, s.todayPages, data.settings.dailyGoal), style = UType.Muted)
-                }
-                Spacer(Modifier.height(8.dp))
-                Bar(s.fed, color = U.c.ember, track = U.c.line)
-                // Guardian candles waiting to keep the streak.
-                if (data.settings.candles > 0) Text(
-                    stringResource(R.string.guard_n, data.settings.candles), style = UType.Small.copy(color = U.c.gold),
-                    modifier = Modifier.padding(top = 6.dp).clip(U.RSm).clickable { go.furnish() }.padding(4.dp),
-                )
-            }
-        }
-        Spacer(Modifier.height(12.dp))
-        UCard(onClick = { go.bestiary() }) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(stringResource(R.string.bestiary), style = UType.Strong)
-                    val eggs = s.unlocked.count { u -> data.pets.none { it.species == u.name } }
-                    Text(
-                        if (eggs > 0) stringResource(R.string.bestiary_eggs, eggs) else stringResource(R.string.bestiary_count, data.pets.size, Species.entries.size),
-                        style = UType.Muted.copy(color = if (eggs > 0) U.c.gold else U.c.muted),
-                    )
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy((-14).dp)) {
-                    data.pets.take(4).forEach { p -> FamiliarArt(data.lookOfPet(p), Modifier.size(46.dp), fps = 3f) }
                 }
             }
         }
@@ -432,4 +403,80 @@ private fun speech(data: FamiliarData, sp: Species, name: String, seed: Int): St
         }
     }
     return Lines.line(l, sp, state, name, seed)
+}
+
+/** Growth and today's feeding, side by side in one small card. */
+@Composable
+private fun Vitals(data: FamiliarData, go: Go) {
+    val pet = data.pet ?: return
+    val s = data.stats
+    val next = s.stage.next
+    UCard(padding = PaddingValues(horizontal = 14.dp, vertical = 12.dp)) {
+        Row {
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Rounded.AutoAwesome, null, tint = U.c.mana, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(stringResource(R.string.mana_title), style = UType.Small.copy(color = U.c.ink, fontWeight = FontWeight.SemiBold), maxLines = 1, modifier = Modifier.weight(1f))
+                    Text(if (next == null) stringResource(R.string.mana_n, pet.mana) else stringResource(R.string.mana_of, pet.mana, next.from), style = UType.Small)
+                }
+                Spacer(Modifier.height(6.dp))
+                Bar(Stage.progress(pet.mana), color = U.c.mana, track = U.c.manaSoft)
+            }
+            Spacer(Modifier.width(16.dp))
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Rounded.LocalFireDepartment, null, tint = U.c.ember, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(stringResource(R.string.fed_title), style = UType.Small.copy(color = U.c.ink, fontWeight = FontWeight.SemiBold), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    Text(stringResource(R.string.fed_of, s.todayPages, data.settings.dailyGoal), style = UType.Small)
+                }
+                Spacer(Modifier.height(6.dp))
+                Bar(s.fed, color = U.c.ember, track = U.c.emberSoft)
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                if (next == null) stringResource(R.string.mana_max) else if (s.stage == Stage.EGG) stringResource(R.string.mana_to_hatch, next.from - pet.mana) else stringResource(R.string.mana_to_next, stageName(next), next.from - pet.mana),
+                style = UType.Small.copy(color = U.c.muted), modifier = Modifier.weight(1f),
+            )
+            // Guardian candles waiting to keep the streak.
+            if (data.settings.candles > 0) Text(
+                stringResource(R.string.guard_n, data.settings.candles), style = UType.Small.copy(color = U.c.gold),
+                modifier = Modifier.clip(U.RSm).clickable { go.furnish() }.padding(4.dp),
+            )
+        }
+    }
+}
+
+/** The rest of the den, a tap away each: furnishing, the casket, the bestiary and visits. */
+@Composable
+private fun Rooms(data: FamiliarData, go: Go) {
+    val s = data.stats
+    val sparks = Den.sparks(data.pets, data.settings.spent)
+    val eggs = s.unlocked.count { u -> data.pets.none { it.species == u.name } }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        RoomTile(Icons.Rounded.Chair, stringResource(R.string.den_tile), "\u2726 $sparks", U.c.gold, U.c.goldSoft, Modifier.weight(1f)) { go.furnish() }
+        RoomTile(Icons.Rounded.Inventory2, stringResource(R.string.casket), "${data.owned.size}/${Trinket.entries.size}", U.c.accent, U.c.accentSoft, Modifier.weight(1f)) { go.casket() }
+        RoomTile(
+            Icons.Rounded.Pets, stringResource(R.string.bestiary),
+            if (eggs > 0) stringResource(R.string.eggs_short, eggs) else "${data.pets.size}/${Species.entries.size}",
+            if (eggs > 0) U.c.gold else U.c.leaf, if (eggs > 0) U.c.goldSoft else U.c.leafSoft, Modifier.weight(1f),
+        ) { go.bestiary() }
+        RoomTile(Icons.Rounded.QrCode2, stringResource(R.string.visit), null, U.c.mana, U.c.manaSoft, Modifier.weight(1f)) { go.visit() }
+    }
+}
+
+@Composable
+private fun RoomTile(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String?, color: Color, soft: Color, modifier: Modifier, onClick: () -> Unit) {
+    Column(
+        modifier.clip(U.RMd).background(soft).clickable(onClick = onClick).padding(vertical = 10.dp, horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(icon, null, tint = color, modifier = Modifier.size(22.dp))
+        Spacer(Modifier.height(4.dp))
+        Text(label, style = UType.Small.copy(color = U.c.ink, fontWeight = FontWeight.SemiBold), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(value ?: " ", style = UType.Small.copy(color = color), maxLines = 1)
+    }
 }

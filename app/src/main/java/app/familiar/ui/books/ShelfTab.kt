@@ -33,6 +33,7 @@ import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.ViewList
+import androidx.compose.material.icons.rounded.ViewWeek
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -131,7 +132,11 @@ fun ShelfTab(data: FamiliarData, go: Go) {
     val cycles = remember(data.books, query) {
         Series.all(data.books).filter { c -> query.isBlank() || query.trim().lowercase().let { q -> q in c.name.lowercase() || c.books.any { q in it.title.lowercase() } } }
     }
-    val listMode = data.settings.shelfList
+    val spineMode = data.settings.shelfSpines
+    val listMode = data.settings.shelfList && !spineMode
+    // The planks, packed for the width there is: the screen less the grid's side padding and the plank's own.
+    val room = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp - 36 - 12
+    val planks = remember(list, room, spineMode) { if (spineMode) Spines.rows(list, room) else emptyList() }
     val container = androidx.compose.ui.platform.LocalContext.current.container
     var adding by remember { mutableStateOf(false) }
     var renaming by remember { mutableStateOf<String?>(null) }
@@ -156,8 +161,8 @@ fun ShelfTab(data: FamiliarData, go: Go) {
                         IconButton(onClick = { searching = !searching; if (!searching) query = "" }) {
                             Icon(if (searching) Icons.Rounded.Close else Icons.Rounded.Search, stringResource(R.string.lib_search), tint = if (searching) U.c.accent else U.c.muted)
                         }
-                        IconButton(onClick = { container.scope.launch { container.settings.update { it.copy(shelfList = !listMode) } } }) {
-                            Icon(if (listMode) Icons.Rounded.GridView else Icons.Rounded.ViewList, stringResource(if (listMode) R.string.lib_as_covers else R.string.lib_as_list), tint = U.c.muted)
+                        ViewMenu(if (spineMode) View.SPINES else if (listMode) View.LIST else View.COVERS) { v ->
+                            container.scope.launch { container.settings.update { it.copy(shelfList = v == View.LIST, shelfSpines = v == View.SPINES) } }
                         }
                     }
                     if (searching) UTextField(query, { query = it.take(60) }, Modifier.padding(top = 6.dp), placeholder = stringResource(R.string.lib_search_hint))
@@ -226,7 +231,10 @@ fun ShelfTab(data: FamiliarData, go: Go) {
                     if (all.isNotEmpty() && list.isEmpty()) Text(stringResource(R.string.lib_nothing), style = UType.Sub, modifier = Modifier.padding(top = 24.dp))
                 }
             }
-            if (view == CYCLES) items(cycles, key = { it.key }, span = { GridItemSpan(3) }) { c -> CycleCard(c) { go.series(c.name) } }
+            if (view == CYCLES) items(cycles, key = { it.key }, span = { GridItemSpan(3) }) { c ->
+                if (spineMode) CycleShelf(c, room + 12, { go.series(c.name) }) { go.book(it.id) } else CycleCard(c) { go.series(c.name) }
+            }
+            else if (spineMode) items(planks, key = { row -> "plank:" + row.first().id }, span = { GridItemSpan(3) }) { row -> SpineRow(row) { go.book(it.id) } }
             else if (listMode) items(list, key = { it.id }, span = { GridItemSpan(3) }) { b -> BookRow(b, view == ALL) { go.book(b.id) } }
             else items(list, key = { it.id }) { b ->
                 Column(Modifier.clip(RoundedCornerShape(8.dp)).clickable { go.book(b.id) }) {
@@ -303,6 +311,30 @@ fun ShelfTab(data: FamiliarData, go: Go) {
 private const val OWN = "own:"
 private const val CYCLES = "cycles"
 private const val ALL = "all"
+
+/** How the shelf is shown. */
+private enum class View { COVERS, LIST, SPINES }
+
+/** Covers, a list or spines on planks: the icon shows the one on, the menu offers all three. */
+@Composable
+private fun ViewMenu(current: View, onPick: (View) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    fun icon(v: View) = when (v) { View.COVERS -> Icons.Rounded.GridView; View.LIST -> Icons.Rounded.ViewList; View.SPINES -> Icons.Rounded.ViewWeek }
+    @Composable fun name(v: View) = stringResource(when (v) { View.COVERS -> R.string.lib_as_covers; View.LIST -> R.string.lib_as_list; View.SPINES -> R.string.lib_as_spines })
+    Box {
+        IconButton(onClick = { open = true }) { Icon(icon(current), stringResource(R.string.lib_view), tint = U.c.muted) }
+        DropdownMenu(open, { open = false }, containerColor = U.c.bg) {
+            View.entries.forEach { v ->
+                val on = v == current
+                DropdownMenuItem(
+                    text = { Text(name(v), style = if (on) UType.Strong.copy(color = U.c.accent) else UType.Body) },
+                    leadingIcon = { Icon(icon(v), null, tint = if (on) U.c.accent else U.c.muted) },
+                    onClick = { onPick(v); open = false },
+                )
+            }
+        }
+    }
+}
 
 /** The order of the shelf; picking the same one again turns it round. */
 @Composable
@@ -481,6 +513,7 @@ fun CycleCard(c: Series, onClick: () -> Unit) {
             Column(Modifier.weight(1f)) {
                 Text(c.name, style = UType.Strong, maxLines = 2)
                 Text(stringResource(R.string.cycle_of, c.done, c.books.size), style = UType.Muted.copy(color = if (c.complete) U.c.gold else U.c.muted))
+                c.next?.takeIf { c.done > 0 }?.let { n -> Text(stringResource(R.string.cycle_next, n.title), style = UType.Small.copy(color = U.c.accent), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 Spacer(Modifier.height(6.dp))
                 Bar(c.done / c.books.size.toFloat(), Modifier.height(5.dp), color = U.c.gold, track = U.c.goldSoft)
             }

@@ -299,6 +299,8 @@ class Series(val name: String, val books: List<Book>) {
     /** Every volume on the shelf is read, and there are at least two. */
     val complete: Boolean = books.size >= 2 && done == books.size
     val key: String get() = "series:" + name.lowercase()
+    /** The volume to read next: the first one neither read nor put down; null once there's none. */
+    val next: Book? = books.firstOrNull { it.shelfOf != Shelf.DONE && it.shelfOf != Shelf.ABANDONED }
 
     companion object {
         const val REWARD = 200

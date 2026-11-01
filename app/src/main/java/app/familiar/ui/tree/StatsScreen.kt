@@ -7,16 +7,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,11 +27,9 @@ import app.familiar.R
 import app.familiar.domain.DayPart
 import app.familiar.domain.Insights
 import app.familiar.ui.FamiliarData
-import app.familiar.ui.Go
 import app.familiar.ui.components.Bar
 import app.familiar.ui.components.SectionTitle
 import app.familiar.ui.components.Stat
-import app.familiar.ui.components.TopBar
 import app.familiar.ui.components.UCard
 import app.familiar.ui.genreColor
 import app.familiar.ui.genreName
@@ -44,18 +38,20 @@ import app.familiar.ui.pages
 import app.familiar.ui.theme.U
 import app.familiar.ui.theme.UType
 import java.time.format.TextStyle
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import app.familiar.domain.Finished
+import app.familiar.ui.books
+import app.familiar.ui.components.Chip
 
-/** Pace, habits and the last months, in plain numbers. */
+/** The ledger itself, scrolling: the books finished, then pace, habits and months. */
 @Composable
-fun StatsScreen(data: FamiliarData, go: Go) {
+fun StatsContent(data: FamiliarData, modifier: Modifier = Modifier) {
     val n = remember(data) { Insights(data.stats) }
-    Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding()) {
-        TopBar(stringResource(R.string.stats_title), { go.back() }) {
-            androidx.compose.material3.IconButton(onClick = { go.share(app.familiar.ui.share.Cards.Kind.YEAR) }) {
-                androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.Share, stringResource(R.string.share), tint = U.c.muted)
-            }
-        }
-        Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).navigationBarsPadding().padding(bottom = 24.dp)) {
+    run {
+        Column(modifier.verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).padding(bottom = 24.dp)) {
             UCard {
                 Row {
                     Stat(n.perDay.toString(), stringResource(R.string.stats_per_day), Modifier.weight(1f))
@@ -63,6 +59,8 @@ fun StatsScreen(data: FamiliarData, go: Go) {
                     Stat(n.hours.toString(), stringResource(R.string.stats_hours), Modifier.weight(1f))
                 }
             }
+
+            FinishedBooks(data)
 
             SectionTitle(stringResource(R.string.stats_pace))
             UCard {
@@ -149,6 +147,123 @@ fun StatsScreen(data: FamiliarData, go: Go) {
             }
         }
     }
+}
+
+/** The finished books of this year or of all of them: how many, how long, stars, genres, authors. */
+@Composable
+private fun FinishedBooks(data: FamiliarData) {
+    val s = data.stats
+    var all by rememberSaveable { mutableStateOf(false) }
+    val f = remember(data, all) { Finished(s, if (all) null else s.today.year) }
+    SectionTitle(stringResource(R.string.stats_books))
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 10.dp)) {
+        Chip(s.today.year.toString(), !all, { all = false })
+        Chip(stringResource(R.string.tree_all), all, { all = true })
+    }
+    UCard {
+        Row {
+            Stat(f.books.size.toString(), stringResource(R.string.stats_books_done), Modifier.weight(1f))
+            Stat(f.pages.toString(), stringResource(R.string.stats_books_pages), Modifier.weight(1f))
+            Stat(f.avgLength?.toString() ?: "–", stringResource(R.string.stats_avg_length), Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(14.dp))
+        Row {
+            Stat(f.avgRating?.let { String.format(locale(), "%.1f", it) } ?: "–", stringResource(R.string.stats_avg_rating), Modifier.weight(1f), color = U.c.gold)
+            Stat(f.avgDays?.toString() ?: "–", stringResource(R.string.stats_avg_days), Modifier.weight(1f))
+            Stat(f.authorCount.toString(), stringResource(R.string.stats_authors_count), Modifier.weight(1f))
+        }
+    }
+    if (f.books.isEmpty()) return
+
+    // Month by month this year, or year by year over all of them.
+    val loc = locale()
+    val columns = if (all) f.byYear.map { (y, n) -> y.toString().takeLast(2).let { "’$it" } to n }
+    else f.byMonth.mapIndexed { i, n -> java.time.Month.of(i + 1).getDisplayName(TextStyle.NARROW_STANDALONE, loc) to n }
+    if (columns.size > 1) {
+        SectionTitle(stringResource(if (all) R.string.stats_by_year else R.string.stats_by_month))
+        UCard {
+            val top = columns.maxOf { it.second }.coerceAtLeast(1).toFloat()
+            val current = if (all) columns.lastIndex else s.today.monthValue - 1
+            Row(Modifier.fillMaxWidth().height(120.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
+                columns.forEachIndexed { i, (_, n) ->
+                    Column(Modifier.weight(1f).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
+                        if (n > 0) Text(n.toString(), style = UType.Small, maxLines = 1)
+                        Spacer(Modifier.height(3.dp))
+                        Box(
+                            Modifier.fillMaxWidth().height((96 * (n / top)).coerceAtLeast(3f).dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(if (i == current) U.c.leaf else U.c.leafSoft)
+                        )
+                    }
+                }
+            }
+            HorizontalDivider(Modifier.padding(vertical = 6.dp), color = U.c.line)
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                columns.forEach { (label, _) -> Text(label, style = UType.Small, maxLines = 1, textAlign = TextAlign.Center, modifier = Modifier.weight(1f)) }
+            }
+        }
+    }
+
+    SectionTitle(stringResource(R.string.stats_genres))
+    UCard {
+        val genres = f.genres.take(8)
+        val top = genres.first().second.toFloat()
+        genres.forEachIndexed { i, (g, n) ->
+            if (i > 0) Spacer(Modifier.height(10.dp))
+            Line(genreName(g), n.toString(), n / top, genreColor(g))
+        }
+    }
+
+    if (f.ratings.any { it.second > 0 }) {
+        SectionTitle(stringResource(R.string.stats_ratings))
+        UCard {
+            val top = f.ratings.maxOf { it.second }.coerceAtLeast(1).toFloat()
+            f.ratings.forEachIndexed { i, (r, n) ->
+                if (i > 0) Spacer(Modifier.height(10.dp))
+                Line("★".repeat(r), n.toString(), n / top, U.c.gold, labelColor = U.c.gold)
+            }
+        }
+    }
+
+    if (f.lengths.any { it > 0 }) {
+        SectionTitle(stringResource(R.string.stats_lengths))
+        UCard {
+            val top = f.lengths.max().coerceAtLeast(1).toFloat()
+            val names = listOf(
+                stringResource(R.string.stats_len_short, Finished.LENGTHS[0]),
+                stringResource(R.string.stats_len_mid, Finished.LENGTHS[0], Finished.LENGTHS[1] - 1),
+                stringResource(R.string.stats_len_mid, Finished.LENGTHS[1], Finished.LENGTHS[2] - 1),
+                stringResource(R.string.stats_len_long, Finished.LENGTHS[2]),
+            )
+            f.lengths.forEachIndexed { i, n ->
+                if (i > 0) Spacer(Modifier.height(10.dp))
+                Line(names[i], n.toString(), n / top, U.c.accent)
+            }
+        }
+    }
+
+    // Only once there's an author you've come back to: a list of ones says nothing.
+    if (f.authors.any { it.second > 1 }) {
+        SectionTitle(stringResource(R.string.stats_authors))
+        UCard {
+            val top = f.authors.first().second.toFloat()
+            f.authors.filter { it.second > 1 }.forEachIndexed { i, (a, n) ->
+                if (i > 0) Spacer(Modifier.height(10.dp))
+                Line(a, books(n), n / top, U.c.mana)
+            }
+        }
+    }
+}
+
+/** A labelled bar: the name and its number above, the bar under them. */
+@Composable
+private fun Line(label: String, value: String, fraction: Float, color: androidx.compose.ui.graphics.Color, labelColor: androidx.compose.ui.graphics.Color = U.c.ink) {
+    Row {
+        Text(label, style = UType.Small.copy(color = labelColor), maxLines = 1, modifier = Modifier.weight(1f))
+        Text(value, style = UType.Small)
+    }
+    Spacer(Modifier.height(4.dp))
+    Bar(fraction, color = color, track = U.c.surface2)
 }
 
 private fun partName(p: DayPart): Int = when (p) {

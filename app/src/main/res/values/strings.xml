@@ -125,8 +125,6 @@
     <string name="book_edit">Edit book</string>
     <string name="from_shelf">Pick from the shelf</string>
     <string name="bestiary">Bestiary</string>
-    <string name="bestiary_count">%1$d of %2$d familiars found</string>
-    <string name="bestiary_eggs">Eggs waiting for you: %d</string>
     <string name="bestiary_text">Fourteen familiars live in these pages. Read and they come to you one by one, as eggs. You read with one at a time; the others rest in the den with all they\'ve eaten.</string>
     <string name="bestiary_note">Mana goes to the familiar you read with. Switch any time.</string>
     <string name="with_you">with you</string>
@@ -396,7 +394,6 @@
     <string name="it_candles">Candles</string>
     <string name="it_lantern">Lantern</string>
     <string name="furnish">Furnish the den</string>
-    <string name="furnish_short">Den · ✦ %d</string>
     <string name="sparks_n">✦ %d sparks</string>
     <string name="furnish_text">Every mana your familiars ate left a spark. Spend them on the den: it never takes anything from their growth.</string>
     <string name="furnish_note">One piece per place: a new window replaces the old one. What you bought stays yours.</string>
@@ -552,7 +549,6 @@
 
     <!-- Finds and the casket -->
     <string name="casket">Casket</string>
-    <string name="casket_short">Casket · %1$d/%2$d</string>
     <string name="casket_text">Things your familiars brought back from stories. Each genre hides its own, and some turn up only on special days of the year.</string>
     <string name="casket_count">%1$d of %2$d found</string>
     <string name="find_title">%s brought something back!</string>
@@ -792,7 +788,6 @@
     <string name="community_chat">StillCraft chat</string>
     <string name="community_chat_sub">all the apps and people</string>
     <string name="stats_title">The ledger</string>
-    <string name="stats_sub">Pace, habits and months in plain numbers</string>
     <string name="stats_per_day">pages a day</string>
     <string name="stats_per_sitting">min a sitting</string>
     <string name="stats_hours">hours by the candle</string>
@@ -817,6 +812,40 @@
     <string name="stats_month_less">%s less than last month</string>
     <string name="stats_month_same">Just as much as last month</string>
     <string name="stats_month_first">Nothing last month to compare with</string>
+    <string name="lib_view">How the shelf looks</string>
+    <string name="lib_as_spines">Show as spines</string>
+    <string name="cycle_next">Next: %s</string>
+    <string name="cycle_next_short">Read next</string>
+    <string name="cal_title">The month in covers</string>
+    <string name="cal_earlier">Month before</string>
+    <string name="cal_later">Month after</string>
+    <string name="cal_empty">Nothing read this month yet: the first sitting puts a cover on its day.</string>
+    <string name="cal_finished">%s finished</string>
+    <string name="cal_days">days with a book: %d</string>
+    <string name="cal_done">Finished that day</string>
+    <string name="cal_year_title">The year in covers</string>
+    <string name="cal_year_empty">No book finished this year yet.</string>
+    <string name="den_tile">Den</string>
+    <string name="also_reading">Your open books</string>
+    <string name="eggs_short">eggs: %d</string>
+    <string name="tree_page_tree">Overview</string>
+    <string name="tree_page_calendar">Calendar</string>
+    <string name="stats_books">Books finished</string>
+    <string name="stats_books_done">books</string>
+    <string name="stats_books_pages">pages in them</string>
+    <string name="stats_avg_length">pages a book</string>
+    <string name="stats_avg_rating">stars on average</string>
+    <string name="stats_avg_days">days a book</string>
+    <string name="stats_authors_count">authors</string>
+    <string name="stats_by_month">Month by month</string>
+    <string name="stats_by_year">Year by year</string>
+    <string name="stats_genres">Genres</string>
+    <string name="stats_ratings">Your stars</string>
+    <string name="stats_lengths">How long they were</string>
+    <string name="stats_len_short">under %d pages</string>
+    <string name="stats_len_mid">%1$d–%2$d pages</string>
+    <string name="stats_len_long">%d pages and more</string>
+    <string name="stats_authors">Authors you come back to</string>
     <string name="forecast">At this pace, done around %s</string>
 
     <!-- Share cards -->

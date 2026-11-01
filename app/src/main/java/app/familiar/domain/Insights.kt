@@ -104,6 +104,78 @@ class Insights(private val s: Stats) {
     }
 }
 
+/**
+ * What the finished books of [year] add up to, or of every year when it's null: how many, how long,
+ * how they were rated, which genres and authors, and when they were finished.
+ */
+class Finished(s: Stats, val year: Int?) {
+    private val zone = s.zone
+    private fun date(t: Long) = Instant.ofEpochMilli(t).atZone(zone).toLocalDate()
+
+    val books: List<Book> = s.finished.filter { year == null || (it.finished != null && date(it.finished).year == year) }
+    /** Books on paper with a known length: audiobooks count minutes, not pages. */
+    private val paper = books.filter { !it.audio && it.pages > 0 }
+    val pages: Int = paper.sumOf { it.pages }
+    val avgLength: Int? = if (paper.isEmpty()) null else pages / paper.size
+    val avgRating: Float? = books.mapNotNull { it.rating }.takeIf { it.isNotEmpty() }?.average()?.toFloat()
+    /** Days from the first page to the last, both counted, over the books where both are known. */
+    val avgDays: Int? = books.mapNotNull { b ->
+        val from = b.started ?: return@mapNotNull null
+        val to = b.finished ?: return@mapNotNull null
+        (date(to).toEpochDay() - date(from).toEpochDay() + 1).takeIf { it > 0 }
+    }.takeIf { it.isNotEmpty() }?.average()?.let { kotlin.math.round(it).toInt() }
+
+    /** Books in each genre, the most read first. */
+    val genres: List<Pair<Genre, Int>> = books.groupBy { Genre.of(it.genre) }.map { it.key to it.value.size }.sortedByDescending { it.second }
+    /** Books given each number of stars, five first. */
+    val ratings: List<Pair<Int, Int>> = (5 downTo 1).map { r -> r to books.count { it.rating == r } }
+    /** Books on paper by length: up to [LENGTHS] pages, each bucket starting where the last one ended. */
+    val lengths: List<Int> = (LENGTHS.indices).map { i ->
+        val from = if (i == 0) 0 else LENGTHS[i - 1]
+        paper.count { it.pages >= from && (i == LENGTHS.lastIndex || it.pages < LENGTHS[i]) }
+    }
+    private val byAuthor = books.filter { it.author.isNotBlank() }.groupBy { it.author.trim().lowercase() }
+    /** How many different authors wrote them. */
+    val authorCount: Int = byAuthor.size
+    /** The authors with most books, up to five. */
+    val authors: List<Pair<String, Int>> = byAuthor
+        .map { (_, l) -> l.first().author.trim() to l.size }
+        .sortedWith(compareByDescending<Pair<String, Int>> { it.second }.thenBy { it.first })
+        .take(5)
+    /** Books finished in each month of [year], January first; empty when every year is counted. */
+    val byMonth: List<Int> = if (year == null) emptyList() else (1..12).map { m -> books.count { it.finished != null && date(it.finished).monthValue == m } }
+    /** Books finished in each of the last years up to this one, oldest first; empty for a single year. */
+    val byYear: List<Pair<Int, Int>> = if (year != null) emptyList() else {
+        val years = books.mapNotNull { it.finished?.let { t -> date(t).year } }
+        if (years.isEmpty()) emptyList() else (maxOf(years.min(), s.today.year - YEARS + 1)..s.today.year).map { y -> y to years.count { it == y } }
+    }
+
+    companion object {
+        /** Where the lengths are cut: under 200 pages, under 400, under 700, and the rest. */
+        val LENGTHS = listOf(200, 400, 700, Int.MAX_VALUE)
+        /** How many years the all-time columns go back. */
+        const val YEARS = 8
+    }
+}
+
+/** The book a day of [month] shows: the one finished that day, or else the one read most. */
+class DayBook(val book: Book, val finished: Boolean)
+
+fun dayBooks(s: Stats, month: YearMonth): Map<LocalDate, DayBook> {
+    fun date(t: Long) = Instant.ofEpochMilli(t).atZone(s.zone).toLocalDate()
+    val bookOf = s.books.associateBy { it.id }
+    val read = s.readings.filter { it.counts }
+        .groupBy { date(it.end) }
+        .filterKeys { YearMonth.from(it) == month }
+        .mapNotNull { (d, rs) ->
+            val id = rs.groupBy { it.bookId }.maxByOrNull { (_, l) -> l.sumOf { it.amount } }?.key
+            bookOf[id]?.let { d to DayBook(it, false) }
+        }.toMap()
+    // Finished books are in the order they were finished: the last one that day wins.
+    val done = s.finished.mapNotNull { b -> b.finished?.let { date(it) }?.takeIf { YearMonth.from(it) == month }?.let { it to DayBook(b, true) } }.toMap()
+    return read + done
+}
+
 /** One month of reading in full: what was finished, what was opened, and every day of it. */
 class MonthSummary(private val s: Stats, val month: YearMonth) {
     private fun date(t: Long) = Instant.ofEpochMilli(t).atZone(s.zone).toLocalDate()

@@ -77,6 +77,8 @@ data class Settings(
     /** How the shelf is sorted ([app.familiar.ui.books.Sort] name), and shown as a list rather than covers. */
     val shelfSort: String = "",
     val shelfList: Boolean = false,
+    /** The shelf shown as spines on planks; wins over [shelfList]. */
+    val shelfSpines: Boolean = false,
     /** The tree bears only this year's books rather than every book ever finished. */
     val treeYear: Boolean = false,
 ) {
@@ -122,6 +124,7 @@ class SettingsStore(context: Context) {
         genres = (this[GENRES] ?: "").split('\n').mapNotNull { app.familiar.domain.OwnGenre.decode(it) },
         shelfSort = this[SHELF_SORT] ?: "",
         shelfList = this[SHELF_LIST] ?: false,
+        shelfSpines = this[SHELF_SPINES] ?: false,
         treeYear = this[TREE_YEAR] ?: false,
     )
 
@@ -167,6 +170,7 @@ class SettingsStore(context: Context) {
             it[GENRES] = s.genres.joinToString("\n") { g -> g.encode() }
             it[SHELF_SORT] = s.shelfSort
             it[SHELF_LIST] = s.shelfList
+            it[SHELF_SPINES] = s.shelfSpines
             it[TREE_YEAR] = s.treeYear
         }
     }
@@ -208,6 +212,7 @@ class SettingsStore(context: Context) {
         val GENRES = stringPreferencesKey("genres")
         val SHELF_SORT = stringPreferencesKey("shelf_sort")
         val SHELF_LIST = booleanPreferencesKey("shelf_list")
+        val SHELF_SPINES = booleanPreferencesKey("shelf_spines")
         val TREE_YEAR = booleanPreferencesKey("tree_year")
     }
 }

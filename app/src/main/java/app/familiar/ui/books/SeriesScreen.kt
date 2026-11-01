@@ -1,6 +1,7 @@
 package app.familiar.ui.books
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -85,12 +86,15 @@ fun SeriesScreen(name: String, data: FamiliarData, go: Go) {
             }
             Spacer(Modifier.height(14.dp))
             c.books.forEach { b ->
-                UCard(Modifier.padding(bottom = 10.dp), onClick = { go.book(b.id) }) {
+                val next = b.id == c.next?.id
+                UCard(Modifier.padding(bottom = 10.dp).then(if (next) Modifier.border(1.5.dp, U.c.accent, U.RMd) else Modifier), onClick = { go.book(b.id) }) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         BookCover(b, Modifier.width(50.dp).height(72.dp), small = true)
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
-                            b.volume?.let { Text(stringResource(R.string.volume_n, it).uppercase(), style = UType.Eyebrow) }
+                            // The one to read next says so, over its number.
+                            val eyebrow = listOfNotNull(b.volume?.let { stringResource(R.string.volume_n, it) }, if (next) stringResource(R.string.cycle_next_short) else null).joinToString(" · ")
+                            if (eyebrow.isNotEmpty()) Text(eyebrow.uppercase(), style = UType.Eyebrow.copy(color = if (next) U.c.accent else UType.Eyebrow.color))
                             Text(b.title, style = UType.Strong, maxLines = 2)
                             Text(if (b.shelfOf == Shelf.DONE) shelfName(Shelf.DONE) else progressLabel(b), style = UType.Small)
                         }
