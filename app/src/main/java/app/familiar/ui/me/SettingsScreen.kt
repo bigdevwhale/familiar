@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.provider.OpenableColumns
 import android.provider.Settings as AndroidSettings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -42,6 +43,7 @@ import app.familiar.BuildConfig
 import app.familiar.R
 import app.familiar.container
 import app.familiar.data.Backup
+import app.familiar.data.Bookmory
 import app.familiar.data.Covers
 import app.familiar.data.Import
 import app.familiar.data.Settings
@@ -120,9 +122,13 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
         if (uri == null) return@rememberLauncherForActivityResult
         container.scope.launch {
             val result = runCatching {
-                val text = context.contentResolver.openInputStream(uri)!!.use { it.readBytes().decodeToString() }
+                val bytes = context.contentResolver.openInputStream(uri)!!.use { it.readBytes() }
+                // Livelib Backup keeps the shelf in the file's name.
+                val name = context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+                    ?.use { c -> if (c.moveToFirst()) c.getString(0) else null }.orEmpty()
                 val dao = container.db.dao()
-                val found = Import.parse(text, dao.books())
+                val found = if (Bookmory.isBackup(bytes)) Bookmory.parse(bytes, dao.books(), context.cacheDir)
+                    else Import.parse(bytes.decodeToString(), dao.books(), name)
                 dao.addBooks(found.books)
                 Import.wantCovers(context.filesDir, dao, found)
                 container.changed()
@@ -222,7 +228,7 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
                 Text(stringResource(R.string.import_text), style = UType.Muted)
                 Spacer(Modifier.height(8.dp))
                 Row {
-                    TextButton(onClick = { books.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream")) }) {
+                    TextButton(onClick = { books.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/json", "application/zip", "application/octet-stream")) }) {
                         Text(stringResource(R.string.import_pick), color = U.c.accent, style = UType.Button)
                     }
                     TextButton(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(EXPORT_HOWTO))) }) {

@@ -9,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withTimeoutOrNull
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.time.LocalDate
@@ -20,68 +21,109 @@ import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
 /**
- * Books from another reading site, as a Goodreads export (My Books → Import and export) or the LiveLib
- * export made on the website, which uses the same columns plus a cover address. Only books come across:
- * no sittings, so they feed no familiar. Pages and genre are whatever the file knows, often nothing.
+ * Books from another reading site: a Goodreads export (My Books → Import and export), the LiveLib export
+ * made on our website (the same columns plus a cover address), one made by Livelib Backup
+ * (chimildic.github.io/livelib-backup) in any of its three kinds, or the Yandex Books export made by
+ * tools/yandex_books.py. Only books come across: no sittings, so they feed no familiar. Pages and genre
+ * are whatever the file knows, often nothing.
  */
 object Import {
     /** [isbn] keeps what the file knew of each book's ISBN, to find covers by once the books are in. */
     class Result(val books: List<Book>, val skipped: Int, val isbn: Map<Pair<String, String>, String> = emptyMap())
 
-    /** The books in [text] that aren't already among [have]. Throws [IllegalArgumentException] when it isn't such a file. */
-    fun parse(text: String, have: List<Book>, now: Long = System.currentTimeMillis(), zone: ZoneId = ZoneId.systemDefault()): Result {
-        val rows = csv(text.removePrefix(Char(0xFEFF).toString()))
-        val head = rows.firstOrNull()?.map { it.trim() }.orEmpty()
-        val col = head.withIndex().associate { (i, name) -> name to i }
-        require("Title" in col && "Author" in col) { "Not a Goodreads or LiveLib export" }
-        fun List<String>.of(name: String) = col[name]?.let { getOrNull(it) }?.trim().orEmpty()
+    /**
+     * The books in [text] that aren't already among [have]. [name] is the file's name: Livelib Backup tells
+     * the shelf only there ("livelib-reader-wish-01.11.2026.csv"). Throws [IllegalArgumentException] when it
+     * isn't such a file.
+     */
+    fun parse(text: String, have: List<Book>, name: String = "", now: Long = System.currentTimeMillis(), zone: ZoneId = ZoneId.systemDefault()): Result {
+        val body = text.removePrefix(Char(0xFEFF).toString()).trim()
+        val json = body.startsWith("[")
+        val head = body.lineSequence().first()
+        val rows = if (json) backupJson(body) else table(body)
+        // Livelib Backup's files: the shelf is in the file's name (or, made for Goodreads, its Shelves column);
+        // with neither it is the Read page, the site's first choice.
+        val backup = json || "Название" in head || "Shelves" in head
+        val hint = BACKUP_PAGE.find(name)?.groupValues?.get(1)?.let { PAGES[it] }
 
         val seen = have.map { key(it.title, it.author) }.toMutableSet()
         var skipped = 0
         val isbn = mutableMapOf<Pair<String, String>, String>()
-        val books = rows.drop(1).mapNotNull { r ->
+        val books = rows.mapNotNull { r ->
+            fun of(column: String) = r[column]?.trim().orEmpty()
             // Goodreads keeps the cycle in the title: "Dune (Dune Chronicles, #1)".
-            val cycle = CYCLE.matchEntire(r.of("Title"))
-            val title = (cycle?.groupValues?.get(1)?.trim() ?: r.of("Title")).replace(EDITION, "").trim()
+            val cycle = CYCLE.matchEntire(of("Title"))
+            val title = (cycle?.groupValues?.get(1)?.trim() ?: of("Title")).replace(EDITION, "").trim()
             if (title.isEmpty()) return@mapNotNull null
-            val author = r.of("Author")
+            // Livelib Backup joins co-authors with a bare comma.
+            val author = of("Author").replace(Regex(""",(?=\S)"""), ", ")
             if (!seen.add(key(title, author))) { skipped++; return@mapNotNull null }
-            // Goodreads writes ISBNs as ="0441013597", so only digits (and a final X) count.
-            r.of("ISBN13").ifEmpty { r.of("ISBN") }.filter { it.isDigit() || it == 'X' }.takeIf { it.length >= 10 }?.let { isbn[key(title, author)] = it }
-            val exclusive = r.of("Exclusive Shelf").lowercase()
+            // Goodreads writes ISBNs as ="0441013597"; LiveLib lists every edition's, "978-5-17-1, 978-5-04-2".
+            (of("ISBN13").ifEmpty { of("ISBN") }).split(',', ';')
+                .map { s -> s.filter { it.isDigit() || it == 'X' } }.firstOrNull { it.length >= 10 }
+                ?.let { isbn[key(title, author)] = it }
+            val exclusive = of("Exclusive Shelf").ifEmpty { of("Shelves") }.ifEmpty { hint ?: if (backup) "read" else "" }.lowercase()
             val shelf = when {
                 exclusive == "read" -> Shelf.DONE
                 exclusive == "currently-reading" -> Shelf.READING
+                exclusive == "unread" -> Shelf.PAUSED
                 // A shelf of the reader's own on Goodreads: read if it says when.
-                exclusive != "to-read" && r.of("Date Read").isNotEmpty() -> Shelf.DONE
+                exclusive != "to-read" && of("Date Read").isNotEmpty() -> Shelf.DONE
                 else -> Shelf.WANT
             }
-            val pages = r.of("Number of Pages").toIntOrNull()?.coerceAtLeast(0) ?: 0
-            val read = date(r.of("Date Read"), zone)
-            val added = date(r.of("Date Added"), zone)
+            val pages = of("Number of Pages").toIntOrNull()?.coerceAtLeast(0) ?: 0
+            val read = date(of("Date Read"), zone)
+            val added = date(of("Date Added"), zone)
             val finished = if (shelf == Shelf.DONE) read ?: added ?: now else null
             Book(
                 title = title,
                 author = author,
                 pages = pages,
                 // Goodreads has no genres, but a reader's own shelves often are ones: "fantasy", "popular-science".
-                genre = genre(r.of("Genres").ifEmpty { r.of("Bookshelves") + "," + exclusive }).name,
+                genre = genre(of("Genres").ifEmpty { of("Bookshelves") + "," + exclusive }).name,
                 shelf = shelf.name,
                 page = if (shelf == Shelf.DONE) pages else 0,
                 added = added ?: finished ?: now,
                 started = if (shelf == Shelf.READING) added ?: now else null,
                 finished = finished,
-                // Goodreads writes "4.0".
-                rating = r.of("My Rating").toDoubleOrNull()?.roundToInt()?.takeIf { shelf == Shelf.DONE && it in 1..5 },
-                cover = r.of("Cover").takeIf { it.startsWith("https://") }.orEmpty(),
-                audio = r.of("Audio").isNotEmpty(),
-                series = r.of("Series").ifEmpty { cycle?.groupValues?.get(2)?.trim().orEmpty() },
-                volume = (r.of("Series Number").ifEmpty { cycle?.groupValues?.get(3).orEmpty() }).toIntOrNull(),
+                // Goodreads writes "4.0", LiveLib "4.5".
+                rating = of("My Rating").replace(',', '.').toDoubleOrNull()?.roundToInt()?.takeIf { shelf == Shelf.DONE && it in 1..5 },
+                cover = of("Cover").takeIf { it.startsWith("https://") }.orEmpty(),
+                audio = of("Audio").isNotEmpty(),
+                series = of("Series").ifEmpty { cycle?.groupValues?.get(2)?.trim().orEmpty() },
+                volume = (of("Series Number").ifEmpty { cycle?.groupValues?.get(3).orEmpty() }).toIntOrNull(),
                 // Goodreads lists every shelf a book is on; the ones besides read / to-read become the reader's own shelves.
-                tags = (r.of("Bookshelves").split(',') + exclusive).map { it.trim() }.filter { it.isNotEmpty() && it !in SHELVES }.distinct().joinToString("\n"),
+                tags = (of("Bookshelves").split(',') + exclusive).map { it.trim() }.filter { it.isNotEmpty() && it !in SHELVES }.distinct().joinToString("\n"),
             )
         }
         return Result(books, skipped, isbn)
+    }
+
+    /** A CSV with a header row, by column name; Livelib Backup's Russian names are read as Goodreads' ones. */
+    private fun table(body: String): List<Map<String, String>> {
+        val head = body.lineSequence().first()
+        // Livelib Backup's plain CSV is split by semicolons, everything else by commas.
+        val rows = csv(body, if (head.count { it == ';' } > head.count { it == ',' }) ';' else ',')
+        val names = rows.firstOrNull()?.map { it.trim().let { n -> RUSSIAN[n] ?: n } }.orEmpty()
+        require("Title" in names && "Author" in names) { "Not a book export" }
+        return rows.drop(1).map { r -> names.withIndex().associate { (i, n) -> n to r.getOrNull(i).orEmpty() } }
+    }
+
+    /** Livelib Backup's JSON: [{title, authors: [{name}], readDate, rating: {user}, details: {isbn}, genres: [{name}], coverHref}]. */
+    private fun backupJson(body: String): List<Map<String, String>> {
+        val list = runCatching { JSONArray(body) }.getOrElse { throw IllegalArgumentException("Not a book export") }
+        return (0 until list.length()).mapNotNull { list.optJSONObject(it) }.map { o ->
+            fun names(key: String) = o.optJSONArray(key)?.let { a -> (0 until a.length()).mapNotNull { a.optJSONObject(it)?.optString("name")?.takeIf(String::isNotBlank) } }.orEmpty()
+            mapOf(
+                "Title" to o.optString("title"),
+                "Author" to names("authors").joinToString(", "),
+                "Date Read" to o.optString("readDate"),
+                "My Rating" to (o.optJSONObject("rating")?.optString("user") ?: ""),
+                "ISBN" to (o.optJSONObject("details")?.optString("isbn") ?: ""),
+                "Genres" to names("genres").joinToString("; "),
+                "Cover" to o.optString("coverHref"),
+            )
+        }.also { require(it.any { r -> r["Title"]!!.isNotBlank() }) { "Not a book export" } }
     }
 
     /** Where the books still waiting for a cover are kept, so the search goes on after the app is closed. */
@@ -152,7 +194,16 @@ object Import {
         if (queue.isEmpty()) f.delete() else f.writeText(JSONObject(queue.mapKeys { it.key.toString() }).toString())
     }
 
-    private val SHELVES = setOf("read", "currently-reading", "to-read")
+    private val SHELVES = setOf("read", "currently-reading", "to-read", "unread")
+    /** Livelib Backup's column names, as Goodreads calls them; its publisher's "Серия" is no cycle and stays out. */
+    private val RUSSIAN = mapOf(
+        "Название" to "Title", "Автор" to "Author", "Дата прочтения" to "Date Read", "Моя оценка" to "My Rating",
+        "Жанры" to "Genres", "Ссылка на обложку" to "Cover", "Дата издания" to "Year Published",
+    )
+    /** Livelib Backup's pages, in the names of its files, as Goodreads shelves. */
+    private val PAGES = mapOf("read" to "read", "unread" to "unread", "reading" to "currently-reading", "wish" to "to-read")
+    private val BACKUP_PAGE = Regex("""livelib-.+-(read|unread|reading|wish)-""")
+    private val MONTHS = listOf("январ", "феврал", "март", "апрел", "ма", "июн", "июл", "август", "сентябр", "октябр", "ноябр", "декабр")
     /** Amazon's "(Russian Edition)", "(Kindle Edition)" and the like after a title. */
     private val EDITION = Regex("""\s*\([^()]*\bEdition\)\s*$""", RegexOption.IGNORE_CASE)
     private val CYCLE = Regex("""(.+?)\s*\(([^()#]+?),?\s*#(\d+)[^()]*\)""")
@@ -178,21 +229,33 @@ object Import {
     /** Ours for "Фантастика; Зарубежная фантастика" and the like: the first of the site's genres (its main one leads) we know a word in. */
     fun genre(names: String): Genre {
         for (name in names.lowercase().replace('-', ' ').split(';', ',').map { it.trim() }.filter { it.isNotEmpty() }) {
-            WORDS.firstOrNull { (_, words) -> words.any { it in name } }?.let { return it.first }
+            // "Детская проза и поэзия" (Yandex Books) is a shelf for any children's book, not poems.
+            WORDS.firstOrNull { (genre, words) -> words.any { it in name } && !(genre == Genre.POETRY && "проз" in name) }?.let { return it.first }
         }
         return Genre.OTHER
     }
 
-    private fun key(title: String, author: String) =
+    /** Which books count as the same: case, spaces and punctuation aside. */
+    internal fun key(title: String, author: String) =
         title.lowercase().filter { it.isLetterOrDigit() } to author.lowercase().filter { it.isLetterOrDigit() }
 
-    /** "2019/08/15" (Goodreads) or "2019-08-15", at noon so the day survives any time zone. */
-    private fun date(s: String, zone: ZoneId): Long? = runCatching {
-        LocalDate.parse(s.replace('/', '-')).atTime(LocalTime.NOON).atZone(zone).toInstant().toEpochMilli()
-    }.getOrNull()
+    /**
+     * "2019/08/15" (Goodreads), "2019-08-15" or LiveLib's "Декабрь 2025 г." (the first of that month), at noon
+     * so the day survives any time zone.
+     */
+    private fun date(s: String, zone: ZoneId): Long? {
+        val day = runCatching { LocalDate.parse(s.replace('/', '-')) }.getOrNull() ?: Regex("""(\p{L}+)\s+(\d{4})""").find(s.lowercase())?.let { m ->
+            val month = MONTHS.indexOfFirst { m.groupValues[1].startsWith(it) }
+            if (month < 0) null else LocalDate.of(m.groupValues[2].toInt(), month + 1, 1)
+        }
+        return day?.atTime(LocalTime.NOON)?.atZone(zone)?.toInstant()?.toEpochMilli()
+    }
 
-    /** RFC 4180: commas, quoted fields with doubled quotes, line breaks inside quotes. */
-    private fun csv(text: String): List<List<String>> {
+    /**
+     * RFC 4180: [sep]-separated, quoted fields with doubled quotes, line breaks inside quotes. A quote opens a
+     * quoted field only at its start: Livelib Backup quotes nothing, so a title may hold a bare one.
+     */
+    private fun csv(text: String, sep: Char): List<List<String>> {
         val rows = mutableListOf<List<String>>()
         var row = mutableListOf<String>()
         val cell = StringBuilder()
@@ -202,9 +265,10 @@ object Import {
             val c = text[i]
             when {
                 quoted && c == '"' && text.getOrNull(i + 1) == '"' -> { cell.append('"'); i++ }
-                c == '"' -> quoted = !quoted
+                quoted && c == '"' -> quoted = false
                 quoted -> cell.append(c)
-                c == ',' -> { row += cell.toString(); cell.clear() }
+                c == '"' && cell.isEmpty() -> quoted = true
+                c == sep -> { row += cell.toString(); cell.clear() }
                 c == '\n' || c == '\r' -> {
                     if (c == '\r' && text.getOrNull(i + 1) == '\n') i++
                     row += cell.toString(); cell.clear()

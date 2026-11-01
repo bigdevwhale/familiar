@@ -6,6 +6,18 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [Unreleased]
+
+- **Import from Yandex Books:** `tools/yandex_books.js` (paste it in the browser console on a profile page) or `tools/yandex_books.py` saves a reader's books as a CSV Familiar imports: finished, reading and wanted, with covers, genres, audiobooks and comics.
+- **Import from Livelib Backup:** its CSV, JSON and Goodreads files are read as they are; the shelf comes from the file's name, "Didn't finish" goes to Paused.
+- **Import from Bookmory:** its backup file (.bookmory) is read as it is: shelves, dates, ratings, pages, covers, audiobooks and your collections as shelves.
+- The import is now Settings → Books from another app, and takes JSON too.
+
+<!-- tg
+Импорт из Яндекс Книг: скрипт для браузера сохранит твои полки в файл для Фамильяра.
+Файлы Livelib Backup (CSV и JSON) и бэкап Bookmory теперь открываются сразу.
+-->
+
 ## [1.5.0] - 2026-10-31
 
 - **Share cards:** pictures of your reading for stories and posts, in a candlelit night or warm parchment, 9:16 or 4:5. The book you're on (its real cover, progress and the day you'll finish it), or every book on the go at once; your month (books, pages, hours, the covers you finished and a square for every day); your year (the numbers, the goal, six months in columns, your favourite genre and pace); and the den. Each card carries a code that opens Familiar on Google Play. Share them from the den, a book, the feast after a sitting, the tree, the ledger and the saga, or save them to the gallery.

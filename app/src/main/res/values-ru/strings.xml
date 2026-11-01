@@ -360,12 +360,12 @@
     <string name="backup_done">Копия сохранена</string>
     <string name="backup_restored">Восстановлено</string>
     <string name="backup_failed">Не удалось прочитать или записать файл</string>
-    <string name="import_books">Книги из LiveLib или Goodreads</string>
-    <string name="import_text">Перенеси прочитанное с другого сайта: экспорт Goodreads или LiveLib, сделанный на нашем сайте. Книги встанут на полки, а фамильяр ест только то, что ты читаешь здесь.</string>
-    <string name="import_pick">Выбрать CSV-файл</string>
+    <string name="import_books">Книги из другого приложения</string>
+    <string name="import_text">Перенеси прочитанное из другого места: экспорт Goodreads, LiveLib (с нашего сайта или из Livelib Backup, CSV или JSON), Яндекс Книги, сохранённые нашим скриптом, или бэкап Bookmory. Книги встанут на полки, а фамильяр ест только то, что ты читаешь здесь.</string>
+    <string name="import_pick">Выбрать файл</string>
     <string name="import_how">Как выгрузить</string>
     <string name="import_done">Добавлено книг: %1$d. Уже были на полке: %2$d.</string>
-    <string name="import_failed">Это не экспорт Goodreads или LiveLib</string>
+    <string name="import_failed">Это не экспорт книг, который знает Фамильяр</string>
     <string name="about">О приложении</string>
     <string name="about_text">Фамильяр бесплатный, без рекламы и аккаунта. В интернет он ходит только за книгой и её обложкой; визиты передаются с телефона на телефон QR-кодом. Часть Stillcraft.</string>
     <string name="about_version">Версия %s</string>

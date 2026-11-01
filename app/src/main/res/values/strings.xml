@@ -346,12 +346,12 @@
     <string name="backup_done">Backup saved</string>
     <string name="backup_restored">Restored</string>
     <string name="backup_failed">Couldn\'t read or write the file</string>
-    <string name="import_books">Books from LiveLib or Goodreads</string>
-    <string name="import_text">Bring the books you have read from another site: a Goodreads export, or a LiveLib one made on our website. They go on your shelves; your familiar only eats what you read here.</string>
-    <string name="import_pick">Pick a CSV file</string>
+    <string name="import_books">Books from another app</string>
+    <string name="import_text">Bring the books you have read elsewhere: a Goodreads export, a LiveLib one (from our website or Livelib Backup, CSV or JSON), Yandex Books saved by our script, or a Bookmory backup. They go on your shelves; your familiar only eats what you read here.</string>
+    <string name="import_pick">Pick a file</string>
     <string name="import_how">How to export</string>
     <string name="import_done">Books added: %1$d. Already on the shelf: %2$d.</string>
-    <string name="import_failed">That isn\'t a Goodreads or LiveLib export</string>
+    <string name="import_failed">That isn\'t a book export Familiar knows</string>
     <string name="about">About</string>
     <string name="about_text">Familiar is free, has no ads and no account. It goes online only to find a book and its cover; visits go from phone to phone as a QR code. Part of Stillcraft.</string>
     <string name="about_version">Version %s</string>
