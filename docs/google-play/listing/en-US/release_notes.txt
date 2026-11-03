@@ -1,6 +1,5 @@
-New in 1.9:
-• A background picture: a photo for each genre, one that follows your book, or your own (Settings → Background).
+New in 1.9.1:
+• Settings in three tabs: Reading, Look and Data.
+• Backgrounds as a grid, all in sight (Settings → Look).
+• A background picture: a photo for each genre, one that follows your book, or your own.
 • Pick the day when you mark a book finished.
-• One subgenre in several genres; change the day a book was finished on its page.
-• A year goal of any number; paper, e-book or audio.
-• A chime and a buzz when the candle burns out.

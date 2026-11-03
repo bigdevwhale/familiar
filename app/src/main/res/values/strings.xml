@@ -12,6 +12,9 @@
     <string name="share">Share</string>
     <string name="off">Off</string>
     <string name="settings">Settings</string>
+    <string name="set_tab_reading">Reading</string>
+    <string name="set_tab_look">Look</string>
+    <string name="set_tab_data">Data</string>
 
     <string name="tab_den">Den</string>
     <string name="tab_shelf">Shelf</string>

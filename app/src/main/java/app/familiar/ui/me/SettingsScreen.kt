@@ -94,6 +94,7 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
             if (app.familiar.ui.Backdrops.importPicked(context, uri)) container.settings.update { it.copy(backdrop = app.familiar.ui.Backdrops.OWN, backdropStamp = System.currentTimeMillis()) }
         }
     }
+    var page by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableIntStateOf(0) }
     var canNotify by remember { mutableStateOf(Alarms.canNotify(context)) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { canNotify = Alarms.canNotify(context) }
     val askPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
@@ -149,116 +150,131 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
 
     Column(Modifier.fillMaxSize().background(U.screen).statusBarsPadding()) {
         TopBar(stringResource(R.string.settings), onBack)
+        // Three pages instead of one long list: reading, the look of the app, and your data.
+        Row(Modifier.padding(horizontal = 18.dp), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+            listOf(R.string.set_tab_reading, R.string.set_tab_look, R.string.set_tab_data).forEachIndexed { i, res ->
+                app.familiar.ui.tree.PageTab(stringResource(res), page == i) { page = i }
+            }
+        }
+        androidx.compose.material3.HorizontalDivider(Modifier.padding(horizontal = 18.dp), color = U.c.line)
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).navigationBarsPadding().padding(bottom = 24.dp)) {
-            if (!canNotify) {
-                Spacer(Modifier.height(12.dp))
-                UCard(onClick = { if (Build.VERSION.SDK_INT >= 33) askPermission.launch(Manifest.permission.POST_NOTIFICATIONS) }) {
-                    Text(stringResource(R.string.perm_title), style = UType.Strong.copy(color = U.c.accent))
-                    Spacer(Modifier.height(4.dp))
-                    Text(stringResource(R.string.perm_text), style = UType.Muted)
-                }
-            }
-
-            SectionTitle(stringResource(R.string.set_name))
-            UTextField(name, { name = it.take(30) }, placeholder = stringResource(R.string.ob_name_hint))
-
-            SectionTitle(stringResource(R.string.set_goal))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(10, 20, 30, 50, 80).forEach { n -> Chip(stringResource(R.string.pages_short, n), settings.dailyGoal == n, { update { it.copy(dailyGoal = n) } }) }
-            }
-            Text(stringResource(R.string.set_goal_note), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 6.dp))
-
-            SectionTitle(stringResource(R.string.set_ritual))
-            UCard {
-                Text(stringResource(R.string.set_candle), style = UType.Body)
-                Spacer(Modifier.height(6.dp))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(15, 30, 45, 60, 90).forEach { n -> Chip(stringResource(R.string.min_short, n), settings.candleMin == n, { update { it.copy(candleMin = n) } }) }
-                }
-                Spacer(Modifier.height(6.dp))
-                SwitchRow(stringResource(R.string.set_candle_bell), stringResource(R.string.set_candle_bell_sub), settings.candleBell, { v -> update { it.copy(candleBell = v) } })
-                SwitchRow(stringResource(R.string.set_page_sound), null, settings.pageSound, { v -> update { it.copy(pageSound = v) } })
-                SwitchRow(stringResource(R.string.set_haptics), null, settings.haptics, { v -> update { it.copy(haptics = v) } })
-                SwitchRow(stringResource(R.string.set_dim), stringResource(R.string.set_dim_sub), settings.stillDim, { v -> update { it.copy(stillDim = v) } })
-            }
-
-            SectionTitle(stringResource(R.string.set_remind))
-            UCard {
-                val t = settings.remindAt
-                InfoRow(
-                    Icons.Rounded.Notifications, stringResource(R.string.set_remind_daily),
-                    if (t < 0) stringResource(R.string.off) else DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(l).format(LocalTime.of(t / 60, t % 60)),
-                ) { pickTime = true }
-                if (t >= 0) TextButton(onClick = { update { it.copy(remindAt = -1) } }) { Text(stringResource(R.string.set_remind_off), color = U.c.muted, style = UType.Button) }
-                Text(stringResource(R.string.set_remind_note), style = UType.Small.copy(color = U.c.muted))
-            }
-            Spacer(Modifier.height(10.dp))
-            UCard(onClick = {
-                context.startActivity(Intent(AndroidSettings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)))
-            }) {
-                Text(stringResource(R.string.autostart_title), style = UType.Strong)
-                Spacer(Modifier.height(2.dp))
-                Text(stringResource(R.string.autostart_text), style = UType.Muted)
-            }
-
-            SectionTitle(stringResource(R.string.set_appearance))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Chip(stringResource(R.string.theme_system), settings.theme == ThemeMode.SYSTEM, { update { it.copy(theme = ThemeMode.SYSTEM) } })
-                Chip(stringResource(R.string.theme_light), settings.theme == ThemeMode.LIGHT, { update { it.copy(theme = ThemeMode.LIGHT) } })
-                Chip(stringResource(R.string.theme_dark), settings.theme == ThemeMode.DARK, { update { it.copy(theme = ThemeMode.DARK) } })
-            }
-
-            SectionTitle(stringResource(R.string.backdrop_title))
-            app.familiar.ui.BackdropPicker(
-                settings.backdrop, data.reading.firstOrNull()?.let { app.familiar.domain.Genre.of(it.genre) }, settings.backdropStamp,
-                onPick = { k -> update { it.copy(backdrop = k) } },
-                onOwn = { pickBackdrop.launch(androidx.activity.result.PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-            )
-            Text(stringResource(R.string.backdrop_note), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 6.dp))
-
-            SectionTitle(stringResource(R.string.language))
-            val current = Language.current()
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Chip(stringResource(R.string.lang_system), current == Language.SYSTEM, { Language.set(Language.SYSTEM) })
-                Chip("English", current == Language.EN, { Language.set(Language.EN) })
-                Chip("Русский", current == Language.RU, { Language.set(Language.RU) })
-            }
-
-            SectionTitle(stringResource(R.string.backup))
-            UCard {
-                Text(stringResource(R.string.backup_text), style = UType.Muted)
-                Spacer(Modifier.height(8.dp))
-                Row {
-                    TextButton(onClick = { export.launch("familiar-${LocalDate.now()}.json") }) {
-                        Text(stringResource(R.string.backup_export), color = U.c.accent, style = UType.Button)
+            when (page) {
+                0 -> {
+                    if (!canNotify) {
+                        Spacer(Modifier.height(12.dp))
+                        UCard(onClick = { if (Build.VERSION.SDK_INT >= 33) askPermission.launch(Manifest.permission.POST_NOTIFICATIONS) }) {
+                            Text(stringResource(R.string.perm_title), style = UType.Strong.copy(color = U.c.accent))
+                            Spacer(Modifier.height(4.dp))
+                            Text(stringResource(R.string.perm_text), style = UType.Muted)
+                        }
                     }
-                    TextButton(onClick = { import.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }) {
-                        Text(stringResource(R.string.backup_import), color = U.c.accent, style = UType.Button)
+
+                    SectionTitle(stringResource(R.string.set_name))
+                    UTextField(name, { name = it.take(30) }, placeholder = stringResource(R.string.ob_name_hint))
+
+                    SectionTitle(stringResource(R.string.set_goal))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(10, 20, 30, 50, 80).forEach { n -> Chip(stringResource(R.string.pages_short, n), settings.dailyGoal == n, { update { it.copy(dailyGoal = n) } }) }
+                    }
+                    Text(stringResource(R.string.set_goal_note), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 6.dp))
+
+                    SectionTitle(stringResource(R.string.set_ritual))
+                    UCard {
+                        Text(stringResource(R.string.set_candle), style = UType.Body)
+                        Spacer(Modifier.height(6.dp))
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(15, 30, 45, 60, 90).forEach { n -> Chip(stringResource(R.string.min_short, n), settings.candleMin == n, { update { it.copy(candleMin = n) } }) }
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        SwitchRow(stringResource(R.string.set_candle_bell), stringResource(R.string.set_candle_bell_sub), settings.candleBell, { v -> update { it.copy(candleBell = v) } })
+                        SwitchRow(stringResource(R.string.set_page_sound), null, settings.pageSound, { v -> update { it.copy(pageSound = v) } })
+                        SwitchRow(stringResource(R.string.set_haptics), null, settings.haptics, { v -> update { it.copy(haptics = v) } })
+                        SwitchRow(stringResource(R.string.set_dim), stringResource(R.string.set_dim_sub), settings.stillDim, { v -> update { it.copy(stillDim = v) } })
+                    }
+
+                    SectionTitle(stringResource(R.string.set_remind))
+                    UCard {
+                        val t = settings.remindAt
+                        InfoRow(
+                            Icons.Rounded.Notifications, stringResource(R.string.set_remind_daily),
+                            if (t < 0) stringResource(R.string.off) else DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(l).format(LocalTime.of(t / 60, t % 60)),
+                        ) { pickTime = true }
+                        if (t >= 0) TextButton(onClick = { update { it.copy(remindAt = -1) } }) { Text(stringResource(R.string.set_remind_off), color = U.c.muted, style = UType.Button) }
+                        Text(stringResource(R.string.set_remind_note), style = UType.Small.copy(color = U.c.muted))
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    UCard(onClick = {
+                        context.startActivity(Intent(AndroidSettings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)))
+                    }) {
+                        Text(stringResource(R.string.autostart_title), style = UType.Strong)
+                        Spacer(Modifier.height(2.dp))
+                        Text(stringResource(R.string.autostart_text), style = UType.Muted)
+                    }
+
+                }
+                1 -> {
+                    SectionTitle(stringResource(R.string.set_appearance))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Chip(stringResource(R.string.theme_system), settings.theme == ThemeMode.SYSTEM, { update { it.copy(theme = ThemeMode.SYSTEM) } })
+                        Chip(stringResource(R.string.theme_light), settings.theme == ThemeMode.LIGHT, { update { it.copy(theme = ThemeMode.LIGHT) } })
+                        Chip(stringResource(R.string.theme_dark), settings.theme == ThemeMode.DARK, { update { it.copy(theme = ThemeMode.DARK) } })
+                    }
+
+                    SectionTitle(stringResource(R.string.backdrop_title))
+                    app.familiar.ui.BackdropPicker(
+                        settings.backdrop, data.reading.firstOrNull()?.let { app.familiar.domain.Genre.of(it.genre) }, settings.backdropStamp,
+                        onPick = { k -> update { it.copy(backdrop = k) } },
+                        onOwn = { pickBackdrop.launch(androidx.activity.result.PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                    )
+                    Text(stringResource(R.string.backdrop_note), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 6.dp))
+
+                    SectionTitle(stringResource(R.string.language))
+                    val current = Language.current()
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Chip(stringResource(R.string.lang_system), current == Language.SYSTEM, { Language.set(Language.SYSTEM) })
+                        Chip("English", current == Language.EN, { Language.set(Language.EN) })
+                        Chip("Русский", current == Language.RU, { Language.set(Language.RU) })
+                    }
+
+                }
+                else -> {
+                    SectionTitle(stringResource(R.string.backup))
+                    UCard {
+                        Text(stringResource(R.string.backup_text), style = UType.Muted)
+                        Spacer(Modifier.height(8.dp))
+                        Row {
+                            TextButton(onClick = { export.launch("familiar-${LocalDate.now()}.json") }) {
+                                Text(stringResource(R.string.backup_export), color = U.c.accent, style = UType.Button)
+                            }
+                            TextButton(onClick = { import.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }) {
+                                Text(stringResource(R.string.backup_import), color = U.c.accent, style = UType.Button)
+                            }
+                        }
+                    }
+
+                    SectionTitle(stringResource(R.string.import_books))
+                    UCard {
+                        Text(stringResource(R.string.import_text), style = UType.Muted)
+                        Spacer(Modifier.height(8.dp))
+                        Row {
+                            TextButton(onClick = { books.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/json", "application/zip", "application/octet-stream")) }) {
+                                Text(stringResource(R.string.import_pick), color = U.c.accent, style = UType.Button)
+                            }
+                            TextButton(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(EXPORT_HOWTO))) }) {
+                                Text(stringResource(R.string.import_how), color = U.c.accent, style = UType.Button)
+                            }
+                        }
+                    }
+
+                    CommunityLinks()
+
+                    SectionTitle(stringResource(R.string.about))
+                    UCard {
+                        Text(stringResource(R.string.about_text), style = UType.Sub)
+                        Spacer(Modifier.height(8.dp))
+                        Text(stringResource(R.string.about_version, BuildConfig.VERSION_NAME), style = UType.Small)
                     }
                 }
-            }
-
-            SectionTitle(stringResource(R.string.import_books))
-            UCard {
-                Text(stringResource(R.string.import_text), style = UType.Muted)
-                Spacer(Modifier.height(8.dp))
-                Row {
-                    TextButton(onClick = { books.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/json", "application/zip", "application/octet-stream")) }) {
-                        Text(stringResource(R.string.import_pick), color = U.c.accent, style = UType.Button)
-                    }
-                    TextButton(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(EXPORT_HOWTO))) }) {
-                        Text(stringResource(R.string.import_how), color = U.c.accent, style = UType.Button)
-                    }
-                }
-            }
-
-            CommunityLinks()
-
-            SectionTitle(stringResource(R.string.about))
-            UCard {
-                Text(stringResource(R.string.about_text), style = UType.Sub)
-                Spacer(Modifier.height(8.dp))
-                Text(stringResource(R.string.about_version, BuildConfig.VERSION_NAME), style = UType.Small)
             }
         }
     }

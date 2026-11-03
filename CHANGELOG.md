@@ -6,6 +6,14 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.9.1] - 2026-11-03
+
+- **Settings in three tabs:** Reading (name, daily goal, the ritual, the reminder), Look (theme, background, language) and Data (backup, books from another app, community, about). The backgrounds are a grid, all in sight.
+
+<!-- tg
+Настройки разложены по вкладкам: «Чтение», «Вид» и «Данные» — без длинной простыни. Фоны теперь видны сеткой.
+-->
+
 ## [1.9.0] - 2026-11-03
 
 - **A background picture:** behind every screen, softened so the text stays clear. A public-domain photo for each genre (Openverse, CC0; credits in `assets/backdrops/CREDITS.txt`), the genre of the book being read, or a picture of your own from the gallery. Settings → Background.

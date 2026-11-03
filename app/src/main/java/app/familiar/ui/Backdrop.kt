@@ -107,16 +107,20 @@ fun BackdropBox(key: String, reading: Genre?, stamp: Long, content: @Composable 
 }
 
 /** The backdrops to choose from: none, the book's genre, a photo for each genre, or one's own picture. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun BackdropPicker(key: String, reading: Genre?, stamp: Long, onPick: (String) -> Unit, onOwn: () -> Unit) {
     val context = LocalContext.current
     val hasOwn = remember(stamp) { Backdrops.ownFile(context).exists() }
-    androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)) {
-        item { Tile(null, androidx.compose.ui.res.stringResource(app.familiar.R.string.backdrop_none), key == Backdrops.NONE, stamp) { onPick(Backdrops.NONE) } }
-        item { Tile(Backdrops.asset(reading ?: Genre.OTHER), androidx.compose.ui.res.stringResource(app.familiar.R.string.backdrop_auto), key == Backdrops.AUTO, stamp) { onPick(Backdrops.AUTO) } }
-        item { Tile(if (hasOwn) Backdrops.OWN else null, androidx.compose.ui.res.stringResource(app.familiar.R.string.backdrop_own), key == Backdrops.OWN, stamp, plus = !hasOwn) { if (hasOwn && key != Backdrops.OWN) onPick(Backdrops.OWN) else onOwn() } }
-        items(Genre.entries.size) { i ->
-            val g = Genre.entries[i]
+    // On a page of its own: every choice in sight, four to a row.
+    androidx.compose.foundation.layout.FlowRow(
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
+    ) {
+        run { Tile(null, androidx.compose.ui.res.stringResource(app.familiar.R.string.backdrop_none), key == Backdrops.NONE, stamp) { onPick(Backdrops.NONE) } }
+        run { Tile(Backdrops.asset(reading ?: Genre.OTHER), androidx.compose.ui.res.stringResource(app.familiar.R.string.backdrop_auto), key == Backdrops.AUTO, stamp) { onPick(Backdrops.AUTO) } }
+        run { Tile(if (hasOwn) Backdrops.OWN else null, androidx.compose.ui.res.stringResource(app.familiar.R.string.backdrop_own), key == Backdrops.OWN, stamp, plus = !hasOwn) { if (hasOwn && key != Backdrops.OWN) onPick(Backdrops.OWN) else onOwn() } }
+        Genre.entries.forEach { g ->
             Tile(Backdrops.asset(g), genreName(g), key == Backdrops.of(g), stamp) { onPick(Backdrops.of(g)) }
         }
     }

@@ -99,9 +99,9 @@ fun TreeTab(data: FamiliarData, go: Go) {
     }
 }
 
-/** A page of the tab: its name, underlined while it's the one open. */
+/** A page of a screen: its name, underlined while it's the one open (the tree, settings). */
 @Composable
-private fun PageTab(text: String, selected: Boolean, onClick: () -> Unit) {
+fun PageTab(text: String, selected: Boolean, onClick: () -> Unit) {
     Column(
         Modifier.width(androidx.compose.foundation.layout.IntrinsicSize.Max).clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp)).clickable(onClick = onClick).padding(top = 8.dp)
             .semantics { this.selected = selected; role = Role.Tab },

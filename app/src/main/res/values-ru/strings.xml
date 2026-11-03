@@ -12,6 +12,9 @@
     <string name="share">Поделиться</string>
     <string name="off">Выкл.</string>
     <string name="settings">Настройки</string>
+    <string name="set_tab_reading">Чтение</string>
+    <string name="set_tab_look">Вид</string>
+    <string name="set_tab_data">Данные</string>
 
     <string name="tab_den">Логово</string>
     <string name="tab_shelf">Полка</string>
