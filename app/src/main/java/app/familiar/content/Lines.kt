@@ -45,7 +45,7 @@ object Lines {
             Trait.CURIOUS -> if (ru) listOf("{n} суёт нос между страниц: что там спрятано?", "{n} разглядывает корешки на полке и что-то замышляет.") else listOf("{n} pokes its nose between the pages: what's hidden there?", "{n} studies the spines on the shelf, plotting something.")
             Trait.GRUMPY -> if (ru) listOf("{n} ворчит, но тихонько придвигается поближе.", "{n} делает вид, что ему всё равно. Ему не всё равно.") else listOf("{n} grumbles, but quietly shuffles closer.", "{n} pretends not to care. It cares.")
             Trait.PLAYFUL -> if (ru) listOf("{n} гоняется за закладкой по всему логову.", "{n} прыгает вокруг: ну давай почитаем!") else listOf("{n} chases a bookmark all around the den.", "{n} bounces around: come on, let's read!")
-            Trait.BRAVE -> if (ru) listOf("{n} готово к любой истории, даже самой страшной.", "{n} охраняет логово с картонным мечом.") else listOf("{n} is ready for any story, even the scariest.", "{n} guards the den with a cardboard sword.")
+            Trait.BRAVE -> if (ru) listOf("{n} не боится ни одной истории, даже самой страшной.", "{n} охраняет логово с картонным мечом.") else listOf("{n} is ready for any story, even the scariest.", "{n} guards the den with a cardboard sword.")
         }
         return list[Math.floorMod(seed, list.size)].replace("{n}", name)
     }
@@ -65,7 +65,7 @@ object Lines {
 
     private fun common(locale: Locale): Map<State, List<String>> = if (locale.language == "ru") mapOf(
         State.EGG to listOf("Яйцо тёплое. Кажется, оно слушает, как ты читаешь.", "Внутри что-то шевелится. Ещё пара страниц…", "Тук-тук. Яйцо ждёт историю."),
-        State.STONE to listOf("{n} каменеет: на нём чары забвения. Пара страниц снимет их.", "{n} почти статуя. Открой книгу, и камень треснет."),
+        State.STONE to listOf("{n} каменеет: это чары забвения. Пара страниц снимет их.", "{n} почти статуя. Открой книгу, и камень треснет."),
         State.FED to listOf("{n} сыто мурлычет и греется у свечи.", "{n} дремлет у камина. Сегодня был хороший ужин."),
         State.READING to listOf("{n} заглядывает через плечо: что там дальше?", "{n} тихо ждёт следующую страницу."),
         State.SLEEP to listOf("{n} спит и сопит. Тсс…", "{n} видит сны о недочитанных главах."),
@@ -152,7 +152,7 @@ object Lines {
         ),
         Species.SLIME to mapOf(
             State.HUNGRY to listOf("{n} грустно колышется. Внутри ничего нового.", "{n} пытается проглотить пульт от телевизора. Не то."),
-            State.FED to listOf("{n} радостно трясётся и хвастается тем, что проглотил.", "{n} мягко светится изнутри: полон историй."),
+            State.FED to listOf("{n} радостно трясётся и хвастается проглоченным.", "{n} мягко светится изнутри: полон историй."),
         ),
         Species.DRAGON to mapOf(
             State.HUNGRY to listOf("{n} пересчитывает сокровища. Ещё бы одну книгу.", "{n} грустно выпускает колечко дыма."),

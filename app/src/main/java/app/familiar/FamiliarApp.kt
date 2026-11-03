@@ -43,6 +43,7 @@ class FamiliarApp : Application() {
         super.onCreate()
         container = AppContainer(this)
         Alarms.ensureChannels(this)
+        app.familiar.notify.CandleBell.ensureChannel(this)
         // Re-arm on every start: OEM task killers (HyperOS & co.) silently drop alarms.
         container.scope.launch {
             if (BuildConfig.DEMO) DemoSeed.seedIfEmpty(container.db, container.settings)

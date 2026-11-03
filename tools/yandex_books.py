@@ -21,7 +21,7 @@ UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like 
 PAUSE = 1.0  # seconds between requests, to be gentle with the site
 STEP = 50
 COLUMNS = ["Title", "Author", "ISBN", "My Rating", "Number of Pages", "Date Read", "Date Added",
-           "Bookshelves", "Exclusive Shelf", "Cover", "Genres", "Audio"]
+           "Bookshelves", "Exclusive Shelf", "Cover", "Genres", "Audio", "Ebook"]
 # The library filters on the profile page, the Goodreads shelf each becomes, in the order a book is kept
 # when it turns up under several: a finished book is also among the recently opened.
 STATES = [("FINISHED", "read"), ("OPENED", "currently-reading"), ("ADDED", "to-read")]
@@ -76,6 +76,8 @@ def row(item: dict, shelf: str) -> dict:
         # The site lists the broad topics ("Художественная литература") among the telling ones; Familiar picks.
         "Genres": "; ".join(t["name"] for t in book.get("topics") or []),
         "Audio": "yes" if kind == "AudioBook" else "",
+        # Everything else on Yandex Books is read on a screen.
+        "Ebook": "" if kind == "AudioBook" else "yes",
     }
 
 

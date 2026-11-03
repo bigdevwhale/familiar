@@ -6,6 +6,22 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.8.0] - 2026-11-03
+
+- **One subgenre in several genres:** "Mysticism" can sit both in horror and in mystery; a name is taken only within its own genre (#15).
+- **The day a book was finished can be moved:** on a finished or abandoned book, tap Edit beside the date. Imported books that came dated the day of the import (Yandex Books shows nobody the dates) can get their real month and year back (#19).
+- **A year goal of your own:** any number of books, not only the ones offered (#17).
+- **Paper or e-book:** a book is on paper, an e-book or an audiobook, and the shelf filters by each. Books from Yandex Books and Bookmory come as e-books when they are (#20).
+- **Russian lines fit any name:** "Призрак готово…" and two other lines no longer give the familiar a grammatical gender (#21).
+- **A bell for the candle:** when the ritual candle burns out, a chime and a buzz, or a notification when the app isn't in front; it can be turned off in Settings (#22).
+
+<!-- tg
+Один и тот же поджанр теперь можно добавить к разным жанрам: «мистика» и у ужасов, и у детективов.
+Дату прочтения можно поменять в карточке книги — для книг из импорта, которые получили сегодняшнюю дату.
+Цель на год — любое своё число; у книги появился формат «бумажная / электронная / аудио».
+Когда свеча догорает, звучит сигнал и вибрация, чтобы не зачитаться (выключается в настройках).
+-->
+
 ## [1.7.0] - 2026-11-01
 
 - **The shelf as spines:** besides covers and a list, the shelf can stand as spines on wooden planks. Thick books are thick, each keeps its own height, the spine takes the colours of its cover (or its genre's, with gold bands), the title runs down it, a book being read has its ribbon sticking out and an abandoned one fades. Cycles stand on planks of their own, volumes in order.

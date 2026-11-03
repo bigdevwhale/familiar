@@ -43,7 +43,7 @@ object OwnGenres {
     suspend fun change(c: AppContainer, from: OwnGenre, to: OwnGenre) {
         c.settings.update { s -> s.copy(genres = (s.genres.filter { it.key != from.key && it.key != to.key } + to)) }
         val dao = c.db.dao()
-        dao.books().filter { OwnGenre.key(it.sub) == from.key }.forEach { b -> dao.updateBook(b.copy(sub = to.name, genre = to.parent.name)) }
+        dao.books().filter { OwnGenre.of(it)?.key == from.key }.forEach { b -> dao.updateBook(b.copy(sub = to.name, genre = to.parent.name)) }
         c.changed()
     }
 
@@ -51,7 +51,7 @@ object OwnGenres {
     suspend fun remove(c: AppContainer, g: OwnGenre) {
         c.settings.update { s -> s.copy(genres = s.genres.filter { it.key != g.key }) }
         val dao = c.db.dao()
-        dao.books().filter { OwnGenre.key(it.sub) == g.key }.forEach { b -> dao.updateBook(b.copy(sub = "")) }
+        dao.books().filter { OwnGenre.of(it)?.key == g.key }.forEach { b -> dao.updateBook(b.copy(sub = "")) }
         c.changed()
     }
 }
@@ -63,8 +63,9 @@ fun GenreDialog(parent: Genre, initial: OwnGenre? = null, taken: List<OwnGenre> 
     var name by remember { mutableStateOf(initial?.name ?: "") }
     var under by remember { mutableStateOf(initial?.parent ?: parent) }
     val n = name.trim()
-    // A name already used elsewhere would merge two genres; a built-in one would only confuse.
-    val clash = taken.any { it.key == OwnGenre.key(n) && it.key != initial?.key }
+    // A name already used in the same genre would merge two; a built-in one would only confuse.
+    // The same name under another genre is fine: "Mysticism" in horror and in mystery.
+    val clash = taken.any { it.key == OwnGenre.key(n, under) && it.key != initial?.key }
     val builtIn = Genre.entries.map { genreName(it).lowercase() }
     val ok = n.isNotEmpty() && !clash && n.lowercase() !in builtIn
     AlertDialog(
@@ -112,7 +113,7 @@ fun GenreDialog(parent: Genre, initial: OwnGenre? = null, taken: List<OwnGenre> 
 fun GenrePicker(genre: Genre, sub: String, all: List<OwnGenre>, onChange: (Genre, String) -> Unit) {
     val container = LocalContext.current.container
     var adding by remember { mutableStateOf<Genre?>(null) }
-    val own = all.firstOrNull { it.key == OwnGenre.key(sub) }
+    val own = all.firstOrNull { it.key == OwnGenre.key(sub, genre) }
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Genre.entries.forEach { g ->
             Chip(genreName(g), genre == g && own?.standalone != true, { onChange(g, if (genre == g && own?.standalone != true) sub else "") }, genreColor(g))

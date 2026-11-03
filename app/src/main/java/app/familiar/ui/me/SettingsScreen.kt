@@ -170,6 +170,7 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
                     listOf(15, 30, 45, 60, 90).forEach { n -> Chip(stringResource(R.string.min_short, n), settings.candleMin == n, { update { it.copy(candleMin = n) } }) }
                 }
                 Spacer(Modifier.height(6.dp))
+                SwitchRow(stringResource(R.string.set_candle_bell), stringResource(R.string.set_candle_bell_sub), settings.candleBell, { v -> update { it.copy(candleBell = v) } })
                 SwitchRow(stringResource(R.string.set_page_sound), null, settings.pageSound, { v -> update { it.copy(pageSound = v) } })
                 SwitchRow(stringResource(R.string.set_haptics), null, settings.haptics, { v -> update { it.copy(haptics = v) } })
                 SwitchRow(stringResource(R.string.set_dim), stringResource(R.string.set_dim_sub), settings.stillDim, { v -> update { it.copy(stillDim = v) } })

@@ -50,6 +50,8 @@ data class Book(
     @ColumnInfo(defaultValue = "") val sub: String = "",
     /** A few words of the reader's own about the book: why it was put down, what it was like. */
     @ColumnInfo(defaultValue = "") val note: String = "",
+    /** An e-book rather than one on paper; an audiobook is neither. */
+    @ColumnInfo(defaultValue = "0") val ebook: Boolean = false,
 ) {
     val tagList: List<String> get() = tags.split('\n').map { it.trim() }.filter { it.isNotEmpty() }
     /** The last page you can reach: the book's end, or no limit when its length isn't known. */
@@ -217,9 +219,9 @@ abstract class FamiliarDao {
 // Every schema change gets a new version and a migration that keeps what's there (1.1.0 lost data without one).
 @Database(
     entities = [Book::class, Reading::class, Pet::class, Find::class],
-    version = 5,
+    version = 6,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5)],
+    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6)],
 )
 abstract class FamiliarDatabase : RoomDatabase() {
     abstract fun dao(): FamiliarDao

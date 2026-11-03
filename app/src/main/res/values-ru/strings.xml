@@ -343,6 +343,8 @@
     <string name="set_ritual">Ритуал</string>
     <string name="set_candle">Сколько горит свеча</string>
     <string name="set_page_sound">Шелест страницы</string>
+    <string name="set_candle_bell">Сигнал, когда свеча догорит</string>
+    <string name="set_candle_bell_sub">Звон и вибрация, чтобы не зачитаться</string>
     <string name="set_haptics">Вибрация при перелистывании</string>
     <string name="set_dim">Гасить экран вниз лицом</string>
     <string name="set_dim_sub">Когда телефон лежит экраном вниз во время ритуала</string>
@@ -381,6 +383,10 @@
 
     <string name="channel_remind">Вечернее напоминание</string>
     <string name="channel_remind_desc">Раз в день, если чтения ещё не было</string>
+    <string name="channel_candle">Свеча</string>
+    <string name="channel_candle_desc">Когда свеча ритуала догорает</string>
+    <string name="candle_bell_title">Свеча догорела</string>
+    <string name="candle_bell_text">Прошло %d мин. Можно читать дальше или закончить.</string>
     <string name="notif_title">%s ждёт историю</string>
     <string name="widget_name">Фамильяр</string>
     <string name="widget_desc">Твой фамильяр и страницы за сегодня</string>
@@ -427,6 +433,7 @@
     <string name="goal_on_pace">Точно по графику</string>
     <string name="goal_behind">Отстаёшь от графика на %s: время догнать ещё есть</string>
     <string name="goal_pick">Книг дочитать в этом году</string>
+    <string name="goal_own">Своё число</string>
     <string name="saga_goal">Из обещанных %2$d книг прочитано %1$d.</string>
     <string name="saga_goal_done">Обещание прочитать %d книг сдержано.</string>
     <string name="audio_of">%1$s из %2$s</string>
@@ -439,6 +446,9 @@
     <string name="listened_now">Прослушано: %s</string>
     <string name="f_audio">Аудиокнига</string>
     <string name="f_audio_sub">Считается в минутах, а не в страницах</string>
+    <string name="f_format">Формат</string>
+    <string name="f_paper">Бумажная</string>
+    <string name="f_ebook">Электронная</string>
     <string name="f_minutes">Длительность</string>
     <string name="f_minute_now">Сейчас на</string>
     <string name="audio_playing">Каждая прослушанная минута засчитывается сама.</string>
@@ -800,8 +810,9 @@
     <string name="lib_nothing">Ничего не нашлось. Попробуй другое слово или сбрось фильтр.</string>
     <string name="lib_format">Формат</string>
     <string name="lib_any">Любой</string>
-    <string name="lib_paper">Текст</string>
+    <string name="lib_paper">Бумага</string>
     <string name="lib_audio">Аудио</string>
+    <string name="lib_ebook">Электронные</string>
     <string name="lib_show">Показать: %s</string>
     <string name="empty_all">Библиотека пуста. Добавь первую книгу кнопкой +.</string>
     <string name="sort_recent">Недавние</string>

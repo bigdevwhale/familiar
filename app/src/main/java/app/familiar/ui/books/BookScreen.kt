@@ -73,6 +73,8 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
     val book = data.book(id)
     var deleting by remember { mutableStateOf(false) }
     var abandoning by remember { mutableStateOf(false) }
+    // The day it was finished (or put down) can be moved: an imported book arrives dated the day of the import.
+    var redating by remember { mutableStateOf(false) }
     if (book == null) {
         LaunchedEffect(Unit) { go.back() }
         return
@@ -130,7 +132,10 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
                 // Put down for good: the day and the reader's reason, and a way back.
                 Shelf.ABANDONED -> {
                     UCard {
-                        Text(book.finished?.let { stringResource(R.string.abandoned_on, dateShort(it)) } ?: stringResource(R.string.shelf_abandoned), style = UType.Strong)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(book.finished?.let { stringResource(R.string.abandoned_on, dateShort(it)) } ?: stringResource(R.string.shelf_abandoned), style = UType.Strong, modifier = Modifier.weight(1f))
+                            TextButton(onClick = { redating = true }) { Text(stringResource(R.string.edit), color = U.c.accent, style = UType.Button) }
+                        }
                         if (book.note.isNotBlank()) Text("«" + book.note + "»", style = UType.Sub.copy(fontStyle = FontStyle.Italic), modifier = Modifier.padding(top = 6.dp))
                     }
                     Spacer(Modifier.height(8.dp))
@@ -140,8 +145,11 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
                 }
                 Shelf.DONE -> {
                     UCard {
-                        Text(stringResource(R.string.finished_on, dateShort(book.finished ?: book.added)), style = UType.Strong)
-                        Spacer(Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(stringResource(R.string.finished_on, dateShort(book.finished ?: book.added)), style = UType.Strong, modifier = Modifier.weight(1f))
+                            TextButton(onClick = { redating = true }) { Text(stringResource(R.string.edit), color = U.c.accent, style = UType.Button) }
+                        }
+                        Spacer(Modifier.height(4.dp))
                         Text(stringResource(R.string.your_rating), style = UType.Muted)
                         Row {
                             (1..5).forEach { r ->
@@ -201,6 +209,10 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
                 }
             }
         }
+    }
+    if (redating) app.familiar.ui.components.DateTimeDialog(book.finished ?: book.added, { redating = false }, time = false) { day ->
+        container.write { dao().updateBook(book.copy(finished = day, started = book.started?.coerceAtMost(day), added = book.added.coerceAtMost(day))) }
+        redating = false
     }
     if (abandoning) AbandonDialog({ abandoning = false }) { why ->
         container.write { dao().updateBook(book.copy(shelf = Shelf.ABANDONED.name, finished = System.currentTimeMillis(), note = why.ifBlank { book.note })) }

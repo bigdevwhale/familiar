@@ -95,6 +95,7 @@ object Import {
                 rating = of("My Rating").replace(',', '.').toDoubleOrNull()?.roundToInt()?.takeIf { shelf == Shelf.DONE && it in 1..5 },
                 cover = of("Cover").takeIf { it.startsWith("https://") }.orEmpty(),
                 audio = of("Audio").isNotEmpty(),
+                ebook = of("Ebook").isNotEmpty() && of("Audio").isEmpty(),
                 series = of("Series").ifEmpty { cycle?.groupValues?.get(2)?.trim().orEmpty() },
                 volume = (of("Series Number").ifEmpty { cycle?.groupValues?.get(3).orEmpty() }).toIntOrNull(),
                 // Goodreads lists every shelf a book is on; the ones besides read / to-read become the reader's own shelves.

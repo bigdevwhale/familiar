@@ -15,7 +15,7 @@ object Backup {
         .put("books", JSONArray(s.books.map {
             JSONObject().put("id", it.id).put("title", it.title).put("author", it.author).put("pages", it.pages).put("genre", it.genre)
                 .put("shelf", it.shelf).put("page", it.page).put("added", it.added).put("started", it.started ?: JSONObject.NULL)
-                .put("finished", it.finished ?: JSONObject.NULL).put("rating", it.rating ?: JSONObject.NULL).put("cover", it.cover).put("audio", it.audio).put("series", it.series).put("volume", it.volume ?: JSONObject.NULL).put("tags", it.tags).put("sub", it.sub).put("note", it.note)
+                .put("finished", it.finished ?: JSONObject.NULL).put("rating", it.rating ?: JSONObject.NULL).put("cover", it.cover).put("audio", it.audio).put("series", it.series).put("volume", it.volume ?: JSONObject.NULL).put("tags", it.tags).put("sub", it.sub).put("note", it.note).put("ebook", it.ebook)
         }))
         .put("readings", JSONArray(s.readings.map {
             JSONObject().put("id", it.id).put("bookId", it.bookId).put("petId", it.petId).put("start", it.start).put("end", it.end)
@@ -52,7 +52,7 @@ object Backup {
                 Book(
                     id = getLong("id"), title = getString("title"), author = optString("author"), pages = getInt("pages"), genre = getString("genre"),
                     shelf = optString("shelf", Shelf.READING.name), page = optInt("page"), added = getLong("added"),
-                    started = optL("started"), finished = optL("finished"), rating = optI("rating"), cover = optString("cover").let { moved[it] ?: it }, audio = optBoolean("audio"), series = optString("series"), volume = optI("volume"), tags = optString("tags"), sub = optString("sub"), note = optString("note"),
+                    started = optL("started"), finished = optL("finished"), rating = optI("rating"), cover = optString("cover").let { moved[it] ?: it }, audio = optBoolean("audio"), series = optString("series"), volume = optI("volume"), tags = optString("tags"), sub = optString("sub"), note = optString("note"), ebook = optBoolean("ebook"),
                 )
             },
             readings = root.list("readings") {

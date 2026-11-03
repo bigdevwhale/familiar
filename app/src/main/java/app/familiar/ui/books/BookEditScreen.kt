@@ -64,6 +64,7 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
     var shelf by remember { mutableStateOf(old?.shelfOf ?: Shelf.READING) }
     var cover by remember { mutableStateOf(old?.cover ?: "") }
     var audio by remember { mutableStateOf(old?.audio ?: false) }
+    var ebook by remember { mutableStateOf(old?.ebook ?: false) }
     var series by remember { mutableStateOf(old?.series ?: newSeries) }
     // A new volume of a cycle gets the next number.
     var tags by remember { mutableStateOf(old?.tagList?.toSet() ?: emptySet()) }
@@ -96,13 +97,19 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
                 cover = f.cover
             }
             SectionTitle(stringResource(R.string.f_cover))
-            CoverPicker(title, genre, cover, app.familiar.domain.OwnGenre.key(sub).let { k -> data.genres.firstOrNull { it.key == k }?.argb }) { cover = it }
+            CoverPicker(title, genre, cover, app.familiar.domain.OwnGenre.key(sub, genre).let { k -> data.genres.firstOrNull { it.key == k }?.argb }) { cover = it }
             SectionTitle(stringResource(R.string.f_title))
             UTextField(title, { title = it.take(120) }, placeholder = stringResource(R.string.f_title_hint))
             SectionTitle(stringResource(R.string.f_author))
             UTextField(author, { author = it.take(80) }, placeholder = stringResource(R.string.f_author_hint))
-            Spacer(Modifier.height(8.dp))
-            app.familiar.ui.components.SwitchRow(stringResource(R.string.f_audio), stringResource(R.string.f_audio_sub), audio, { audio = it })
+            // On paper, an e-book, or an audiobook counted in minutes.
+            SectionTitle(stringResource(R.string.f_format))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Chip(stringResource(R.string.f_paper), !audio && !ebook, { audio = false; ebook = false })
+                Chip(stringResource(R.string.f_ebook), !audio && ebook, { audio = false; ebook = true })
+                Chip(stringResource(R.string.f_audio), audio, { audio = true; ebook = false })
+            }
+            if (audio) Text(stringResource(R.string.f_audio_sub), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 6.dp))
             if (audio) {
                 // An audiobook's length as the shop or the player shows it: hours and minutes.
                 SectionTitle(stringResource(R.string.f_minutes))
@@ -181,7 +188,7 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
                 val read = old == null && shelf == Shelf.DONE
                 val p = if (read) total else (page.toIntOrNull() ?: 0).coerceIn(0, if (total > 0) total else 99_999)
                 val b = (old ?: Book(title = "", pages = total, genre = genre.name, added = if (read) finished else now)).copy(
-                    title = title.trim(), author = author.trim(), pages = total, genre = genre.name, sub = sub.trim(), page = p, cover = cover, audio = audio, tags = tags.joinToString("\n"), series = series.trim(), volume = volume.toIntOrNull()?.takeIf { series.isNotBlank() },
+                    title = title.trim(), author = author.trim(), pages = total, genre = genre.name, sub = sub.trim(), page = p, cover = cover, audio = audio, ebook = ebook && !audio, tags = tags.joinToString("\n"), series = series.trim(), volume = volume.toIntOrNull()?.takeIf { series.isNotBlank() },
                     shelf = if (old == null) shelf.name else old.shelf,
                     started = old?.started ?: if (shelf == Shelf.READING) now else null,
                     finished = if (read) finished else old?.finished,

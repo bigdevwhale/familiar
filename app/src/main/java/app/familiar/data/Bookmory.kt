@@ -90,6 +90,7 @@ object Bookmory {
                 rating = star.roundToInt().takeIf { shelf == Shelf.DONE && it in 1..5 },
                 cover = b.optString("image").takeIf { it.startsWith("https://") }.orEmpty(),
                 audio = (b.strings("book_types") + b.optString("book_type")).any { it.contains("audio", ignoreCase = true) },
+                ebook = (b.strings("book_types") + b.optString("book_type")).let { t -> t.none { it.contains("audio", ignoreCase = true) } && t.any { it.contains("ebook", ignoreCase = true) || it.contains("e_book", ignoreCase = true) || it.contains("electronic", ignoreCase = true) } },
                 // The reader's own collections ("Favorite") become their shelves.
                 // What the reader wrote of this read: a review, or why it was given up.
                 note = read?.optString("comment").orEmpty().trim(),

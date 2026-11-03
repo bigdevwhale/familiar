@@ -474,7 +474,7 @@ private fun FilterSheet(data: FamiliarData, shown: List<Book>, browse: Browse, o
             }
             SectionTitle(stringResource(R.string.lib_format))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(Format.ANY to R.string.lib_any, Format.PAPER to R.string.lib_paper, Format.AUDIO to R.string.lib_audio).forEach { (f, res) ->
+                listOf(Format.ANY to R.string.lib_any, Format.PAPER to R.string.lib_paper, Format.EBOOK to R.string.lib_ebook, Format.AUDIO to R.string.lib_audio).forEach { (f, res) ->
                     Chip(stringResource(res), browse.format == f, { onChange(browse.copy(format = f)) })
                 }
             }

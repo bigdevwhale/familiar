@@ -227,6 +227,8 @@ const QUERY = `
                     Cover: (book.cover && book.cover.url) || '',
                     Genres: (book.topics || []).map(t => t.name).join('; '),
                     Audio: item.__typename === 'AudioBook' ? 'yes' : '',
+                    // Everything else on Yandex Books is read on a screen.
+                    Ebook: item.__typename === 'AudioBook' ? '' : 'yes',
                 })
             }
             console.log(`Familiar: ${rows.length} книг…`)
@@ -236,7 +238,7 @@ const QUERY = `
         }
     }
     const columns = ['Title', 'Author', 'ISBN', 'My Rating', 'Number of Pages', 'Date Read', 'Date Added',
-        'Bookshelves', 'Exclusive Shelf', 'Cover', 'Genres', 'Audio']
+        'Bookshelves', 'Exclusive Shelf', 'Cover', 'Genres', 'Audio', 'Ebook']
     const cell = v => /[",\r\n]/.test(v || '') ? '"' + v.replaceAll('"', '""') + '"' : (v || '')
     const csv = [columns.join(','), ...rows.filter(r => r.Title).map(r => columns.map(c => cell(r[c])).join(','))].join('\r\n')
     const a = document.createElement('a')

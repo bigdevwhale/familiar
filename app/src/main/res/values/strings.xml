@@ -329,6 +329,8 @@
     <string name="set_ritual">The ritual</string>
     <string name="set_candle">How long the candle burns</string>
     <string name="set_page_sound">Page rustle</string>
+    <string name="set_candle_bell">A bell when the candle burns out</string>
+    <string name="set_candle_bell_sub">A chime and a buzz, so you read on only if you mean to</string>
     <string name="set_haptics">Vibration on a page turn</string>
     <string name="set_dim">Dim the screen face down</string>
     <string name="set_dim_sub">When the phone lies face down during a ritual</string>
@@ -368,6 +370,10 @@
     <!-- Notifications and widget -->
     <string name="channel_remind">Evening reminder</string>
     <string name="channel_remind_desc">Once a day, when you haven\'t read yet</string>
+    <string name="channel_candle">Candle</string>
+    <string name="channel_candle_desc">When the ritual candle burns out</string>
+    <string name="candle_bell_title">The candle has burned out</string>
+    <string name="candle_bell_text">%d minutes of reading. Read on, or finish.</string>
     <string name="notif_title">%s is waiting for a story</string>
     <string name="widget_name">Familiar</string>
     <string name="widget_desc">Your familiar and today\'s pages</string>
@@ -414,6 +420,7 @@
     <string name="goal_on_pace">Right on pace</string>
     <string name="goal_behind">Behind the pace by %s: there\'s time to catch up</string>
     <string name="goal_pick">Books to finish this year</string>
+    <string name="goal_own">Your own number</string>
     <string name="saga_goal">Of the %2$d books promised, %1$d are read so far.</string>
     <string name="saga_goal_done">The promise of %d books was kept.</string>
     <string name="audio_of">%1$s of %2$s</string>
@@ -426,6 +433,9 @@
     <string name="listened_now">That\'s %s listened</string>
     <string name="f_audio">Audiobook</string>
     <string name="f_audio_sub">Counted in minutes instead of pages</string>
+    <string name="f_format">Format</string>
+    <string name="f_paper">Paper</string>
+    <string name="f_ebook">E-book</string>
     <string name="f_minutes">Length</string>
     <string name="f_minute_now">Now at</string>
     <string name="audio_playing">Every minute listened counts by itself.</string>
@@ -767,6 +777,7 @@
     <string name="lib_any">Any</string>
     <string name="lib_paper">Paper</string>
     <string name="lib_audio">Audio</string>
+    <string name="lib_ebook">E-book</string>
     <string name="lib_show">Show %s</string>
     <string name="empty_all">Your library is empty. Add the first book with +.</string>
     <string name="sort_recent">Recent</string>

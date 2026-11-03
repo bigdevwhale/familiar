@@ -188,6 +188,14 @@ fun FamiliarRoot(settings: Settings, dim: (Boolean) -> Unit) {
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route
 
+    // The candle's bell: an alarm in case the phone sleeps, and the app's own timer while it's awake.
+    val ritual = settings.ritual
+    LaunchedEffect(ritual?.start, ritual?.rang, settings.candleMin, settings.candleBell) {
+        app.familiar.notify.CandleBell.schedule(context, ritual, settings.candleMin, settings.candleBell)
+        if (ritual == null || ritual.rang || !settings.candleBell) return@LaunchedEffect
+        kotlinx.coroutines.delay((app.familiar.notify.CandleBell.due(ritual, settings.candleMin) - System.currentTimeMillis()).coerceAtLeast(0))
+        app.familiar.notify.CandleBell.ringIfDue(context)
+    }
     // A ritual left burning comes back to the front once, when the app opens.
     LaunchedEffect(Unit) {
         settings.ritual?.let { if (settings.onboarded) go.ritual(it.bookId) }

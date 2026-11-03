@@ -245,12 +245,25 @@ private fun CalendarPage(data: FamiliarData, go: Go) {
 @androidx.compose.foundation.layout.ExperimentalLayoutApi
 @Composable
 private fun YearGoalPicker(current: Int, onPick: (Int) -> Unit) {
+    val presets = listOf(0, 6, 12, 24, 36, 52)
     androidx.compose.foundation.layout.FlowRow(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
-        listOf(0, 6, 12, 24, 36, 52).forEach { n ->
+        presets.forEach { n ->
             app.familiar.ui.components.Chip(if (n == 0) stringResource(R.string.off) else n.toString(), current == n, { onPick(n) })
         }
     }
+    // Any number of one's own: 15, 100, 365.
+    var own by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(current.takeIf { it > 0 && it !in presets }?.toString() ?: "") }
+    val n = own.toIntOrNull()?.takeIf { it in 1..MAX_YEAR_GOAL }
+    Spacer(Modifier.height(8.dp))
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        app.familiar.ui.components.UTextField(own, { own = it.filter(Char::isDigit).take(4) }, Modifier.weight(1f), placeholder = stringResource(R.string.goal_own), number = true)
+        androidx.compose.material3.TextButton(onClick = { n?.let(onPick) }, enabled = n != null) {
+            Text(stringResource(R.string.save), color = if (n != null) U.c.accent else U.c.faint, style = UType.Button)
+        }
+    }
 }
+
+private const val MAX_YEAR_GOAL = 1000
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable

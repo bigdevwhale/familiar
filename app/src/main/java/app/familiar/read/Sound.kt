@@ -121,6 +121,38 @@ object Sound {
         }
     }
 
+    private var bell: ShortArray? = null
+
+    /** Two soft strokes of a small bell: a few inharmonic partials dying away, the way metal rings. */
+    fun chime() {
+        val pcm = bell ?: run {
+            val stroke = (1.4 * RATE).toInt()
+            val gap = (0.55 * RATE).toInt()
+            val partials = listOf(1.0 to 1.0, 2.76 to 0.45, 5.4 to 0.22, 8.93 to 0.1)
+            ShortArray(gap + stroke) { i ->
+                fun ring(t: Double, f: Double): Double = if (t < 0) 0.0 else
+                    partials.sumOf { (k, a) -> a * sin(2 * PI * f * k * t) * exp(-t * (2.2 + k * 0.9)) } * (t * 400).coerceAtMost(1.0)
+                val t = i.toDouble() / RATE
+                val v = ring(t, 1046.5) + 0.85 * ring(t - gap.toDouble() / RATE, 784.0)
+                (v * 0.22 * Short.MAX_VALUE).toInt().coerceIn(-32767, 32767).toShort()
+            }.also { bell = it }
+        }
+        Thread {
+            val track = runCatching {
+                AudioTrack.Builder()
+                    .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build())
+                    .setAudioFormat(AudioFormat.Builder().setSampleRate(RATE).setEncoding(AudioFormat.ENCODING_PCM_16BIT).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build())
+                    .setBufferSizeInBytes(pcm.size * 2)
+                    .setTransferMode(AudioTrack.MODE_STATIC)
+                    .build()
+            }.getOrNull() ?: return@Thread
+            track.write(pcm, 0, pcm.size)
+            track.play()
+            Thread.sleep(pcm.size * 1000L / RATE + 200)
+            track.release()
+        }.start()
+    }
+
     private var rustle: ShortArray? = null
 
     /** The swish of a page: band-limited noise that rises and falls in a quarter of a second. */

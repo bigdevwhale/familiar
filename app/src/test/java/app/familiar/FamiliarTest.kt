@@ -337,6 +337,9 @@ class FamiliarTest {
         val all = app.familiar.domain.OwnGenre.all(listOf(g), listOf(book(1, Genre.OTHER).copy(sub = "Manga"), book(2).copy(sub = "DARK FANTASY")))
         assertEquals(listOf("Dark fantasy", "Manga"), all.map { it.name })
         assertTrue(all[1].standalone)
+        // One name in two genres is two subgenres: "Mysticism" in horror and in mystery.
+        val two = app.familiar.domain.OwnGenre.all(emptyList(), listOf(book(1, Genre.HORROR).copy(sub = "Mysticism"), book(2, Genre.MYSTERY).copy(sub = "mysticism")))
+        assertEquals(listOf(Genre.HORROR, Genre.MYSTERY), two.map { it.parent })
     }
 
     @Test
@@ -352,7 +355,12 @@ class FamiliarTest {
         assertEquals(listOf("Hobbit", "Dracula", "Dune"), titles(by.copy(reverse = true)))
         assertEquals(listOf("Dracula"), titles(by.copy(format = app.familiar.ui.books.Format.AUDIO)))
         assertEquals(listOf("Dune", "Hobbit"), titles(by.copy(genres = setOf("g:FANTASY"))))
-        assertEquals(listOf("Hobbit"), titles(by.copy(genres = setOf("o:fairy-tale"))))
+        assertEquals(listOf("Hobbit"), titles(by.copy(genres = setOf("o:FANTASY|fairy-tale"))))
+        // Paper, e-book and audio each on their own.
+        val withEbook = b.map { if (it.title == "Dune") it.copy(ebook = true) else it }
+        fun formats(f: app.familiar.ui.books.Format) = by.copy(format = f).apply(withEbook, emptyList(), locale = Locale.ENGLISH).map { it.title }
+        assertEquals(listOf("Hobbit"), formats(app.familiar.ui.books.Format.PAPER))
+        assertEquals(listOf("Dune"), formats(app.familiar.ui.books.Format.EBOOK))
         assertEquals(listOf("Dune"), titles(by.copy(stars = 4)))
         assertEquals(listOf("Hobbit"), titles(by.copy(query = "tolk")))
         assertEquals(listOf("Dracula"), by.copy(query = "ужас").apply(b, emptyList(), genreNames = mapOf(Genre.HORROR to "Ужасы")).map { it.title })

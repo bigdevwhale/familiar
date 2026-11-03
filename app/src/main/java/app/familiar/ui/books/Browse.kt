@@ -12,9 +12,9 @@ import java.util.Locale
 /** [SERIES]: cycle by cycle, each in volume order, books outside a cycle last. */
 enum class Sort { RECENT, ADDED, TITLE, AUTHOR, RATING, PROGRESS, LENGTH, SERIES }
 
-enum class Format { ANY, PAPER, AUDIO }
+enum class Format { ANY, PAPER, EBOOK, AUDIO }
 
-/** What the shelf shows: a search, genres, a cycle, paper or audio, stars, and the order. */
+/** What the shelf shows: a search, genres, a cycle, paper, e-book or audio, stars, and the order. */
 data class Browse(
     val query: String = "",
     /** [genreKey] of built-in genres (with all their subgenres) and own genres; a book in any of them shows. */
@@ -36,7 +36,8 @@ data class Browse(
         val genre = genreNames[Genre.of(b.genre)].orEmpty()
         if (q.isNotEmpty() && listOf(b.title, b.author, b.series, b.sub, b.tags, genre).none { q in it.lowercase() }) return false
         if (genres.isNotEmpty() && genreKey(Genre.of(b.genre)) !in genres && OwnGenre.of(b)?.let { genreKey(it) } !in genres) return false
-        if (format == Format.PAPER && b.audio || format == Format.AUDIO && !b.audio) return false
+        val f = when { b.audio -> Format.AUDIO; b.ebook -> Format.EBOOK; else -> Format.PAPER }
+        if (format != Format.ANY && format != f) return false
         if (stars > 0 && (b.rating ?: 0) < stars) return false
         if (series.isNotBlank() && !b.series.trim().equals(series.trim(), ignoreCase = true)) return false
         return true

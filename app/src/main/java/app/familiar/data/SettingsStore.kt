@@ -21,7 +21,8 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 enum class Ambience { OFF, FIRE, RAIN }
 
 /** A ritual in progress; kept in settings so it survives the app being closed. */
-data class Ritual(val bookId: Long, val start: Long, val fromPage: Int, val page: Int, val stillMs: Long, val listen: Boolean = false)
+/** [rang]: the bell has told that the candle burned out, so it doesn't again. */
+data class Ritual(val bookId: Long, val start: Long, val fromPage: Int, val page: Int, val stillMs: Long, val listen: Boolean = false, val rang: Boolean = false)
 
 data class Settings(
     val theme: ThemeMode = ThemeMode.SYSTEM,
@@ -32,6 +33,8 @@ data class Settings(
     /** How long the ritual candle burns, minutes. */
     val candleMin: Int = 30,
     val ambience: Ambience = Ambience.FIRE,
+    /** A chime and a buzz when the candle burns out, so reading doesn't run on unnoticed. */
+    val candleBell: Boolean = true,
     /** A rustle when a page is turned. */
     val pageSound: Boolean = true,
     val haptics: Boolean = true,
@@ -97,12 +100,13 @@ class SettingsStore(context: Context) {
         dailyGoal = this[DAILY_GOAL] ?: 20,
         candleMin = this[CANDLE_MIN] ?: 30,
         ambience = this[AMBIENCE]?.let { a -> runCatching { Ambience.valueOf(a) }.getOrNull() } ?: Ambience.FIRE,
+        candleBell = this[CANDLE_BELL] ?: true,
         pageSound = this[PAGE_SOUND] ?: true,
         haptics = this[HAPTICS] ?: true,
         stillDim = this[STILL_DIM] ?: true,
         remindAt = this[REMIND_AT] ?: -1,
         ritual = (this[R_BOOK] ?: 0L).takeIf { it > 0 }?.let {
-            Ritual(it, this[R_START] ?: 0L, this[R_FROM] ?: 0, this[R_PAGE] ?: 0, this[R_STILL] ?: 0L, this[R_LISTEN] ?: false)
+            Ritual(it, this[R_START] ?: 0L, this[R_FROM] ?: 0, this[R_PAGE] ?: 0, this[R_STILL] ?: 0L, this[R_LISTEN] ?: false, this[R_RANG] ?: false)
         },
         seenUnlocks = this[SEEN_UNLOCKS] ?: emptySet(),
         seenStages = this[SEEN_STAGES] ?: emptySet(),
@@ -139,6 +143,7 @@ class SettingsStore(context: Context) {
             it[DAILY_GOAL] = s.dailyGoal
             it[CANDLE_MIN] = s.candleMin
             it[AMBIENCE] = s.ambience.name
+            it[CANDLE_BELL] = s.candleBell
             it[PAGE_SOUND] = s.pageSound
             it[HAPTICS] = s.haptics
             it[STILL_DIM] = s.stillDim
@@ -150,6 +155,7 @@ class SettingsStore(context: Context) {
             it[R_PAGE] = r?.page ?: 0
             it[R_STILL] = r?.stillMs ?: 0L
             it[R_LISTEN] = r?.listen ?: false
+            it[R_RANG] = r?.rang ?: false
             it[SEEN_UNLOCKS] = s.seenUnlocks
             it[SEEN_STAGES] = s.seenStages
             it[CLAIMED] = s.claimed
@@ -183,6 +189,7 @@ class SettingsStore(context: Context) {
         val CANDLE_MIN = intPreferencesKey("candle_min")
         val AMBIENCE = stringPreferencesKey("ambience")
         val PAGE_SOUND = booleanPreferencesKey("page_sound")
+        val CANDLE_BELL = booleanPreferencesKey("candle_bell")
         val HAPTICS = booleanPreferencesKey("haptics")
         val STILL_DIM = booleanPreferencesKey("still_dim")
         val REMIND_AT = intPreferencesKey("remind_at")
@@ -192,6 +199,7 @@ class SettingsStore(context: Context) {
         val R_PAGE = intPreferencesKey("ritual_page")
         val R_STILL = longPreferencesKey("ritual_still")
         val R_LISTEN = booleanPreferencesKey("ritual_listen")
+        val R_RANG = booleanPreferencesKey("ritual_rang")
         val SEEN_UNLOCKS = stringSetPreferencesKey("seen_unlocks")
         val SEEN_STAGES = stringSetPreferencesKey("seen_stages")
         val CLAIMED = stringSetPreferencesKey("claimed")

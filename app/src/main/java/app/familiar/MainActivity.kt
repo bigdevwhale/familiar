@@ -47,6 +47,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        app.familiar.notify.CandleBell.front = true
+    }
+
+    override fun onStop() {
+        app.familiar.notify.CandleBell.front = false
+        super.onStop()
+    }
+
     /** Screen almost dark while the phone lies face down during a ritual. */
     private fun dim(on: Boolean) {
         window.attributes = window.attributes.apply {

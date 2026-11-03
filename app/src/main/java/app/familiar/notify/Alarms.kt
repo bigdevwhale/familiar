@@ -125,10 +125,14 @@ private val receiverScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != Alarms.REMIND) return
+        if (intent.action != Alarms.REMIND && intent.action != CandleBell.ACTION) return
         val pending = goAsync()
         receiverScope.launch {
             try {
+                if (intent.action == CandleBell.ACTION) {
+                    CandleBell.ringIfDue(context)
+                    return@launch
+                }
                 Alarms.fire(context)
                 context.container.changed()
             } finally {

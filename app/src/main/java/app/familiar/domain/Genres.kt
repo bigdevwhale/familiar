@@ -11,11 +11,13 @@ import kotlin.math.abs
  */
 class OwnGenre(val name: String, val parent: Genre) {
     val standalone: Boolean get() = parent == Genre.OTHER
-    val key: String get() = key(name)
+    /** The same name may be a subgenre of several genres ("Mysticism" in horror and in mystery): each is its own. */
+    val key: String get() = key(name, parent)
 
     /** A shade of the parent's colour, or a colour of its own for a genre standing by itself. */
     val argb: Long get() {
-        val h = Math.floorMod(key.hashCode(), 9_973)
+        // By the name alone, so the colours stay what they were before keys knew the parent.
+        val h = Math.floorMod(key(name).hashCode(), 9_973)
         if (standalone) return PALETTE[h % PALETTE.size]
         val t = SHADES[h % SHADES.size]
         return mix(parent.argb, if (t > 0) 0xFFFFF6E0 else 0xFF1E0E28, abs(t))
@@ -30,6 +32,8 @@ class OwnGenre(val name: String, val parent: Genre) {
         const val MAX_NAME = 30
 
         fun key(name: String): String = name.trim().lowercase()
+
+        fun key(name: String, parent: Genre): String = parent.name + "|" + key(name)
 
         fun decode(line: String): OwnGenre? {
             val i = line.indexOf('|')
