@@ -29,14 +29,16 @@ import app.familiar.ui.components.UTextField
 import app.familiar.ui.theme.U
 import app.familiar.ui.theme.UType
 
-class SittingInput(val toPage: Int, val item: String, val finish: Boolean)
+/** [finishedOn]: the day the book was finished, when it was another day than today; null for today. */
+class SittingInput(val toPage: Int, val item: String, val finish: Boolean, val finishedOn: Long? = null)
 
 /**
  * Where you stopped and (for a slime) what it should swallow. After a [timed] ritual the page can
- * be left out: then the familiar eats the minutes by the candle.
+ * be left out: then the familiar eats the minutes by the candle. With [pickDay] a finished book can
+ * be dated another day (logged afterwards: finished last week, last year).
  */
 @Composable
-fun SittingForm(book: Book, fromPage: Int, startPage: Int, slime: Boolean, button: String, timed: Boolean = false, listen: Boolean = false, skipPage: Boolean = listen, onSave: (SittingInput) -> Unit) {
+fun SittingForm(book: Book, fromPage: Int, startPage: Int, slime: Boolean, button: String, timed: Boolean = false, listen: Boolean = false, skipPage: Boolean = listen, pickDay: Boolean = false, onSave: (SittingInput) -> Unit) {
     var page by remember { mutableIntStateOf(startPage.coerceIn(fromPage, book.cap)) }
     // What was typed: a page, or for an audiobook the time in hours and minutes; or a percent.
     var typed by remember { mutableStateOf("") }
@@ -44,6 +46,8 @@ fun SittingForm(book: Book, fromPage: Int, startPage: Int, slime: Boolean, butto
     var percent by remember { mutableStateOf("") }
     var item by remember { mutableStateOf("") }
     var finish by remember { mutableStateOf(false) }
+    var day by remember { mutableStateOf<Long?>(null) }
+    var pickingDay by remember { mutableStateOf(false) }
     // Where the page was before "finished" sent it to the end, to go back there when it's undone.
     var before by remember { mutableStateOf<Int?>(null) }
     // After listening the page in the text is often unknown: skipping it is the default then.
@@ -98,6 +102,18 @@ fun SittingForm(book: Book, fromPage: Int, startPage: Int, slime: Boolean, butto
                 }
                 typed = ""; typedTime = null; percent = ""
             })
+            if (pickDay && (finish || atEnd)) Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.finished_on, app.familiar.ui.dateShort(day ?: System.currentTimeMillis())),
+                    style = UType.Body, modifier = Modifier.weight(1f),
+                )
+                androidx.compose.material3.TextButton(onClick = { pickingDay = true }) { Text(stringResource(R.string.edit), color = U.c.accent, style = UType.Button) }
+            }
+        }
+        if (pickingDay) app.familiar.ui.components.DateTimeDialog(day ?: System.currentTimeMillis(), { pickingDay = false }, time = false) { d ->
+            // Today picked again is no other day.
+            day = d.takeIf { java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate() != java.time.LocalDate.now() }
+            pickingDay = false
         }
         if (slime) {
             SectionTitle(stringResource(R.string.slime_item))
@@ -107,7 +123,8 @@ fun SittingForm(book: Book, fromPage: Int, startPage: Int, slime: Boolean, butto
         Spacer(Modifier.height(18.dp))
         PrimaryButton(button, {
             val to = if (noPage) fromPage else page
-            onSave(SittingInput(to, item, finish || (known && to >= book.pages)))
+            val done = finish || (known && to >= book.pages)
+            onSave(SittingInput(to, item, done, day.takeIf { done && pickDay }))
         }, Modifier.fillMaxWidth())
     }
 }

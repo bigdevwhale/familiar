@@ -84,6 +84,9 @@ data class Settings(
     val shelfSpines: Boolean = false,
     /** The tree bears only this year's books rather than every book ever finished. */
     val treeYear: Boolean = false,
+    /** The picture behind every screen ([app.familiar.ui.Backdrops] key), and when the reader's own was last picked. */
+    val backdrop: String = "",
+    val backdropStamp: Long = 0,
 ) {
     val guardedDays: Set<java.time.LocalDate> get() = guarded.mapNotNull { runCatching { java.time.LocalDate.parse(it) }.getOrNull() }.toSet()
 }
@@ -130,6 +133,8 @@ class SettingsStore(context: Context) {
         shelfList = this[SHELF_LIST] ?: false,
         shelfSpines = this[SHELF_SPINES] ?: false,
         treeYear = this[TREE_YEAR] ?: false,
+        backdrop = this[BACKDROP] ?: "",
+        backdropStamp = this[BACKDROP_STAMP] ?: 0L,
     )
 
     suspend fun now(): Settings = settings.first()
@@ -178,6 +183,8 @@ class SettingsStore(context: Context) {
             it[SHELF_LIST] = s.shelfList
             it[SHELF_SPINES] = s.shelfSpines
             it[TREE_YEAR] = s.treeYear
+            it[BACKDROP] = s.backdrop
+            it[BACKDROP_STAMP] = s.backdropStamp
         }
     }
 
@@ -222,5 +229,7 @@ class SettingsStore(context: Context) {
         val SHELF_LIST = booleanPreferencesKey("shelf_list")
         val SHELF_SPINES = booleanPreferencesKey("shelf_spines")
         val TREE_YEAR = booleanPreferencesKey("tree_year")
+        val BACKDROP = stringPreferencesKey("backdrop")
+        val BACKDROP_STAMP = longPreferencesKey("backdrop_stamp")
     }
 }

@@ -59,7 +59,7 @@ fun FurnishScreen(data: FamiliarData, go: Go) {
     val books = data.stats.finished.map { Genre.of(it.genre).argb.toInt() }.takeLast(24)
     val hour = LocalTime.now().hour
     val night = hour < 6 || hour >= 20
-    Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding()) {
+    Column(Modifier.fillMaxSize().background(U.screen).statusBarsPadding()) {
         TopBar(stringResource(R.string.furnish), { go.back() })
         LazyVerticalGrid(
             GridCells.Fixed(2),

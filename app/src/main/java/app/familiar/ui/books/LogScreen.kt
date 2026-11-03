@@ -45,7 +45,7 @@ fun LogScreen(id: Long, data: FamiliarData, go: Go) {
         LaunchedEffect(Unit) { go.back() }
         return
     }
-    Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding().imePadding()) {
+    Column(Modifier.fillMaxSize().background(U.screen).statusBarsPadding().imePadding()) {
         TopBar(book.title, { go.back() })
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).navigationBarsPadding().padding(bottom = 24.dp)) {
             Text(stringResource(R.string.log_text), style = UType.Sub)
@@ -70,7 +70,7 @@ fun LogScreen(id: Long, data: FamiliarData, go: Go) {
                 app.familiar.ui.components.UTextField(minutes, { minutes = it.filter(Char::isDigit).take(3) }, number = true, placeholder = "30")
             }
             androidx.compose.runtime.key(mode) {
-            SittingForm(book, book.page, book.page, data.species == Species.SLIME, stringResource(R.string.feed), timed = byTime, listen = byTime && listened, skipPage = byTime) { input ->
+            SittingForm(book, book.page, book.page, data.species == Species.SLIME, stringResource(R.string.feed), timed = byTime, listen = byTime && listened, skipPage = byTime, pickDay = true) { input ->
                 container.scope.launch {
                     val now = System.currentTimeMillis()
                     val mins = if (byTime) (minutes.toIntOrNull() ?: 0).coerceIn(0, 600) else 0
@@ -78,6 +78,13 @@ fun LogScreen(id: Long, data: FamiliarData, go: Go) {
                         container.db.dao(), book, book.page, input.toPage, now - mins * 60_000L, now, timed = mins > 0,
                         listened = listened, item = input.item, finish = input.finish, guarded = data.settings.guardedDays,
                     )
+                    // Finished another day: the book is dated then, the sitting stays today's.
+                    input.finishedOn?.let { day ->
+                        val dao = container.db.dao()
+                        dao.book(book.id)?.takeIf { it.shelfOf == app.familiar.data.Shelf.DONE }?.let { b ->
+                            dao.updateBook(b.copy(finished = day, started = b.started?.coerceAtMost(day), added = b.added.coerceAtMost(day)))
+                        }
+                    }
                     container.changed()
                     withContext(Dispatchers.Main) {
                         lastFeast.value = r

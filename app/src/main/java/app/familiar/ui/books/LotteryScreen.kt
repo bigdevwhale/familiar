@@ -82,7 +82,7 @@ fun LotteryScreen(data: FamiliarData, go: Go) {
         drawn = pick.id
     }
     val book = wanted.firstOrNull { it.id == drawn }
-    Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding()) {
+    Column(Modifier.fillMaxSize().background(U.screen).statusBarsPadding()) {
         TopBar(stringResource(R.string.lottery), { go.back() })
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(stringResource(R.string.lottery_text, data.pet?.name ?: ""), style = UType.Sub, textAlign = TextAlign.Center)

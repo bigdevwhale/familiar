@@ -129,7 +129,7 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
     // An audiobook counts itself: every minute listened is a minute further.
     val heard = (ritual.fromPage + (elapsed / 60_000).toInt()).coerceAtMost(book.cap)
 
-    Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding().imePadding()) {
+    Column(Modifier.fillMaxSize().background(U.screen).statusBarsPadding().imePadding()) {
         TopBar(book.title, null) {
             IconButton(onClick = { discarding = true }) { Icon(Icons.Rounded.Close, stringResource(R.string.ritual_discard), tint = U.c.muted) }
         }

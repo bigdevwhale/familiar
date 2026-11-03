@@ -360,6 +360,11 @@
     <string name="theme_system">Как в системе</string>
     <string name="theme_light">Пергамент</string>
     <string name="theme_dark">Свеча</string>
+    <string name="backdrop_title">Фон</string>
+    <string name="backdrop_none">Без фона</string>
+    <string name="backdrop_auto">По книге</string>
+    <string name="backdrop_own">Свой</string>
+    <string name="backdrop_note">Картинка под всеми экранами, приглушённая, чтобы текст читался. «По книге» — под жанр книги, которую читаешь. Фото жанров — из общественного достояния (CC0).</string>
     <string name="language">Язык</string>
     <string name="lang_system">Как в системе</string>
     <string name="backup">Резервная копия</string>

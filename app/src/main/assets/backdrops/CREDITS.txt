@@ -1,0 +1,13 @@
+Backgrounds: photos from Openverse (openverse.org), each in the public domain under CC0 1.0.
+
+fantasy.jpg: "misty forest rotting leaves its" by unknown, https://creativecommons.org/publicdomain/zero/1.0/, https://www.rawpixel.com/image/3302680/free-photo-image-art-cc0-cold
+scifi.jpg: "NASA’s Hubble Dazzles With Young Stars in Trifid Nebula" by NASA Hubble, https://creativecommons.org/publicdomain/zero/1.0/, https://www.flickr.com/photos/144614754@N02/55219878599
+mystery.jpg: "lights urban center city viewed" by unknown, https://creativecommons.org/publicdomain/zero/1.0/, https://www.rawpixel.com/image/5918882/photo-image-public-domain-glass-free
+horror.jpg: "Dirt Road" by Bara Cross, https://creativecommons.org/publicdomain/zero/1.0/, https://stocksnap.io/photo/dirt-road-IRMMWF0933
+romance.jpg: "Cherry Blossom" by Bonnie Moreland, https://creativecommons.org/publicdomain/zero/1.0/, https://stocksnap.io/photo/cherry-blossom-NFZY0LCRS6
+adventure.jpg: "Serene mountain sunrise landscape" by unknown, https://creativecommons.org/publicdomain/zero/1.0/, https://www.rawpixel.com/image/6077012/_dsc0885
+classic.jpg: "Books Old" by Michal Jarmoluk, https://creativecommons.org/publicdomain/zero/1.0/, https://stocksnap.io/photo/books-old-YLD54C7D2C
+history.jpg: "medieval castle hill town Luxembourg" by unknown, https://creativecommons.org/publicdomain/zero/1.0/, https://www.rawpixel.com/image/3291409/free-photo-image-cottage-architecture-building
+nonfiction.jpg: "Smartphone Mobile" by Raymond Sam, https://creativecommons.org/publicdomain/zero/1.0/, https://stocksnap.io/photo/smartphone-mobile-FFFK9P5EI6
+poetry.jpg: "Lavender Field" by Christopher Burns, https://creativecommons.org/publicdomain/zero/1.0/, https://stocksnap.io/photo/lavender-field-1QFT6K7S1N
+other.jpg: "Still Items" by Aaron Burden, https://creativecommons.org/publicdomain/zero/1.0/, https://stocksnap.io/photo/still-items-0DS255SCBZ

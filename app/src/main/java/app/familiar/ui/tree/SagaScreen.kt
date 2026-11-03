@@ -65,7 +65,7 @@ fun SagaScreen(data: FamiliarData, go: Go) {
         add(stringResource(R.string.saga_end))
     }
     val text = parts.joinToString(" ")
-    Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding()) {
+    Column(Modifier.fillMaxSize().background(U.screen).statusBarsPadding()) {
         TopBar(stringResource(R.string.saga_title, y.year), { go.back() }) {
             // The legend itself, as words.
             androidx.compose.material3.IconButton(onClick = {

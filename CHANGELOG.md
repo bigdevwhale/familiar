@@ -6,6 +6,16 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.9.0] - 2026-11-03
+
+- **A background picture:** behind every screen, softened so the text stays clear. A public-domain photo for each genre (Openverse, CC0; credits in `assets/backdrops/CREDITS.txt`), the genre of the book being read, or a picture of your own from the gallery. Settings → Background.
+- **The day, when a book is finished:** logging a sitting with "Book finished" shows the day it was finished, and it can be set to another day.
+
+<!-- tg
+Новое: фон приложения — красивые фото по жанрам, «по книге» или своя картинка из галереи (Настройки → Фон).
+Когда отмечаешь книгу дочитанной, можно сразу выбрать дату прочтения.
+-->
+
 ## [1.8.0] - 2026-11-03
 
 - **One subgenre in several genres:** "Mysticism" can sit both in horror and in mystery; a name is taken only within its own genre (#15).

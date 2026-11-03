@@ -132,7 +132,7 @@ fun VisitScreen(data: FamiliarData, go: Go) {
         }
     }
 
-    Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding()) {
+    Column(Modifier.fillMaxSize().background(U.screen).statusBarsPadding()) {
         TopBar(stringResource(R.string.visit), { go.back() })
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).navigationBarsPadding().padding(bottom = 24.dp)) {
             Text(stringResource(R.string.visit_text), style = UType.Sub)

@@ -80,7 +80,7 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
         return
     }
     val sittings = data.readings.filter { it.bookId == id }.sortedByDescending { it.end }
-    Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding()) {
+    Column(Modifier.fillMaxSize().background(U.screen).statusBarsPadding()) {
         TopBar("", { go.back() }) {
             if (book.shelfOf != Shelf.WANT && book.shelfOf != Shelf.ABANDONED) IconButton(onClick = { go.share(app.familiar.ui.share.Cards.Kind.BOOK, id) }) {
                 Icon(Icons.Rounded.Share, stringResource(R.string.share), tint = U.c.muted)

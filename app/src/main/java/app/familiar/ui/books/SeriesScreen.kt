@@ -54,7 +54,7 @@ fun SeriesScreen(name: String, data: FamiliarData, go: Go) {
         return
     }
     val claimed = c.key in data.settings.claimed
-    Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding()) {
+    Column(Modifier.fillMaxSize().background(U.screen).statusBarsPadding()) {
         TopBar(c.name, { go.back() })
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).navigationBarsPadding().padding(bottom = 24.dp)) {
             Text(stringResource(R.string.cycle_of, c.done, c.books.size), style = UType.Strong)

@@ -86,7 +86,7 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
         percent = it.filter(Char::isDigit).take(3).let { p -> if ((p.toIntOrNull() ?: 0) > 100) "100" else p }
         percent.toIntOrNull()?.let { p -> page = Book.atPercent(total, p).toString() }
     }, modifier, number = true, placeholder = Book.percentOf(total, page.toIntOrNull() ?: 0).toString(), suffix = "%")
-    Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding().imePadding()) {
+    Column(Modifier.fillMaxSize().background(U.screen).statusBarsPadding().imePadding()) {
         TopBar(stringResource(if (old == null) R.string.book_add else R.string.book_edit), { go.back() })
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 18.dp)) {
             SectionTitle(stringResource(R.string.search_title))

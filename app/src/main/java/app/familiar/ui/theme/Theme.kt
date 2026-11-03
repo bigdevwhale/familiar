@@ -10,6 +10,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -100,6 +101,9 @@ val DarkPalette = Palette(
 
 val LocalPalette = staticCompositionLocalOf { DarkPalette }
 
+/** What a whole screen is painted with: the page colour, or nothing over a backdrop picture. */
+val LocalScreen = staticCompositionLocalOf { Color.Unspecified }
+
 val Nunito = FontFamily(
     Font(R.font.nunito_regular, FontWeight.Normal),
     Font(R.font.nunito_semibold, FontWeight.SemiBold),
@@ -114,6 +118,8 @@ val Cormorant = FontFamily(
 
 object U {
     val c: Palette @Composable get() = LocalPalette.current
+    /** A screen's own background: see [LocalScreen]. */
+    val screen: Color @Composable get() = LocalScreen.current.takeOrElse { c.bg }
 
     val RXl = RoundedCornerShape(28.dp)
     val RLg = RoundedCornerShape(22.dp)

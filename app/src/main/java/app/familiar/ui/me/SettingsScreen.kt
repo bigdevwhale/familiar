@@ -88,6 +88,12 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
             container.changed()
         }
     }
+    // A picture of one's own behind every screen, kept on the phone.
+    val pickBackdrop = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) container.scope.launch {
+            if (app.familiar.ui.Backdrops.importPicked(context, uri)) container.settings.update { it.copy(backdrop = app.familiar.ui.Backdrops.OWN, backdropStamp = System.currentTimeMillis()) }
+        }
+    }
     var canNotify by remember { mutableStateOf(Alarms.canNotify(context)) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { canNotify = Alarms.canNotify(context) }
     val askPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
@@ -141,7 +147,7 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
         }
     }
 
-    Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding()) {
+    Column(Modifier.fillMaxSize().background(U.screen).statusBarsPadding()) {
         TopBar(stringResource(R.string.settings), onBack)
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).navigationBarsPadding().padding(bottom = 24.dp)) {
             if (!canNotify) {
@@ -201,6 +207,14 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
                 Chip(stringResource(R.string.theme_light), settings.theme == ThemeMode.LIGHT, { update { it.copy(theme = ThemeMode.LIGHT) } })
                 Chip(stringResource(R.string.theme_dark), settings.theme == ThemeMode.DARK, { update { it.copy(theme = ThemeMode.DARK) } })
             }
+
+            SectionTitle(stringResource(R.string.backdrop_title))
+            app.familiar.ui.BackdropPicker(
+                settings.backdrop, data.reading.firstOrNull()?.let { app.familiar.domain.Genre.of(it.genre) }, settings.backdropStamp,
+                onPick = { k -> update { it.copy(backdrop = k) } },
+                onOwn = { pickBackdrop.launch(androidx.activity.result.PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+            )
+            Text(stringResource(R.string.backdrop_note), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 6.dp))
 
             SectionTitle(stringResource(R.string.language))
             val current = Language.current()

@@ -1,6 +1,6 @@
-New in 1.8:
-• One subgenre can sit in several genres.
-• Change the day a book was finished, right on its page (handy after an import).
-• A year goal of any number you like.
-• A book's format: paper, e-book or audio, with a shelf filter for each.
-• A chime and a buzz when the candle burns out (can be turned off in Settings).
+New in 1.9:
+• A background picture: a photo for each genre, one that follows your book, or your own (Settings → Background).
+• Pick the day when you mark a book finished.
+• One subgenre in several genres; change the day a book was finished on its page.
+• A year goal of any number; paper, e-book or audio.
+• A chime and a buzz when the candle burns out.

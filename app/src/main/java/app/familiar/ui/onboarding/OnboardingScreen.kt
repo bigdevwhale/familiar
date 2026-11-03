@@ -74,7 +74,7 @@ fun OnboardingScreen(onDone: () -> Unit) {
     var cover by remember { mutableStateOf("") }
     var remind by remember { mutableStateOf(true) }
     BackHandler(step > 0) { step-- }
-    Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding().imePadding()) {
+    Column(Modifier.fillMaxSize().background(U.screen).statusBarsPadding().imePadding()) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 22.dp)) {
             Spacer(Modifier.height(18.dp))
             when (step) {

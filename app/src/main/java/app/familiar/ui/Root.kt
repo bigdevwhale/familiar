@@ -216,10 +216,11 @@ fun FamiliarRoot(settings: Settings, dim: (Boolean) -> Unit) {
         }
     }
 
+    BackdropBox(settings.backdrop, data.reading.firstOrNull()?.let { app.familiar.domain.Genre.of(it.genre) }, settings.backdropStamp) {
     NavHost(
         navController = nav,
         startDestination = start,
-        modifier = Modifier.background(U.c.bg),
+        modifier = Modifier.background(U.screen),
         enterTransition = { fadeIn(tween(240)) },
         exitTransition = { fadeOut(tween(180)) },
         popEnterTransition = { fadeIn(tween(240)) },
@@ -228,7 +229,7 @@ fun FamiliarRoot(settings: Settings, dim: (Boolean) -> Unit) {
         composable("welcome") {
             OnboardingScreen { nav.navigate("main") { popUpTo("welcome") { inclusive = true } } }
         }
-        composable("main") { if (loaded) MainTabs(tab, { tab = it }, go, data) else Box(Modifier.fillMaxSize().background(U.c.bg)) }
+        composable("main") { if (loaded) MainTabs(tab, { tab = it }, go, data) else Box(Modifier.fillMaxSize().background(U.screen)) }
         composable("ritual/{id}", arguments = listOf(navArgument("id") { type = NavType.LongType })) { e ->
             RitualScreen(e.arguments?.getLong("id") ?: 0L, data, go, dim)
         }
@@ -256,6 +257,7 @@ fun FamiliarRoot(settings: Settings, dim: (Boolean) -> Unit) {
             val kind = app.familiar.ui.share.Cards.Kind.entries.firstOrNull { it.name == e.arguments?.getString("kind") } ?: app.familiar.ui.share.Cards.Kind.MONTH
             if (loaded) app.familiar.ui.share.ShareScreen(kind, e.arguments?.getLong("book") ?: 0L, data, go)
         }
+    }
     }
 
     if (settings.onboarded && loaded && route == "main") Celebrations(data)
@@ -307,7 +309,7 @@ private fun Celebrations(data: FamiliarData) {
 
 @Composable
 private fun MainTabs(tab: Tab, onTab: (Tab) -> Unit, go: Go, data: FamiliarData) {
-    Column(Modifier.fillMaxSize().background(U.c.bg)) {
+    Column(Modifier.fillMaxSize().background(U.screen)) {
         Box(Modifier.weight(1f)) {
             when (tab) {
                 Tab.DEN -> DenTab(data, go, onTab)

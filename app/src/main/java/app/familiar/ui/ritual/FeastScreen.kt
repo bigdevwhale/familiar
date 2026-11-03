@@ -66,7 +66,7 @@ fun FeastScreen(data: FamiliarData, go: Go) {
     LaunchedEffect(Unit) { delay(if (data.trait == app.familiar.domain.Trait.GLUTTON) 4200 else 2400); chewing = false }
     BackHandler { go.back() }
     val pet = data.pets.firstOrNull { it.id == r.petId }
-    Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding()) {
+    Column(Modifier.fillMaxSize().background(U.screen).statusBarsPadding()) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 18.dp)) {
             Spacer(Modifier.height(16.dp))
             Den(Modifier.fillMaxWidth().height(280.dp)) {

@@ -346,6 +346,11 @@
     <string name="theme_system">System</string>
     <string name="theme_light">Parchment</string>
     <string name="theme_dark">Candlelight</string>
+    <string name="backdrop_title">Background</string>
+    <string name="backdrop_none">None</string>
+    <string name="backdrop_auto">By book</string>
+    <string name="backdrop_own">Your own</string>
+    <string name="backdrop_note">A picture behind every screen, softened so the text stays clear. By book follows the genre of the book you are reading. The genre photos are in the public domain (CC0).</string>
     <string name="language">Language</string>
     <string name="lang_system">System</string>
     <string name="backup">Backup</string>

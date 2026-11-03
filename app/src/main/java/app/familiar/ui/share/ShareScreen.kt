@@ -103,7 +103,7 @@ fun ShareScreen(start: Cards.Kind, bookId: Long, data: FamiliarData, go: Go) {
         value = withContext(Dispatchers.Default) { runCatching { Cards.draw(context, data, request) }.getOrNull() }
     }
 
-    Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding()) {
+    Column(Modifier.fillMaxSize().background(U.screen).statusBarsPadding()) {
         TopBar(stringResource(R.string.share_title), { go.back() })
         Segmented(kinds, kind, { kindName(it) }, { kind = it }, Modifier.padding(horizontal = 18.dp))
         Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 18.dp, vertical = 14.dp), contentAlignment = Alignment.Center) {

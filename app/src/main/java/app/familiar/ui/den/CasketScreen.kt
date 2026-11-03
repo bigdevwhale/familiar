@@ -59,7 +59,7 @@ fun CasketScreen(data: FamiliarData, go: Go) {
     var open by remember { mutableStateOf<Trinket?>(null) }
     var dream by remember { mutableStateOf<Genre?>(null) }
     val seen = data.settings.dreams
-    Column(Modifier.fillMaxSize().background(U.c.bg).statusBarsPadding()) {
+    Column(Modifier.fillMaxSize().background(U.screen).statusBarsPadding()) {
         TopBar(stringResource(R.string.casket), { go.back() })
         LazyVerticalGrid(
             GridCells.Fixed(5),
