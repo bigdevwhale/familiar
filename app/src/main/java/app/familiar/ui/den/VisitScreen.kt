@@ -183,7 +183,7 @@ fun VisitScreen(data: FamiliarData, go: Go) {
             onDismiss = { welcomed = null; go.back() },
         ) {
             Box(Modifier.fillMaxSize()) {
-                FamiliarArt(app.familiar.ui.pix.Look(v.species, st, shiny = v.shiny, form = if (st >= app.familiar.domain.Stage.ADULT) v.form else Form.NONE, hatch = 0.5f, happy = true), Modifier.fillMaxSize())
+                FamiliarArt(app.familiar.ui.pix.Look(v.species, st, shiny = v.shiny, form = if (st >= app.familiar.domain.Stage.ADULT) v.form else Form.NONE, hatch = 0.5f), Modifier.fillMaxSize())
                 gift?.let { TrinketArt(it, Modifier.align(Alignment.BottomEnd).size(44.dp)) }
             }
         }
@@ -216,7 +216,7 @@ private fun cardImage(context: Context, data: FamiliarData, qr: Bitmap): Bitmap 
     val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
     val cv = Canvas(bmp)
     cv.drawColor(0xFFF3EBDD.toInt())
-    val look = data.look()!!.copy(happy = true)
+    val look = data.look()!!
     Postcard.blit(cv, Sprites.frame(look, 0), (w - Sprites.SIZE * 5) / 2, 30, 5)
     val serif = ResourcesCompat.getFont(context, R.font.cormorant_bold) ?: Typeface.SERIF
     val title = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 92f; color = 0xFF2A2030.toInt(); textAlign = Paint.Align.CENTER }

@@ -560,7 +560,7 @@
     <string name="form_line">%s form</string>
     <string name="form_leaning">Leaning to the %1$s form, %2$d%%. Chosen for good when it grows up.</string>
     <string name="forms_title">Forms</string>
-    <string name="forms_text">A grown familiar takes a form after the books it was fed on, with colours and a crown of its own:</string>
+    <string name="forms_text">A grown familiar takes a form after the books it was fed on, with colours of its own:</string>
     <string name="form_of">%1$s: %2$s</string>
     <string name="cel_form">A form is chosen</string>
     <string name="cel_form_text">%1$s grew up on your books and takes the %2$s form for good.</string>

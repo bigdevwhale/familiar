@@ -53,7 +53,7 @@ All the art is pixel art painted by the app itself (shaded shapes, hue-shifted r
 
 Three can hatch at the start; the other eleven are found by reading (a 400-page book, five late nights, seven days in a row, a non-fiction or history book, a comeback after a pause, five audiobooks, five mornings, a horror or mystery, three long sittings, books in three genres of your own, two subgenres of one genre).
 
-**Forms.** A grown familiar takes one of five forms for good, after the books it was fed on, with its own colours and crown: astral (fantasy, sci-fi), shadow (mystery, horror), bloom (romance, poetry), sage (classic, history, non-fiction) or wild (adventure and the rest). The bestiary shows which way it leans.
+**Forms.** A grown familiar takes one of five forms for good, after the books it was fed on, with its own colours: astral (fantasy, sci-fi), shadow (mystery, horror), bloom (romance, poetry), sage (classic, history, non-fiction) or wild (adventure and the rest). The bestiary shows which way it leans.
 
 **Character.** Every egg hatches with a nature of its own: a sleepy one goes to bed early, a glutton chews longer, a curious one brings back more finds, a grumpy one wants a longer stroke, a playful one hops twice, a brave one isn't scared of horror.
 
@@ -134,7 +134,7 @@ No account, no ads, no analytics. The app goes online only when you search for a
 ./gradlew testDebugUnitTest -Prender --tests '*RenderArt*'   # sprite sheets to app/build/art, launcher icons
 ```
 
-The sprites live in `app/src/main/java/app/familiar/ui/pix`: `Pix.kt` is the shading toolkit, `Sprites.kt`, `Newcomers.kt` and `Patchwork.kt` hold the fourteen familiars and their eggs, `Wardrobe.kt` their forms and seasonal hats, `Room.kt` the den and its furniture, `Scenes.kt` the candle, the gramophone and the tree.
+The sprites live in `app/src/main/java/app/familiar/ui/pix`: `Pix.kt` is the shading toolkit, `Drawn.kt` paints the hand-drawn familiars (cut from the sheets in `art/familiars` by `tools/familiars.py` into `app/src/main/resources/familiars`, with their eyes masked so they can close) and their form and rare colours, `Sprites.kt` the eggs, the moods and what changes from frame to frame (`Newcomers.kt` and `Patchwork.kt` keep the older drawn-in-code familiars as a fallback), `Wardrobe.kt` the colours and wreaths of their forms, `Room.kt` the den and its furniture, `Scenes.kt` the candle, the gramophone and the tree.
 
 ## License
 

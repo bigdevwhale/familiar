@@ -50,7 +50,8 @@ data class Look(
 enum class EyeState { OPEN, BLINK, CLOSED, SCARED, SQUINT, HAPPY }
 
 /** Where the face is, in sprite pixels, for mood marks drawn on top. */
-class Face(val eyes: List<Pair<Int, Int>>, val eyeW: Int, val headX: Int, val headY: Int, val headR: Int)
+/** [drawn]: a hand-drawn familiar, whose head size comes from its eyes. */
+class Face(val eyes: List<Pair<Int, Int>>, val eyeW: Int, val headX: Int, val headY: Int, val headR: Int, val drawn: Boolean = false)
 
 object Sprites {
     const val SIZE = 80
@@ -87,9 +88,12 @@ object Sprites {
             else -> EyeState.OPEN
         }
         val ctx = Ctx(look, f, ph, eyes)
+        val drawn = Drawn.of(look.species, look.stage)
         val face: Face? = if (look.stage == Stage.EGG) {
             egg(body, ctx)
             null
+        } else if (drawn != null) {
+            Drawn.paint(body, drawn, ctx)
         } else {
             val floats = look.species == Species.MOTH || look.species == Species.GHOST
             val pen = Pen(body, stageScale(look.stage), dy = if (floats) sin(ph * 2 * PI.toFloat()) * 1.5f - 2f else 0f)
@@ -115,15 +119,18 @@ object Sprites {
         // One dark line around the whole sprite so it reads on any background.
         val solid = BooleanArray(SIZE * SIZE) { body.c[it].al() >= 160 }
         body.ring(solid, OUT)
-        if (look.shiny) shine(body, look.species)
+        // The drawn ones are recoloured by their own palette (Drawn.shiny); the old turn of the hue is for the rest.
+        if (look.shiny && drawn == null) shine(body, look.species)
         if (stone > 0f) petrify(body, stone, look.species == Species.PHOENIX, f)
         val out = Px(SIZE, SIZE)
         shadow(out, look)
-        if (look.stage == Stage.ANCIENT && stone < 0.5f) aura(out, ph)
+        if (look.stage == Stage.ANCIENT && stone < 0.5f) aura(out, ph, front = false)
         if (face != null && stone < 0.5f) Wardrobe.behind(out, look, f)
         out.blit(body, 0, 0)
+        // The sparks on the near half of the circle pass in front of it.
+        if (look.stage == Stage.ANCIENT && stone < 0.5f) aura(out, ph, front = true)
         if (face != null && stone < 0.5f) Wardrobe.around(out, face, look, f)
-        if (face != null && stone < 0.6f && !look.sleeping && !look.happy) marks(out, face, look, f)
+        if (face != null && stone < 0.6f && !look.sleeping && !look.happy) marks(out, face, look, f, drawn != null)
         if (face != null && look.happy) stamp(out, HEART, face.headX + face.headR, face.headY - face.headR - (f % 6), R.pink[2], WHITE)
         if (face != null && look.sleeping && stone < 0.85f) snore(out, face, f)
         if (look.shiny && stone < 0.5f) for (i in 0 until 3) {
@@ -151,11 +158,16 @@ object Sprites {
         }
     }
 
-    private fun aura(out: Px, ph: Float) {
-        val pulse = 0.8f + 0.2f * sin(ph * 2 * PI.toFloat())
-        out.glow(SIZE / 2f, SIZE * 0.52f, SIZE * 0.47f, rgb(255, 214, 120), (70 * pulse).toInt(), 5)
+    /** The glow of an ancient one, and six sparks circling it: the far ones ([front] false, with the glow) behind it, the near ones in front. */
+    private fun aura(out: Px, ph: Float, front: Boolean) {
+        if (!front) {
+            val pulse = 0.8f + 0.2f * sin(ph * 2 * PI.toFloat())
+            out.glow(SIZE / 2f, SIZE * 0.52f, SIZE * 0.47f, rgb(255, 214, 120), (70 * pulse).toInt(), 5)
+        }
         for (i in 0 until 6) {
             val a = (ph * 60f + i * 60f) * PI / 180
+            // Lower on the ellipse is nearer the viewer.
+            if ((sin(a) > 0) != front) continue
             val x = (SIZE / 2f + kotlin.math.cos(a) * SIZE * 0.42f).roundToInt()
             val y = (SIZE * 0.55f + sin(a) * SIZE * 0.16f).roundToInt()
             val c = rgb(255, 232, 160)
@@ -294,7 +306,7 @@ object Sprites {
         pat.forEachIndexed { y, row -> row.forEachIndexed { x, ch -> if (ch == 'x') px.set(x0 + x, y0 + y, if (x == 1 && y == 1) hi else c, a) } }
     }
 
-    private fun marks(px: Px, f: Face, look: Look, frame: Int) {
+    private fun marks(px: Px, f: Face, look: Look, frame: Int, drawn: Boolean = false) {
         val ph = frame / BEATS.toFloat()
         when (look.mood) {
             Mood.HEARTS -> for (i in 0 until 2) {
@@ -320,6 +332,8 @@ object Sprites {
             Mood.GLASSES -> glasses(px, f)
             Mood.SUSPICIOUS, Mood.NONE -> {}
         }
+        // The drawn ones already wear theirs.
+        if (drawn) return
         if (look.species == Species.OWLBEAR && look.stage >= Stage.ADULT && look.mood != Mood.GLASSES) glasses(px, f)
         // The bookworm can't read without its spectacles.
         if (look.species == Species.WYRM && look.stage >= Stage.YOUNG && look.mood != Mood.GLASSES) glasses(px, f)

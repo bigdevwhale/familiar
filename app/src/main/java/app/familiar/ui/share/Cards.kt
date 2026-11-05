@@ -273,7 +273,8 @@ private class Painter(val context: Context, val cv: Canvas, val f: Cards.Format,
         cv.drawBitmap(img, null, RectF(x, y, x + px.w * k, y + px.h * k), Paint().apply { isFilterBitmap = false })
     }
 
-    fun familiar(data: FamiliarData): Px? = data.look()?.let { Sprites.frame(it.copy(happy = true), 0) }
+    /** Eyes open on a card: its big eyes are what make a drawn familiar, squeezed shut they just look closed. */
+    fun familiar(data: FamiliarData): Px? = data.look()?.let { Sprites.frame(it, 0) }
 
     /** The familiar alone in a warm glow. */
     fun hero(data: FamiliarData, k: Int, spare: Int): Block? {

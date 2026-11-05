@@ -581,7 +581,7 @@
     <string name="form_line">Форма: %s</string>
     <string name="form_leaning">Склоняется к форме «%1$s», %2$d%%. Выбирается навсегда, когда вырастет.</string>
     <string name="forms_title">Формы</string>
-    <string name="forms_text">Выросший фамильяр принимает форму по книгам, которыми его кормили, со своими цветами и короной:</string>
+    <string name="forms_text">Выросший фамильяр принимает форму по книгам, которыми его кормили, со своими цветами:</string>
     <string name="form_of">%1$s: %2$s</string>
     <string name="cel_form">Форма выбрана</string>
     <string name="cel_form_text">%1$s вырастает на твоих книгах и навсегда принимает форму «%2$s».</string>

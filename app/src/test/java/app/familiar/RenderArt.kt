@@ -215,6 +215,18 @@ class RenderArt {
         Mood.entries.map { Sprites.frame(look(sp, Stage.ADULT, it), 1) } + listOf(Sprites.frame(look(sp, Stage.ADULT, stone = 0.45f), 1), Sprites.frame(look(sp, Stage.ADULT, stone = 1f), 1))
     }, scale = 2)
 
+    /** Every grown familiar's eyes: open, blinking, asleep, stroked, suspicious; then shiny and in a form. */
+    @Test
+    fun eyes() = sheet("eyes", Species.entries.map { sp ->
+        val a = look(sp, Stage.ADULT)
+        listOf(
+            Sprites.frame(a, 0), Sprites.frame(a, (Sprites.BEATS - 2) * Sprites.STEP), Sprites.frame(a.copy(sleeping = true), 0),
+            Sprites.frame(a.copy(happy = true), 0), Sprites.frame(a.copy(mood = Mood.SUSPICIOUS), 0),
+            Sprites.frame(a.copy(shiny = true), 0), Sprites.frame(a.copy(form = app.familiar.domain.Form.entries[1]), 0),
+            Sprites.frame(look(sp, Stage.BABY).copy(sleeping = true), 0), Sprites.frame(look(sp, Stage.ANCIENT).copy(happy = true), 0),
+        )
+    }, scale = 3)
+
     @Test
     fun hero() = sheet("hero", Species.entries.chunked(7).map { row -> row.map { Sprites.frame(look(it, Stage.ADULT), 0) } }, scale = 5)
 
@@ -229,6 +241,49 @@ class RenderArt {
             File(dir, "${sp.name.lowercase()}_${st.name.lowercase()}.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
         }
     }
+
+    /** Every familiar asleep at every stage, and the demo's kitsune as it sleeps on Samhain in its shadow form. */
+    @Test
+    fun asleep() = sheet("asleep", Species.entries.map { sp ->
+        Stage.entries.drop(1).map { Sprites.frame(look(sp, it).copy(sleeping = true), 0) }
+    } + listOf(listOf(Sprites.frame(look(Species.KITSUNE, Stage.ADULT).copy(sleeping = true, form = app.familiar.domain.Form.SHADOW, season = app.familiar.domain.Season.SAMHAIN), 0))), scale = 3)
+
+    /** Every familiar at every stage: open, blinking, asleep, stroked (4 columns a stage), for a close look at the eyes. */
+    @Test
+    fun lids() = sheet("lids", Species.entries.map { sp ->
+        Stage.entries.drop(1).flatMap { st ->
+            val l = look(sp, st)
+            listOf(Sprites.frame(l, 0), Sprites.frame(l, (Sprites.BEATS - 2) * Sprites.STEP), Sprites.frame(l.copy(sleeping = true), 0), Sprites.frame(l.copy(happy = true), 0))
+        }
+    }, scale = 1)
+
+    /** Every familiar at every stage in its rare colouring. */
+    @Test
+    fun shinies() = sheet("shinies", Species.entries.map { sp -> Stage.entries.drop(1).map { Sprites.frame(look(sp, it).copy(shiny = true), 0) } + listOf(Sprites.frame(look(sp, Stage.ADULT), 0)) }, scale = 3)
+
+    /**
+     * Frames for a review of everything, every frame of the idle loop: each familiar (a row) as an egg, at every
+     * stage, in each grown form, asleep, stroked and in its rare colouring. art/review/fNN.png; tools/review.py makes the GIF.
+     */
+    @Test
+    fun review() {
+        File(out, "review").mkdirs()
+        val forms = app.familiar.domain.Form.entries.drop(1)
+        for (f in 0 until Sprites.FRAMES) sheet("review/f%02d".format(f), Species.entries.map { sp ->
+            val grown = look(sp, Stage.ADULT)
+            Stage.entries.map { Sprites.frame(look(sp, it), f) } +
+                forms.map { Sprites.frame(grown.copy(form = it), f) } +
+                listOf(
+                    Sprites.frame(grown.copy(sleeping = true), f),
+                    Sprites.frame(grown.copy(happy = true), f),
+                    Sprites.frame(grown.copy(shiny = true), f),
+                )
+        }, scale = 2)
+    }
+
+    /** What circles a familiar, through the loop: the ghost's wisps and an ancient one's sparks pass behind it and in front. */
+    @Test
+    fun orbit() = sheet("orbit", listOf(look(Species.GHOST, Stage.ANCIENT), look(Species.SLIME, Stage.ANCIENT)).map { l -> List(Sprites.FRAMES / 2) { Sprites.frame(l, it * 2) } }, scale = 3)
 
     @Test
     fun anim() = sheet("anim", listOf(Species.KITSUNE, Species.MIMIC, Species.MOTH).map { sp -> List(Sprites.FRAMES) { Sprites.frame(look(sp, Stage.ADULT), it) } }, scale = 2)

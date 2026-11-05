@@ -6,6 +6,20 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.10.0] - 2026-11-06
+
+- **Hand-drawn familiars:** all fourteen are redrawn as cute chibi pixel art, with big glossy eyes and pink cheeks, at every stage from hatchling to ancient. They still breathe, blink, fall asleep, squint with pleasure when stroked, float and turn to stone; the slime still shows what it swallowed, the moth gains stars and the ghost its wisps.
+- **Forms and the rare colouring, recoloured:** each form has its own shade (starry indigo, dusky violet, rose, old gold, leaf green) and each familiar its own rare palette; the eyes, cheeks and mouth stay as drawn.
+- **No more hats:** the seasonal hats and the form crowns are gone; the bloom wreath and the astral moon stay.
+- **Postcards** show the familiar with its eyes open. The wisps and sparks circling a familiar pass in front of it as well as behind.
+- **A new app icon** with the new kitsune.
+
+<!-- tg
+Фамильяры перерисованы: все четырнадцать теперь милые, с большими блестящими глазами — на каждой стадии.
+Формы и редкий окрас получили свои красивые цвета, сезонные шляпы убраны.
+На открытках фамильяр с открытыми глазами, и у приложения новая иконка.
+-->
+
 ## [1.9.1] - 2026-11-03
 
 - **Settings in three tabs:** Reading (name, daily goal, the ritual, the reminder), Look (theme, background, language) and Data (backup, books from another app, community, about). The backgrounds are a grid, all in sight.

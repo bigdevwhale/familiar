@@ -54,10 +54,10 @@ object Lines {
     fun season(locale: Locale, s: Season, name: String): String? {
         val ru = locale.language == "ru"
         return when (s) {
-            Season.SAMHAIN -> if (ru) "{n} примеряет ведьминскую шляпу и рычит на тыкву. Для порядка." else "{n} tries on a witch's hat and growls at the pumpkin. Just in case."
-            Season.WINTER -> if (ru) "{n} в шапке с помпоном смотрит, как за окном идёт снег." else "{n} watches the snow fall, in a hat with a bobble."
+            Season.SAMHAIN -> if (ru) "{n} рычит на тыкву. Для порядка." else "{n} growls at the pumpkin. Just in case."
+            Season.WINTER -> if (ru) "{n} смотрит, как за окном идёт снег." else "{n} watches the snow fall outside."
             Season.VALENTINE -> if (ru) "{n} прячет за спиной валентинку. Для тебя." else "{n} hides a valentine behind its back. It's for you."
-            Season.BOOKDAY -> if (ru) "{n} в бумажной короне: сегодня праздник всех книг!" else "{n} wears a paper crown: today is the feast of all books!"
+            Season.BOOKDAY -> if (ru) "{n} празднует: сегодня праздник всех книг!" else "{n} is celebrating: today is the feast of all books!"
             Season.MIDSUMMER -> if (ru) "{n} ловит светлячков в самую короткую ночь." else "{n} catches fireflies on the shortest night."
             Season.NONE -> null
         }?.replace("{n}", name)

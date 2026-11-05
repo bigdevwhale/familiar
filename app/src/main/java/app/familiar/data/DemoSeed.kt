@@ -104,6 +104,18 @@ object DemoSeed {
         dao.activate(fox)
         // Grown, with the last stage still ahead.
         dao.pets().first { it.id == fox }.let { dao.updatePet(it.copy(mana = 3150)) }
+        // The whole bestiary met, at every stage, so every familiar can be looked at.
+        val traits = app.familiar.domain.Trait.entries
+        listOf(
+            Triple(Species.MIMIC, "Сундучок" to "Chesty", 4400), Triple(Species.SLIME, "Желе" to "Jelly", 1500),
+            Triple(Species.DRAGON, "Искра" to "Ember", 650), Triple(Species.PHOENIX, "Уголёк" to "Cinder", 4200),
+            Triple(Species.GRIFFIN, "Перо" to "Quill", 1300), Triple(Species.OWLBEAR, "Профессор" to "Professor", 4600),
+            Triple(Species.TANUKI, "Листик" to "Leaf", 380), Triple(Species.SPROUT, "Корешок" to "Rootlet", 90),
+            Triple(Species.WYRM, "Закладка" to "Bookmark", 1250), Triple(Species.CHIMERA, "Лоскут" to "Patch", 700),
+            Triple(Species.MAGPIE, "Блёстка" to "Glint", 4100),
+        ).forEachIndexed { i, (sp, names, mana) ->
+            dao.insertPet(Pet(species = sp.name, name = if (ru) names.first else names.second, joined = at(start.plusDays(i * 6L), 20, 0), mana = mana, trait = traits[i % traits.size].name))
+        }
         Library.settleForms(dao)
         dao.insertPet(Pet(species = Species.GHOST.name, name = if (ru) "Шуршик" else "Rustle", joined = at(today.minusDays(5), 21, 0), mana = 420, trait = app.familiar.domain.Trait.BRAVE.name))
         // A casket already half full.
