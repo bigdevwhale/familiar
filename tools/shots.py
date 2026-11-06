@@ -14,7 +14,7 @@ from PIL import Image, ImageDraw, ImageFilter
 
 STATUS = 110  # status bar height at 1080 px wide
 OVERVIEW = ["den", "ritual", "furnish", "saga"]
-SINGLE = ["den", "ritual", "feast", "bestiary", "furnish", "shelf", "tree", "saga"]
+SINGLE = ["den", "ritual", "feast", "bestiary", "furnish", "shelf", "tree", "saga", "look"]
 
 NIGHT = (21, 18, 28)
 VIOLET = (52, 36, 96)
@@ -24,7 +24,10 @@ CANDLE = (74, 52, 30)
 def card(src: Path) -> Image.Image:
     im = Image.open(src).convert("RGB")
     w, h = im.size
-    im = im.crop((0, STATUS, w, STATUS + 2290))
+    # A shorter screen (1080x2340) keeps the same card: a sliver off each side instead of a black band below.
+    tall = min(2290, h - STATUS)
+    side = (w - round(tall * 540 / 1145)) // 2
+    im = im.crop((side, STATUS, w - side, STATUS + tall))
     im = im.resize((540, 1145), Image.LANCZOS)
     mask = Image.new("L", im.size, 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, im.size[0] - 1, im.size[1] - 1), 34, fill=255)
