@@ -141,7 +141,8 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
         val hour = LocalTime.now().hour
         val night = hour < 6 || hour >= 20
         // A sleepy one goes to bed at eleven.
-        val bedtime = if (trait == Trait.SLEEPY) hour < 6 || hour >= 23 else hour < 6
+        // The demo build is for screenshots: its familiar stays awake whatever the hour.
+        val bedtime = !app.familiar.BuildConfig.DEMO && if (trait == Trait.SLEEPY) hour < 6 || hour >= 23 else hour < 6
         val asleep = bedtime && now > wokenUntil && data.settings.ritual == null
         val purring = now < purrUntil
         val look = data.look(sleeping = asleep)?.let { if (purring && !asleep) it.copy(happy = true) else it }
