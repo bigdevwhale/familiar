@@ -56,6 +56,18 @@
                 android:resource="@xml/widget_den" />
         </receiver>
 
+        <receiver
+            android:name=".widget.MiniWidget"
+            android:exported="false"
+            android:label="@string/widget_mini_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_mini" />
+        </receiver>
+
         <!-- Hands postcards and visiting cards to the share sheet. -->
         <provider
             android:name="androidx.core.content.FileProvider"

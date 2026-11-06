@@ -297,6 +297,8 @@
     </plurals>
     <string name="pages_short">%d p.</string>
     <string name="min_short">%d min</string>
+    <string name="min_unit">min</string>
+    <string name="candle_custom">Other…</string>
 
     <!-- Celebrations -->
     <string name="cel_hatched">Hatched!</string>
@@ -385,6 +387,8 @@
     <string name="notif_title">%s is waiting for a story</string>
     <string name="widget_name">Familiar</string>
     <string name="widget_desc">Your familiar and today\'s pages</string>
+    <string name="widget_mini_name">Familiar · small</string>
+    <string name="widget_mini_desc">Just your familiar, one cell</string>
     <string name="w_egg">Warming in the egg</string>
     <string name="w_stone">Turning to stone</string>
     <string name="w_ash">Burned to ash</string>

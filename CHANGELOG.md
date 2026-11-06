@@ -6,6 +6,16 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.11.0] - 2026-11-06
+
+- **A one-cell widget:** "Familiar · small" shows just the familiar you read with, with a thin line of how fed it is today (#23). Both widgets now show its grown form and rare colouring too.
+- **The candle for as long as you like:** Settings → Reading → "Other…" takes any length from 1 to 600 minutes (#25).
+
+<!-- tg
+Новый маленький виджет 1×1 — только твой фамильяр и тонкая полоска сытости.
+Свечу теперь можно поставить на любое время: Настройки → Чтение → «Своё…».
+-->
+
 ## [1.10.0] - 2026-11-06
 
 - **Hand-drawn familiars:** all fourteen are redrawn as cute chibi pixel art, with big glossy eyes and pink cheeks, at every stage from hatchling to ancient. They still breathe, blink, fall asleep, squint with pleasure when stroked, float and turn to stone; the slime still shows what it swallowed, the moth gains stars and the ghost its wisps.

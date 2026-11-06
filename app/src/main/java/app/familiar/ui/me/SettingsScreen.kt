@@ -103,6 +103,7 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
     }
     var pendingImport by remember { mutableStateOf<Uri?>(null) }
     var pickTime by remember { mutableStateOf(false) }
+    var askCandle by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf(settings.name) }
     LaunchedEffect(name) {
         delay(400)
@@ -183,8 +184,16 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
                         Text(stringResource(R.string.set_candle), style = UType.Body)
                         Spacer(Modifier.height(6.dp))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            listOf(15, 30, 45, 60, 90).forEach { n -> Chip(stringResource(R.string.min_short, n), settings.candleMin == n, { update { it.copy(candleMin = n) } }) }
+                            val presets = listOf(15, 30, 45, 60, 90)
+                            presets.forEach { n -> Chip(stringResource(R.string.min_short, n), settings.candleMin == n, { update { it.copy(candleMin = n) } }) }
+                            // Any length at all (#25): the chosen one shows here once it isn't a preset.
+                            val own = settings.candleMin !in presets
+                            Chip(if (own) stringResource(R.string.min_short, settings.candleMin) else stringResource(R.string.candle_custom), own, { askCandle = true })
                         }
+                        if (askCandle) app.familiar.ui.components.NumberDialog(
+                            stringResource(R.string.set_candle), settings.candleMin, 1..600, stringResource(R.string.min_unit),
+                            { askCandle = false }, { n -> update { it.copy(candleMin = n) } },
+                        )
                         Spacer(Modifier.height(6.dp))
                         SwitchRow(stringResource(R.string.set_candle_bell), stringResource(R.string.set_candle_bell_sub), settings.candleBell, { v -> update { it.copy(candleBell = v) } })
                         SwitchRow(stringResource(R.string.set_page_sound), null, settings.pageSound, { v -> update { it.copy(pageSound = v) } })

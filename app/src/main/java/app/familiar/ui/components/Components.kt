@@ -310,6 +310,30 @@ fun ConfirmDialog(title: String, text: String, confirm: String, onConfirm: () ->
     )
 }
 
+/** Asks for a whole number in [range] (how long the candle burns, in minutes). */
+@Composable
+fun NumberDialog(title: String, value: Int, range: IntRange, suffix: String?, onDismiss: () -> Unit, onPicked: (Int) -> Unit) {
+    // Empty to start, the current value shown faintly: typing a new one needs no deleting first.
+    var text by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
+    val n = text.trim().toIntOrNull()
+    val ok = n != null && n in range
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = U.c.bg,
+        title = { Text(title, style = UType.Strong.copy(fontSize = 19.sp)) },
+        text = {
+            Column {
+                UTextField(text, { t -> text = t.filter { it.isDigit() }.take(4) }, placeholder = value.toString(), number = true, suffix = suffix)
+                Text("${range.first}–${range.last}", style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 6.dp))
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { if (ok) { onPicked(n!!); onDismiss() } }, enabled = ok) { Text(stringResource(R.string.save), color = if (ok) U.c.accent else U.c.faint) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = U.c.muted) } },
+    )
+}
+
 /** Clock-face picker for a reminder; [minutes] after midnight in and out. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

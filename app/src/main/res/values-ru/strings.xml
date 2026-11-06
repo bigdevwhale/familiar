@@ -313,6 +313,8 @@
         <item quantity="other">%d книги</item>
     </plurals>
     <string name="pages_short">%d стр.</string>
+    <string name="min_unit">мин</string>
+    <string name="candle_custom">Своё…</string>
     <string name="min_short">%d мин</string>
 
     <string name="cel_hatched">Вылупление!</string>
@@ -398,6 +400,8 @@
     <string name="notif_title">%s ждёт историю</string>
     <string name="widget_name">Фамильяр</string>
     <string name="widget_desc">Твой фамильяр и страницы за сегодня</string>
+    <string name="widget_mini_name">Фамильяр · маленький</string>
+    <string name="widget_mini_desc">Только фамильяр, одна клетка</string>
     <string name="w_egg">Греется в яйце</string>
     <string name="w_stone">Каменеет</string>
     <string name="w_ash">Горстка пепла</string>

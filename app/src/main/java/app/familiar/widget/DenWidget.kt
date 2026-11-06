@@ -43,7 +43,8 @@ class DenWidget : AppWidgetProvider() {
         suspend fun refresh(context: Context) {
             val manager = AppWidgetManager.getInstance(context)
             val ids = manager.getAppWidgetIds(ComponentName(context, DenWidget::class.java))
-            if (ids.isEmpty()) return
+            val mini = manager.getAppWidgetIds(ComponentName(context, MiniWidget::class.java))
+            if (ids.isEmpty() && mini.isEmpty()) return
             val c = context.container
             val s = c.settings.now()
             val dao = c.db.dao()
@@ -51,20 +52,41 @@ class DenWidget : AppWidgetProvider() {
             val l = context.localized()
             val views = RemoteViews(context.packageName, R.layout.widget_den)
             val pet = st.active
-            if (pet != null) {
-                val sp = Species.of(pet.species)
+            // The familiar you read with, as it is: stage, form, rare colouring and what it has gathered.
+            val art = pet?.let {
+                val stage = Stage.of(it.mana)
                 val look = Look(
-                    sp, Stage.of(pet.mana), stone = st.stone, mood = st.mood,
-                    tails = Genre.tails.filter { it in st.genresFinished }.map { it.argb.toInt() },
-                    hoard = st.finished.takeLast(16).map { Genre.of(it.genre).argb.toInt() },
-                    patches = st.ownFinished.map { it.argb.toInt() },
+                    Species.of(it.species), stage, stone = st.stone, mood = st.mood,
+                    tails = Genre.tails.filter { g -> g in st.genresFinished }.map { g -> g.argb.toInt() },
+                    hoard = st.finished.takeLast(16).map { b -> Genre.of(b.genre).argb.toInt() },
+                    patches = st.ownFinished.map { o -> o.argb.toInt() },
                     stars = st.nights, items = st.items.take(7),
-                    hatch = (pet.mana / Stage.BABY.from.toFloat()).coerceIn(0f, 1f),
+                    hatch = (it.mana / Stage.BABY.from.toFloat()).coerceIn(0f, 1f),
+                    shiny = it.shiny && stage != Stage.EGG,
+                    form = if (stage >= Stage.ADULT) app.familiar.domain.Form.of(it.form) else app.familiar.domain.Form.NONE,
                 )
                 val px = Sprites.frame(look, 0)
                 val raw = Bitmap.createBitmap(px.c, px.w, px.h, Bitmap.Config.ARGB_8888)
                 // Scaled up without smoothing so the pixels stay crisp.
-                views.setImageViewBitmap(R.id.art, Bitmap.createScaledBitmap(raw, px.w * 3, px.h * 3, false))
+                Bitmap.createScaledBitmap(raw, px.w * 3, px.h * 3, false)
+            }
+            val open = PendingIntent.getActivity(
+                context, 5000,
+                Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
+            if (mini.isNotEmpty()) {
+                // One cell: just the familiar, with a thin line of how fed it is today.
+                val small = RemoteViews(context.packageName, R.layout.widget_mini)
+                if (art != null) small.setImageViewBitmap(R.id.art, art)
+                small.setProgressBar(R.id.bar, 1000, (st.fed * 1000).toInt(), false)
+                small.setOnClickPendingIntent(R.id.root, open)
+                manager.updateAppWidget(mini, small)
+            }
+            if (ids.isEmpty()) return
+            if (pet != null && art != null) {
+                val sp = Species.of(pet.species)
+                views.setImageViewBitmap(R.id.art, art)
                 views.setTextViewText(R.id.name, pet.name)
                 views.setTextViewText(
                     R.id.state,
@@ -81,15 +103,22 @@ class DenWidget : AppWidgetProvider() {
             }
             views.setTextViewText(R.id.pages, l.getString(R.string.fed_of, st.todayPages, s.dailyGoal))
             views.setProgressBar(R.id.bar, 1000, (st.fed * 1000).toInt(), false)
-            views.setOnClickPendingIntent(
-                R.id.root,
-                PendingIntent.getActivity(
-                    context, 5000,
-                    Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-                ),
-            )
+            views.setOnClickPendingIntent(R.id.root, open)
             manager.updateAppWidget(ids, views)
+        }
+    }
+}
+
+/** The one-cell widget (#23): only the familiar you read with. Drawn together with [DenWidget]. */
+class MiniWidget : AppWidgetProvider() {
+    override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
+        val pending = goAsync()
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            try {
+                DenWidget.refresh(context)
+            } finally {
+                pending.finish()
+            }
         }
     }
 }
