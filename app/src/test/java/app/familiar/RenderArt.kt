@@ -123,6 +123,22 @@ class RenderArt {
         File(if (ru) out else docs, if (ru) "evolutions_ru.png" else "evolutions.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
+    /** The classic look (the setting «Classic»): every familiar through its stages, grown forms and seasonal hats. */
+    @Test
+    fun classic() {
+        Thread.sleep(1500) // the app sets the flag from its settings first; let that land, then override it
+        Sprites.classic = true
+        try {
+            sheet("classic", Species.entries.map { sp -> Stage.entries.map { Sprites.frame(look(sp, it), 0) } }, scale = 2)
+            sheet("classic_dress", listOf(Species.KITSUNE, Species.MIMIC, Species.DRAGON).map { sp ->
+                app.familiar.domain.Form.entries.map { Sprites.frame(look(sp, Stage.ADULT).copy(form = it), 1) } +
+                    app.familiar.domain.Season.entries.map { Sprites.frame(look(sp, Stage.ADULT).copy(season = it), 1) }
+            }, scale = 3)
+        } finally {
+            Sprites.classic = false
+        }
+    }
+
     private val newcomers = listOf(Species.TANUKI, Species.SPROUT, Species.GHOST, Species.WYRM, Species.CHIMERA, Species.MAGPIE)
 
     @Test

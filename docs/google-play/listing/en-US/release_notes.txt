@@ -1,5 +1,2 @@
-New in 1.11.0:
-• A one-cell widget: just your familiar and how fed it is today.
-• The candle for as long as you like: Settings → Reading → "Other…".
-• All fourteen familiars redrawn, with big glossy eyes, at every stage.
-• Forms and the rare colouring in new colours of their own.
+New in 1.12.0:
+• The classic familiars are back as an option: Settings → Look → Familiars → "Classic", with their seasonal hats and crowns.

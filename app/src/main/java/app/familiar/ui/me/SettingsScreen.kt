@@ -229,6 +229,13 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
                         Chip(stringResource(R.string.theme_dark), settings.theme == ThemeMode.DARK, { update { it.copy(theme = ThemeMode.DARK) } })
                     }
 
+                    SectionTitle(stringResource(R.string.art_style))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Chip(stringResource(R.string.art_drawn), !settings.classicArt, { update { it.copy(classicArt = false) } })
+                        Chip(stringResource(R.string.art_classic), settings.classicArt, { update { it.copy(classicArt = true) } })
+                    }
+                    Text(stringResource(R.string.art_note), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 6.dp))
+
                     SectionTitle(stringResource(R.string.backdrop_title))
                     app.familiar.ui.BackdropPicker(
                         settings.backdrop, data.reading.firstOrNull()?.let { app.familiar.domain.Genre.of(it.genre) }, settings.backdropStamp,

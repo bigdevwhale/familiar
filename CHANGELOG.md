@@ -6,6 +6,13 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.12.0] - 2026-11-07
+- **The classic familiars, if you miss them:** Settings → Look → Familiars → "Classic" brings back the familiars as they were before 1.10, drawn in code, with their seasonal hats and form crowns (#27). "Hand-drawn" stays the default.
+<!-- tg
+Вернули классических фамильяров — тех, что были до перерисовки, со шляпами и коронами.
+Включаются в Настройки → Вид → Фамильяры → «Классические».
+-->
+
 ## [1.11.0] - 2026-11-06
 
 - **A one-cell widget:** "Familiar · small" shows just the familiar you read with, with a thin line of how fed it is today (#23). Both widgets now show its grown form and rare colouring too.

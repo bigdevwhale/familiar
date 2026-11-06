@@ -40,6 +40,8 @@ data class Settings(
     val haptics: Boolean = true,
     /** Dim the screen while the phone lies face down. */
     val stillDim: Boolean = true,
+    /** The familiars as they were before 1.10: drawn in code, with seasonal hats and form crowns. */
+    val classicArt: Boolean = false,
     /** Daily reminder, minutes after midnight; -1 when off. */
     val remindAt: Int = -1,
     val ritual: Ritual? = null,
@@ -107,6 +109,7 @@ class SettingsStore(context: Context) {
         pageSound = this[PAGE_SOUND] ?: true,
         haptics = this[HAPTICS] ?: true,
         stillDim = this[STILL_DIM] ?: true,
+        classicArt = this[CLASSIC_ART] ?: false,
         remindAt = this[REMIND_AT] ?: -1,
         ritual = (this[R_BOOK] ?: 0L).takeIf { it > 0 }?.let {
             Ritual(it, this[R_START] ?: 0L, this[R_FROM] ?: 0, this[R_PAGE] ?: 0, this[R_STILL] ?: 0L, this[R_LISTEN] ?: false, this[R_RANG] ?: false)
@@ -152,6 +155,7 @@ class SettingsStore(context: Context) {
             it[PAGE_SOUND] = s.pageSound
             it[HAPTICS] = s.haptics
             it[STILL_DIM] = s.stillDim
+            it[CLASSIC_ART] = s.classicArt
             it[REMIND_AT] = s.remindAt
             val r = s.ritual
             it[R_BOOK] = r?.bookId ?: 0L
@@ -199,6 +203,7 @@ class SettingsStore(context: Context) {
         val CANDLE_BELL = booleanPreferencesKey("candle_bell")
         val HAPTICS = booleanPreferencesKey("haptics")
         val STILL_DIM = booleanPreferencesKey("still_dim")
+        val CLASSIC_ART = booleanPreferencesKey("classic_art")
         val REMIND_AT = intPreferencesKey("remind_at")
         val R_BOOK = longPreferencesKey("ritual_book")
         val R_START = longPreferencesKey("ritual_start")

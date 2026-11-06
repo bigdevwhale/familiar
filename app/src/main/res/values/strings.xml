@@ -351,6 +351,10 @@
     <string name="theme_system">System</string>
     <string name="theme_light">Parchment</string>
     <string name="theme_dark">Candlelight</string>
+    <string name="art_style">Familiars</string>
+    <string name="art_drawn">Hand-drawn</string>
+    <string name="art_classic">Classic</string>
+    <string name="art_note">Classic: the familiars as they were before version 1.10, with seasonal hats and crowns.</string>
     <string name="backdrop_title">Background</string>
     <string name="backdrop_none">None</string>
     <string name="backdrop_auto">By book</string>

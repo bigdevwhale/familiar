@@ -55,6 +55,9 @@ class Face(val eyes: List<Pair<Int, Int>>, val eyeW: Int, val headX: Int, val he
 
 object Sprites {
     const val SIZE = 80
+
+    /** The classic look (drawn in code, as before 1.10) instead of the hand-drawn familiars; follows the setting. */
+    @Volatile var classic = false
     /** Beats in the idle loop: blinks, sparkles and other things that switch on and off keep to these. */
     const val BEATS = 12
     /** Frames painted for it: twice the beats, so whatever sways, flaps or floats moves in finer steps. */
@@ -88,7 +91,7 @@ object Sprites {
             else -> EyeState.OPEN
         }
         val ctx = Ctx(look, f, ph, eyes)
-        val drawn = Drawn.of(look.species, look.stage)
+        val drawn = if (classic) null else Drawn.of(look.species, look.stage)
         val face: Face? = if (look.stage == Stage.EGG) {
             egg(body, ctx)
             null

@@ -56,6 +56,8 @@ class FamiliarApp : Application() {
             }
             container.changed()
         }
+        // The familiars' look follows the setting, for the screens and the widgets alike.
+        container.scope.launch { container.settings.settings.collect { app.familiar.ui.pix.Sprites.classic = it.classicArt } }
         // Covers still being looked up for imported books when the app was last closed.
         container.scope.launch { runCatching { Import.covers(filesDir, container.db.dao()) { container.changed() } } }
     }

@@ -365,6 +365,10 @@
     <string name="theme_system">Как в системе</string>
     <string name="theme_light">Пергамент</string>
     <string name="theme_dark">Свеча</string>
+    <string name="art_style">Фамильяры</string>
+    <string name="art_drawn">Рисованные</string>
+    <string name="art_classic">Классические</string>
+    <string name="art_note">Классические: такими фамильяры были до версии 1.10, с сезонными шляпами и коронами.</string>
     <string name="backdrop_title">Фон</string>
     <string name="backdrop_none">Без фона</string>
     <string name="backdrop_auto">По книге</string>
