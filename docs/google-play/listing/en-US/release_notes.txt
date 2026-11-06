@@ -1,5 +1,5 @@
-New in 1.10.0:
-• All fourteen familiars redrawn: cute, with big glossy eyes, at every stage.
+New in 1.11.0:
+• A one-cell widget: just your familiar and how fed it is today.
+• The candle for as long as you like: Settings → Reading → "Other…".
+• All fourteen familiars redrawn, with big glossy eyes, at every stage.
 • Forms and the rare colouring in new colours of their own.
-• Seasonal hats are gone; postcards show the familiar with its eyes open.
-• A new app icon.
