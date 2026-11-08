@@ -75,6 +75,7 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
     var abandoning by remember { mutableStateOf(false) }
     // The day it was finished (or put down) can be moved: an imported book arrives dated the day of the import.
     var redating by remember { mutableStateOf(false) }
+    var restarting by remember { mutableStateOf(false) }
     if (book == null) {
         LaunchedEffect(Unit) { go.back() }
         return
@@ -111,7 +112,18 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
                     }
                 }
             }
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(10.dp))
+            // When it was begun, which paints its days on the calendar up to the day it's finished (#30).
+            if (book.shelfOf == Shelf.READING || book.shelfOf == Shelf.PAUSED || book.shelfOf == Shelf.DONE) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        book.started?.let { stringResource(R.string.started_on, dateShort(it)) } ?: stringResource(R.string.started_unknown),
+                        style = UType.Sub, modifier = Modifier.weight(1f),
+                    )
+                    TextButton(onClick = { restarting = true }) { Text(stringResource(R.string.edit), color = U.c.accent, style = UType.Button) }
+                }
+            }
+            Spacer(Modifier.height(8.dp))
             when (book.shelfOf) {
                 Shelf.READING, Shelf.PAUSED -> {
                     PrimaryButton(stringResource(R.string.ritual_start), { go.ritual(id) }, Modifier.fillMaxWidth(), icon = Icons.Rounded.LocalFireDepartment)
@@ -213,6 +225,11 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
     if (redating) app.familiar.ui.components.DateTimeDialog(book.finished ?: book.added, { redating = false }, time = false) { day ->
         container.write { dao().updateBook(book.copy(finished = day, started = book.started?.coerceAtMost(day), added = book.added.coerceAtMost(day))) }
         redating = false
+    }
+    if (restarting) app.familiar.ui.components.DateTimeDialog(book.started ?: book.finished ?: book.added, { restarting = false }, time = false) { day ->
+        val start = if (book.shelfOf == Shelf.DONE && book.finished != null) day.coerceAtMost(book.finished) else day
+        container.write { dao().updateBook(book.copy(started = start, added = book.added.coerceAtMost(start))) }
+        restarting = false
     }
     if (abandoning) AbandonDialog({ abandoning = false }) { why ->
         container.write { dao().updateBook(book.copy(shelf = Shelf.ABANDONED.name, finished = System.currentTimeMillis(), note = why.ifBlank { book.note })) }

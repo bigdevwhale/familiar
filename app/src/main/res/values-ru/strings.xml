@@ -167,6 +167,8 @@
     <string name="mark_done">Дочитано</string>
     <string name="move_to">Переложить</string>
     <string name="finished_on">Дочитано %s</string>
+    <string name="started_on">Начато %s</string>
+    <string name="started_unknown">Дата начала не указана</string>
     <string name="your_rating">Твоя оценка</string>
     <string name="chronicle">Чтения</string>
     <string name="no_sittings">Пока ни одного чтения.</string>

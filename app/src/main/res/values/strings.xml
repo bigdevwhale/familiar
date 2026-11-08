@@ -165,6 +165,8 @@
     <string name="mark_done">Finished it</string>
     <string name="move_to">Move to</string>
     <string name="finished_on">Finished on %s</string>
+    <string name="started_on">Started on %s</string>
+    <string name="started_unknown">Start date not set</string>
     <string name="your_rating">Your rating</string>
     <string name="chronicle">Sittings</string>
     <string name="no_sittings">No sittings yet.</string>

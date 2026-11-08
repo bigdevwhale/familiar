@@ -158,23 +158,54 @@ class Finished(s: Stats, val year: Int?) {
     }
 }
 
-/** The book a day of [month] shows: the one finished that day, or else the one read most. */
+/** A book on a day of the calendar; [finished] that very day. */
 class DayBook(val book: Book, val finished: Boolean)
 
-fun dayBooks(s: Stats, month: YearMonth): Map<LocalDate, DayBook> {
+/**
+ * The books each day of [month] shows, the first one foremost: those finished that day (the latest
+ * first), then those read, the most read first. A day with nothing logged shows the books open then,
+ * from the day each was started to the day it was finished (#30), the latest started first, so books
+ * brought over from elsewhere fill their days too.
+ */
+fun dayBooks(s: Stats, month: YearMonth): Map<LocalDate, List<DayBook>> {
     fun date(t: Long) = Instant.ofEpochMilli(t).atZone(s.zone).toLocalDate()
     val bookOf = s.books.associateBy { it.id }
-    val read = s.readings.filter { it.counts }
+    val out = linkedMapOf<LocalDate, MutableList<DayBook>>()
+    fun add(d: LocalDate, b: Book, done: Boolean) {
+        val l = out.getOrPut(d) { mutableListOf() }
+        if (l.none { it.book.id == b.id }) l += DayBook(b, done)
+    }
+    s.finished.filter { it.finished != null && YearMonth.from(date(it.finished)) == month }
+        .sortedByDescending { it.finished }
+        .forEach { add(date(it.finished!!), it, true) }
+    s.readings.filter { it.counts }
         .groupBy { date(it.end) }
         .filterKeys { YearMonth.from(it) == month }
-        .mapNotNull { (d, rs) ->
-            val id = rs.groupBy { it.bookId }.maxByOrNull { (_, l) -> l.sumOf { it.amount } }?.key
-            bookOf[id]?.let { d to DayBook(it, false) }
-        }.toMap()
-    // Finished books are in the order they were finished: the last one that day wins.
-    val done = s.finished.mapNotNull { b -> b.finished?.let { date(it) }?.takeIf { YearMonth.from(it) == month }?.let { it to DayBook(b, true) } }.toMap()
-    return read + done
+        .forEach { (d, rs) ->
+            rs.groupBy { it.bookId }.entries.sortedByDescending { (_, l) -> l.sumOf { it.amount } }
+                .forEach { (id, _) -> bookOf[id]?.let { add(d, it, false) } }
+        }
+    val first = month.atDay(1)
+    val last = minOf(month.atEndOfMonth(), s.today)
+    val spans = s.books.mapNotNull { b ->
+        val start = b.started?.let { date(it) } ?: return@mapNotNull null
+        val end = when (b.shelfOf) {
+            Shelf.DONE -> b.finished?.let { date(it) }
+            Shelf.READING -> s.today
+            else -> null
+        } ?: return@mapNotNull null
+        Triple(b, start, end).takeIf { !start.isAfter(last) && !end.isBefore(first) && !end.isBefore(start) && end.toEpochDay() - start.toEpochDay() <= MAX_SPAN }
+    }.sortedByDescending { it.second }
+    var d = first
+    while (!d.isAfter(last)) {
+        if (d !in out) spans.filter { (_, a, z) -> !d.isBefore(a) && !d.isAfter(z) }.forEach { add(d, it.first, false) }
+        d = d.plusDays(1)
+    }
+    return out
 }
+
+/** A book open longer than this many days doesn't paint the calendar: it was most likely forgotten. */
+private const val MAX_SPAN = 400
 
 /** One month of reading in full: what was finished, what was opened, and every day of it. */
 class MonthSummary(private val s: Stats, val month: YearMonth) {

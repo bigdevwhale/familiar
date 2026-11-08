@@ -1,1 +1,1 @@
-"Light the candle" and "Log" no longer get cut short on a narrow screen or with large text.
+Set the day you began a book. The calendar fills every day from a book's start to its finish, and two books on one day share the cell. Buttons no longer get cut short.

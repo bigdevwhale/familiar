@@ -6,6 +6,16 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.13.0] - 2026-11-08
+- **When you began a book:** a book's page shows the day it was started, and "Edit" sets any day; a book added as already read takes its start day too (#30).
+- **The calendar fills a book's days:** a day with nothing logged shows the books open then, from the day each was started to the day it was finished, so books brought over from another app paint their weeks as well (#30).
+- **Two books on one day share the cell:** two covers side by side, and "+N" when there were more.
+<!-- tg
+Дату начала книги теперь можно поменять, как и дату окончания.
+Календарь закрашивает все дни от начала книги до конца – и перенесённые книги видны целиком.
+Если в один день читалось две книги, клетка делится пополам.
+-->
+
 ## [1.12.2] - 2026-11-08
 - **Buttons fit:** "Light the candle" and "Log" share the row by their words and go one under the other when both don't fit, so neither is cut short on a narrow screen or with large text (#31). In Russian the fed meter is called simply «Сытость», so it isn't cut either.
 <!-- tg

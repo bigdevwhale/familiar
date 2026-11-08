@@ -75,6 +75,8 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
     var finished by remember { mutableStateOf(System.currentTimeMillis()) }
     var rating by remember { mutableIntStateOf(0) }
     var pickingDate by remember { mutableStateOf(false) }
+    var begun by remember { mutableStateOf<Long?>(null) }
+    var pickingStart by remember { mutableStateOf(false) }
     var allCycles by remember { mutableStateOf(false) }
     // The length is optional: 0 means not known yet.
     val total = pages.toIntOrNull()?.takeIf { it in 1..20000 } ?: 0
@@ -168,6 +170,11 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
                         Text(stringResource(R.string.finished_on, app.familiar.ui.dateShort(finished)), style = UType.Strong, modifier = Modifier.weight(1f))
                         TextButton(onClick = { pickingDate = true }) { Text(stringResource(R.string.edit), color = U.c.accent, style = UType.Button) }
                     }
+                    // And when it was begun, for the calendar (#30).
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(begun?.let { stringResource(R.string.started_on, app.familiar.ui.dateShort(it)) } ?: stringResource(R.string.started_unknown), style = UType.Sub, modifier = Modifier.weight(1f))
+                        TextButton(onClick = { pickingStart = true }) { Text(stringResource(R.string.edit), color = U.c.accent, style = UType.Button) }
+                    }
                     Text(stringResource(R.string.your_rating), style = UType.Muted)
                     Row {
                         (1..5).forEach { r ->
@@ -190,7 +197,7 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
                 val b = (old ?: Book(title = "", pages = total, genre = genre.name, added = if (read) finished else now)).copy(
                     title = title.trim(), author = author.trim(), pages = total, genre = genre.name, sub = sub.trim(), page = p, cover = cover, audio = audio, ebook = ebook && !audio, tags = tags.joinToString("\n"), series = series.trim(), volume = volume.toIntOrNull()?.takeIf { series.isNotBlank() },
                     shelf = if (old == null) shelf.name else old.shelf,
-                    started = old?.started ?: if (shelf == Shelf.READING) now else null,
+                    started = old?.started ?: if (shelf == Shelf.READING) now else if (read) begun?.coerceAtMost(finished) else null,
                     finished = if (read) finished else old?.finished,
                     rating = if (read) rating.takeIf { it in 1..5 } else old?.rating,
                 )
@@ -201,6 +208,7 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
             enabled = ok,
         )
     }
+    if (pickingStart) app.familiar.ui.components.DateTimeDialog(begun ?: finished, { pickingStart = false }, time = false) { begun = it; pickingStart = false }
     if (pickingDate) app.familiar.ui.components.DateTimeDialog(finished, { pickingDate = false }, time = false) { finished = it; pickingDate = false }
 }
 

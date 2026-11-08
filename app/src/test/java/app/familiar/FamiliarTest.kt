@@ -466,14 +466,28 @@ class FamiliarTest {
     }
 
     @Test
+    fun aBookFillsItsDaysFromStartToFinish() {
+        // Brought over with no sittings: started 6 days ago, finished 3 days ago; another still open since 4 days ago.
+        val imported = book(5, done = 3).copy(started = at(6))
+        val open = book(6).copy(started = at(4))
+        val s = stats(listOf(read(1, 10, book = 6)), listOf(imported, open))
+        val days = app.familiar.domain.dayBooks(s, YearMonth.from(today))
+        fun ids(n: Long) = days[today.minusDays(n)]?.map { it.book.id }
+        if (today.minusDays(6).month == today.month) assertEquals(listOf(5L), ids(6))
+        if (today.minusDays(4).month == today.month) assertEquals(listOf(6L, 5L), ids(4))
+        if (today.minusDays(3).month == today.month) assertEquals(listOf(5L), ids(3))
+        if (today.minusDays(1).month == today.month) assertEquals(listOf(6L), ids(1))
+    }
+
+    @Test
     fun theDayShowsTheBookFinishedOrReadMost() {
         val books = listOf(book(1), book(2), book(3, done = 2))
         val s = stats(listOf(read(1, 10, book = 1), read(1, 40, book = 2), read(2, 5, book = 1)), books)
         val days = app.familiar.domain.dayBooks(s, YearMonth.from(today))
-        assertEquals(2L, days[today.minusDays(1)]!!.book.id)
-        assertFalse(days[today.minusDays(1)]!!.finished)
-        assertEquals(3L, days[today.minusDays(2)]!!.book.id)
-        assertTrue(days[today.minusDays(2)]!!.finished)
+        assertEquals(listOf(2L, 1L), days[today.minusDays(1)]!!.map { it.book.id })
+        assertFalse(days[today.minusDays(1)]!!.first().finished)
+        assertEquals(listOf(3L, 1L), days[today.minusDays(2)]!!.map { it.book.id })
+        assertTrue(days[today.minusDays(2)]!!.first().finished)
         assertTrue(app.familiar.domain.dayBooks(s, YearMonth.from(today).minusMonths(1)).isEmpty())
     }
 

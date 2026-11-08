@@ -96,7 +96,7 @@ fun CoverCalendar(s: Stats, onBook: (Long) -> Unit, modifier: Modifier = Modifie
                     Box(Modifier.weight(1f).aspectRatio(0.68f)) {
                         if (n in 1..month.lengthOfMonth()) {
                             val date = month.atDay(n)
-                            DayCell(n, days[date]?.book, days[date]?.finished == true, date.isAfter(s.today), date == s.today, onBook)
+                            DayCell(n, days[date].orEmpty(), date.isAfter(s.today), date == s.today, onBook)
                         }
                     }
                 }
@@ -104,11 +104,11 @@ fun CoverCalendar(s: Stats, onBook: (Long) -> Unit, modifier: Modifier = Modifie
         }
         Spacer(Modifier.height(6.dp))
         Text(
-            if (summary.empty) stringResource(R.string.cal_empty)
+            if (summary.empty && days.isEmpty()) stringResource(R.string.cal_empty)
             else listOfNotNull(
                 pages(summary.pages).takeIf { summary.pages > 0 },
                 stringResource(R.string.cal_finished, books(summary.finished.size)).takeIf { summary.finished.isNotEmpty() },
-                stringResource(R.string.cal_days, summary.days.size),
+                stringResource(R.string.cal_days, days.size),
             ).joinToString(" · "),
             style = UType.Small.copy(color = U.c.muted),
         )
@@ -116,15 +116,28 @@ fun CoverCalendar(s: Stats, onBook: (Long) -> Unit, modifier: Modifier = Modifie
 }
 
 @Composable
-private fun DayCell(n: Int, book: Book?, finished: Boolean, ahead: Boolean, today: Boolean, onBook: (Long) -> Unit) {
+private fun DayCell(n: Int, day: List<app.familiar.domain.DayBook>, ahead: Boolean, today: Boolean, onBook: (Long) -> Unit) {
     val shape = RoundedCornerShape(6.dp)
+    val book = day.firstOrNull()?.book
+    val finished = day.any { it.finished }
     Box(
         Modifier.fillMaxSize().clip(shape)
             .background(if (ahead) U.c.surface2.copy(alpha = 0.4f) else U.c.surface2)
-            .then(if (today) Modifier.border(1.5.dp, U.c.accent, shape) else Modifier)
-            .then(if (book != null) Modifier.clickable(onClickLabel = book.title) { onBook(book.id) } else Modifier),
+            .then(if (today) Modifier.border(1.5.dp, U.c.accent, shape) else Modifier),
     ) {
-        if (book != null) BookCover(book, Modifier.fillMaxSize(), small = true, bare = true)
+        // Two books or more on a day share the cell: two covers side by side, and "+N" for the rest (#30).
+        Row(Modifier.fillMaxSize()) {
+            day.take(2).forEach { d ->
+                BookCover(
+                    d.book,
+                    Modifier.weight(1f).fillMaxSize().clickable(onClickLabel = d.book.title) { onBook(d.book.id) },
+                    small = true, bare = true,
+                )
+            }
+        }
+        if (day.size > 2) Box(
+            Modifier.align(Alignment.BottomStart).padding(2.dp).clip(CircleShape).background(U.c.bg.copy(alpha = 0.85f)).padding(horizontal = 4.dp),
+        ) { Text("+${day.size - 2}", style = UType.Small.copy(color = U.c.ink, fontSize = androidx.compose.ui.unit.TextUnit(10f, androidx.compose.ui.unit.TextUnitType.Sp))) }
         // The day's number: on a cover it sits in a little dark disc so it still reads.
         Box(
             Modifier.align(Alignment.TopStart).padding(2.dp)
