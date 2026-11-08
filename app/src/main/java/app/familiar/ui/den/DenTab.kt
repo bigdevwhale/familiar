@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.familiar.R
@@ -249,9 +250,26 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
                     }
                 }
                 Spacer(Modifier.height(14.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    PrimaryButton(stringResource(R.string.ritual_start), { go.ritual(book.id) }, Modifier.weight(1.5f), icon = Icons.Rounded.LocalFireDepartment)
-                    SoftButton(stringResource(R.string.log_short), { go.log(book.id) }, Modifier.weight(1f).height(54.dp), icon = Icons.Rounded.Edit)
+                // Side by side, each as wide as its words need; one under the other when both don't fit (#31).
+                val light = stringResource(R.string.ritual_start)
+                val log = stringResource(R.string.log_short)
+                val measurer = rememberTextMeasurer()
+                val style = UType.Button
+                androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth()) {
+                    val density = androidx.compose.ui.platform.LocalDensity.current
+                    val needLight = with(density) { measurer.measure(light, style).size.width.toDp() } + 48.dp + 28.dp + 4.dp
+                    val needLog = with(density) { measurer.measure(log, style).size.width.toDp() } + 32.dp + 27.dp + 4.dp
+                    if (needLight + needLog + 8.dp <= maxWidth) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            PrimaryButton(light, { go.ritual(book.id) }, Modifier.weight(needLight.value), icon = Icons.Rounded.LocalFireDepartment)
+                            SoftButton(log, { go.log(book.id) }, Modifier.weight(needLog.value).height(54.dp), icon = Icons.Rounded.Edit)
+                        }
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            PrimaryButton(light, { go.ritual(book.id) }, Modifier.fillMaxWidth(), icon = Icons.Rounded.LocalFireDepartment)
+                            SoftButton(log, { go.log(book.id) }, Modifier.fillMaxWidth(), icon = Icons.Rounded.Edit)
+                        }
+                    }
                 }
             }
         } else {

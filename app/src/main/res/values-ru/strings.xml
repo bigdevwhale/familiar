@@ -112,7 +112,7 @@
     <string name="mana_max">Древность. Расти дальше некуда, только глубже.</string>
     <string name="mana_to_hatch">Ещё %d до вылупления: одна страница — одна мана.</string>
     <string name="mana_to_next">Ещё %2$d до стадии «%1$s».</string>
-    <string name="fed_title">Сытость сегодня</string>
+    <string name="fed_title">Сытость</string>
     <string name="fed_of">%1$d / %2$d</string>
     <string name="streak_line">Читаешь %s подряд</string>
     <string name="stone_title">Чары забвения</string>

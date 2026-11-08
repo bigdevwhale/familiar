@@ -6,6 +6,12 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.12.2] - 2026-11-08
+- **Buttons fit:** "Light the candle" and "Log" share the row by their words and go one under the other when both don't fit, so neither is cut short on a narrow screen or with large text (#31). In Russian the fed meter is called simply «Сытость», so it isn't cut either.
+<!-- tg
+Кнопки «Зажечь свечу» и «Отметить» больше не обрезаются: если не помещаются рядом, встают одна под другой.
+-->
+
 ## [1.12.1] - 2026-11-08
 - **A percent stays what you typed:** 52% on an e-book or an audiobook no longer comes back as 51% after the sitting (#29).
 <!-- tg

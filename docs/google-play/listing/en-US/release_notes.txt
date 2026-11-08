@@ -1,2 +1,1 @@
-New in 1.12.1:
-• A percent stays what you typed: 52% no longer comes back as 51%.
+"Light the candle" and "Log" no longer get cut short on a narrow screen or with large text.
