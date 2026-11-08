@@ -61,8 +61,11 @@ data class Book(
     val fraction: Float get() = if (pages <= 0) 0f else (page.toFloat() / pages).coerceIn(0f, 1f)
 
     companion object {
-        /** The page (or minute) [percent] of the way through a book of [pages]. */
-        fun atPercent(pages: Int, percent: Int): Int = (pages * percent.coerceIn(0, 100) + 50) / 100
+        /**
+         * The page (or minute) [percent] of the way through a book of [pages]: the first one that [percentOf]
+         * reads back as at least that much, so a typed 52% shows as 52%, not 51% (#29).
+         */
+        fun atPercent(pages: Int, percent: Int): Int = (pages * percent.coerceIn(0, 100) + 99) / 100
 
         /** How far [page] is through a book of [pages], in whole percent; 0 when its length isn't known. */
         fun percentOf(pages: Int, page: Int): Int = if (pages <= 0) 0 else (page.coerceIn(0, pages) * 100 / pages)

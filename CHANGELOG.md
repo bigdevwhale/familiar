@@ -6,6 +6,12 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.12.1] - 2026-11-08
+- **A percent stays what you typed:** 52% on an e-book or an audiobook no longer comes back as 51% after the sitting (#29).
+<!-- tg
+Исправлено: прогресс в процентах больше не уменьшается на единицу – введённые 52% так и остаются 52%.
+-->
+
 ## [1.12.0] - 2026-11-07
 - **The classic familiars, if you miss them:** Settings → Look → Familiars → "Classic" brings back the familiars as they were before 1.10, drawn in code, with their seasonal hats and form crowns (#27). "Hand-drawn" stays the default.
 <!-- tg

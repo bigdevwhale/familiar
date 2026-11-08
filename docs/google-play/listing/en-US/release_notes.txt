@@ -1,2 +1,2 @@
-New in 1.12.0:
-• The classic familiars are back as an option: Settings → Look → Familiars → "Classic", with their seasonal hats and crowns.
+New in 1.12.1:
+• A percent stays what you typed: 52% no longer comes back as 51%.
