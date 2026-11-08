@@ -851,6 +851,8 @@
     <string name="community_follow_sub">бот напишет, когда выйдет версия</string>
     <string name="community_chat">Чат StillCraft</string>
     <string name="community_chat_sub">все приложения и люди</string>
+    <string name="community_support">Поддержать Фамильяра</string>
+    <string name="community_support_sub">на свечи и угощения для фамильяров</string>
     <string name="stats_title">Счётная книга</string>
     <string name="stats_per_day">страниц в день</string>
     <string name="stats_per_sitting">минут за раз</string>

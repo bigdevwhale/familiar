@@ -816,6 +816,8 @@
     <string name="community_follow_sub">the bot writes when a version is out</string>
     <string name="community_chat">StillCraft chat</string>
     <string name="community_chat_sub">all the apps and people</string>
+    <string name="community_support">Support Familiar</string>
+    <string name="community_support_sub">for candles and treats for the familiars</string>
     <string name="stats_title">The ledger</string>
     <string name="stats_per_day">pages a day</string>
     <string name="stats_per_sitting">min a sitting</string>

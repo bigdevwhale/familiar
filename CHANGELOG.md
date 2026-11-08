@@ -6,6 +6,15 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.13.1] - 2026-11-08
+
+### Added
+- Support Familiar: Settings → StillCraft has a fifth line, «Поддержать Фамильяра · на свечи и угощения для фамильяров», which opens the StillCraft support page in the browser.
+
+<!-- tg
+В настройках, в блоке StillCraft, появилась строчка «Поддержать Фамильяра» – на свечи и угощения для фамильяров.
+-->
+
 ## [1.13.0] - 2026-11-08
 - **When you began a book:** a book's page shows the day it was started, and "Edit" sets any day; a book added as already read takes its start day too (#30).
 - **The calendar fills a book's days:** a day with nothing logged shows the books open then, from the day each was started to the day it was finished, so books brought over from another app paint their weeks as well (#30).

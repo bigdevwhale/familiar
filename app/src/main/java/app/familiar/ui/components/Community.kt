@@ -29,6 +29,8 @@ object Community {
     const val IDEA = "${BOT}wish_$SLUG"
     const val FOLLOW = "${BOT}f_$SLUG"
     const val CHAT = "https://t.me/+Q4gFEDk8O842OGVi"
+    /** The StillCraft page for supporting the apps, opened in the browser. */
+    const val SUPPORT = "https://bigdevwhale.github.io/stillcraft/support/"
 }
 
 /** Report a bug, suggest an idea, follow updates, join the chat; each opens Telegram. */
@@ -44,6 +46,7 @@ fun CommunityLinks() {
             Link("💡", R.string.community_idea, R.string.community_idea_sub, Community.IDEA),
             Link("🔔", R.string.community_follow, R.string.community_follow_sub, Community.FOLLOW),
             Link("💬", R.string.community_chat, R.string.community_chat_sub, Community.CHAT),
+            Link("💛", R.string.community_support, R.string.community_support_sub, Community.SUPPORT),
         )) {
             Row(Modifier.fillMaxWidth().clickable { open(url) }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(icon, fontSize = 18.sp, modifier = Modifier.width(34.dp))
