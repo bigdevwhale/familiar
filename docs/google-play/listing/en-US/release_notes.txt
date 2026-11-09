@@ -1,1 +1,1 @@
-A «Support Familiar» line in the settings opens the StillCraft support page.
+The calendar no longer marks days you didn't read: a book you're reading fills its days only up to your last sitting.

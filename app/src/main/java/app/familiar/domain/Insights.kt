@@ -165,7 +165,7 @@ class DayBook(val book: Book, val finished: Boolean)
  * The books each day of [month] shows, the first one foremost: those finished that day (the latest
  * first), then those read, the most read first. A day with nothing logged shows the books open then,
  * from the day each was started to the day it was finished (#30), the latest started first, so books
- * brought over from elsewhere fill their days too.
+ * brought over from elsewhere fill their days too. A book still being read fills them only up to its last sitting.
  */
 fun dayBooks(s: Stats, month: YearMonth): Map<LocalDate, List<DayBook>> {
     fun date(t: Long) = Instant.ofEpochMilli(t).atZone(s.zone).toLocalDate()
@@ -187,11 +187,14 @@ fun dayBooks(s: Stats, month: YearMonth): Map<LocalDate, List<DayBook>> {
         }
     val first = month.atDay(1)
     val last = minOf(month.atEndOfMonth(), s.today)
+    // A book still open fills its days only up to its last sitting, never on to today: a book set on the
+    // shelf and not opened yet, or a day nothing was read, mustn't show as a day of reading.
+    val lastSitting = s.readings.filter { it.counts }.groupBy { it.bookId }.mapValues { (_, l) -> date(l.maxOf { it.end }) }
     val spans = s.books.mapNotNull { b ->
         val start = b.started?.let { date(it) } ?: return@mapNotNull null
         val end = when (b.shelfOf) {
             Shelf.DONE -> b.finished?.let { date(it) }
-            Shelf.READING -> s.today
+            Shelf.READING, Shelf.PAUSED -> lastSitting[b.id]
             else -> null
         } ?: return@mapNotNull null
         Triple(b, start, end).takeIf { !start.isAfter(last) && !end.isBefore(first) && !end.isBefore(start) && end.toEpochDay() - start.toEpochDay() <= MAX_SPAN }

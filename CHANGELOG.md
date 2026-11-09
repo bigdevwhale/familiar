@@ -6,6 +6,17 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.13.2] - 2026-11-09
+
+### Fixed
+- **The calendar paints only days of reading:** a book still being read filled every day from its start to today, so a day with nothing logged showed every book on the "Reading" shelf, and a book shelved but never opened painted days it wasn't read. Now an open book fills its days only up to its last sitting, and one never opened fills none; finished books still fill from start to finish (#30).
+
+<!-- tg
+Исправили календарь: в день, когда вы не читали, больше не появляются все книги из «Читаю».
+Книга, которую добавили в «Читаю», но ещё не открывали, не закрашивает дни.
+Прочитанные и перенесённые книги по-прежнему закрашивают все дни от начала до конца.
+-->
+
 ## [1.13.1] - 2026-11-08
 
 ### Added

@@ -480,6 +480,19 @@ class FamiliarTest {
     }
 
     @Test
+    fun anOpenBookFillsNoDayAfterItsLastSitting() {
+        // Shelved as being read 6 days ago and never opened; another started 6 days ago, last read 3 days ago.
+        val untouched = book(7).copy(started = at(6))
+        val paused = book(8).copy(started = at(6))
+        val s = stats(listOf(read(3, 10, book = 8)), listOf(untouched, paused))
+        val days = app.familiar.domain.dayBooks(s, YearMonth.from(today))
+        fun ids(n: Long) = days[today.minusDays(n)]?.map { it.book.id }
+        if (today.minusDays(5).month == today.month) assertEquals(listOf(8L), ids(5))
+        assertEquals(null, ids(1))
+        assertEquals(null, ids(0))
+    }
+
+    @Test
     fun theDayShowsTheBookFinishedOrReadMost() {
         val books = listOf(book(1), book(2), book(3, done = 2))
         val s = stats(listOf(read(1, 10, book = 1), read(1, 40, book = 2), read(2, 5, book = 1)), books)
