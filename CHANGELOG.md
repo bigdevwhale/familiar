@@ -6,6 +6,16 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.13.3] - 2026-11-09
+
+### Fixed
+- **The candle lights again:** a candle left burning for a book that was then deleted kept "Light the candle" from working for every other book: the screen opened and closed at once. Such a candle is now put out, and the candle lights for the book you tap. A sitting left burning also comes back to the front again when the app opens.
+
+<!-- tg
+Исправили свечу: если книгу удалили, пока свеча горела, кнопка «Зажечь свечу» больше ни для какой книги не работала. Теперь свеча зажигается.
+Незаконченное чтение снова открывается само, когда вы возвращаетесь в приложение.
+-->
+
 ## [1.13.2] - 2026-11-09
 
 ### Fixed

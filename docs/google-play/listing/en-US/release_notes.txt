@@ -1,1 +1,1 @@
-The calendar no longer marks days you didn't read: a book you're reading fills its days only up to your last sitting.
+The candle lights again: deleting a book while its candle burned kept "Light the candle" from working for any book.

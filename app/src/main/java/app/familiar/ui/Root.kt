@@ -196,6 +196,11 @@ fun FamiliarRoot(settings: Settings, dim: (Boolean) -> Unit) {
         kotlinx.coroutines.delay((app.familiar.notify.CandleBell.due(ritual, settings.candleMin) - System.currentTimeMillis()).coerceAtLeast(0))
         app.familiar.notify.CandleBell.ringIfDue(context)
     }
+    // A candle whose book is gone is put out, so it neither rings nor blocks lighting another.
+    LaunchedEffect(loaded, books) {
+        val r = settings.ritual ?: return@LaunchedEffect
+        if (loaded && data.book(r.bookId) == null) container.settings.update { s -> if (s.ritual?.bookId == r.bookId) s.copy(ritual = null) else s }
+    }
     // A ritual left burning comes back to the front once, when the app opens.
     LaunchedEffect(Unit) {
         settings.ritual?.let { if (settings.onboarded) go.ritual(it.bookId) }
@@ -231,7 +236,8 @@ fun FamiliarRoot(settings: Settings, dim: (Boolean) -> Unit) {
         }
         composable("main") { if (loaded) MainTabs(tab, { tab = it }, go, data) else Box(Modifier.fillMaxSize().background(U.screen)) }
         composable("ritual/{id}", arguments = listOf(navArgument("id") { type = NavType.LongType })) { e ->
-            RitualScreen(e.arguments?.getLong("id") ?: 0L, data, go, dim)
+            // Not before the books arrive, or the screen finds no book and closes itself.
+            if (loaded) RitualScreen(e.arguments?.getLong("id") ?: 0L, data, go, dim) else Box(Modifier.fillMaxSize().background(U.screen))
         }
         composable("log/{id}", arguments = listOf(navArgument("id") { type = NavType.LongType })) { e ->
             LogScreen(e.arguments?.getLong("id") ?: 0L, data, go)

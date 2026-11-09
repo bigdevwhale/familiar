@@ -79,7 +79,9 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
     val container = LocalContext.current.container
     val haptics = LocalHapticFeedback.current
     val s = data.settings
-    val ritual = s.ritual
+    // A candle left burning for a book that is gone (deleted, or replaced by a restore) is no candle at all:
+    // it must not keep every other book from being lit.
+    val ritual = s.ritual?.takeIf { data.book(it.bookId) != null }
     val book = data.book(ritual?.bookId ?: id)
     var finishing by remember { mutableStateOf(false) }
     var discarding by remember { mutableStateOf(false) }
@@ -91,7 +93,10 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
     // Lit once when the screen opens; never again after it was put out here.
     var closing by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        if (book != null) container.settings.update { it.copy(ritual = it.ritual ?: Ritual(book.id, System.currentTimeMillis(), book.page, book.page, 0)) }
+        if (book != null) container.settings.update { st ->
+            val alive = st.ritual?.takeIf { data.book(it.bookId) != null }
+            st.copy(ritual = alive ?: Ritual(book.id, System.currentTimeMillis(), book.page, book.page, 0))
+        }
     }
     if (book == null) {
         LaunchedEffect(Unit) { go.back() }
