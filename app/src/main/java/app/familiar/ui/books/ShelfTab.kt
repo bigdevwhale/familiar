@@ -22,6 +22,10 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -85,6 +89,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.rounded.LocalFlorist
 import androidx.compose.material.icons.automirrored.rounded.Sort
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.size
@@ -136,8 +141,73 @@ fun ShelfTab(data: FamiliarData, go: Go) {
     val listMode = data.settings.shelfList && !spineMode
     // The planks, packed for the width there is: the screen less the grid's side padding and the plank's own.
     val room = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp - 36 - 12
-    val planks = remember(list, room, spineMode) { if (spineMode) Spines.rows(list, room) else emptyList() }
+    // A cycle's volumes stand together under its name, unless the shelf is narrowed to that one cycle.
+    // Decorating: each plank shows a place at its end to put something on.
+    var decorMode by rememberSaveable { mutableStateOf(false) }
+    // What stands at the end of each plank takes its room there.
+    val decor = remember(data.settings.shelfDecor) { Decor.parse(data.settings.shelfDecor) }
+    val look = PlankLook.of(data.settings.shelfWood, data.settings.shelfTrim)
+    val planks = remember(list, room, spineMode, cycle, decor, decorMode) {
+        if (spineMode) Spines.planks(Spines.groups(list, cycles = cycle.isBlank(), decor = decor), room) { if (decorMode) Decor.room(Decor.SLOT) else 0 } else emptyList()
+    }
+    // The book held down on the shelf of spines, to change how it stands and looks; the plank held, to decorate it.
+    var holding by remember { mutableStateOf<Long?>(null) }
+    var decorating by remember { mutableStateOf<Decor.Placed?>(null) }
     val container = androidx.compose.ui.platform.LocalContext.current.container
+    val grid = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+    val drag = remember { ShelfDrag() }
+    drag.movable = view != CYCLES
+    drag.onHold = { holding = it.id }
+    drag.onThingHold = { decorating = it }
+    // A thing put down by a book stands after it, or after the one before it.
+    drag.onThingDrop = { o, by, after ->
+        val shown = planks.flatten().flatMap { it.books }
+        val i = shown.indexOfFirst { it.id == by.id }
+        val anchor = if (after) by.id else shown.getOrNull(i - 1)?.id ?: 0L
+        container.scope.launch {
+            container.settings.update { s -> s.copy(shelfDecor = Decor.encode(Decor.parse(s.shelfDecor).map { if (it.id == o.id) it.copy(after = anchor) else it })) }
+        }
+    }
+    drag.onDrop = { b, by, after ->
+        // The books in the order they stand, the carried one moved; a pile it's put by takes it in, and one
+        // carried out of a pile stands up.
+        val shown = planks.flatten().flatMap { it.books }
+        val order = shown.filter { it.id != b.id }.toMutableList()
+        val at = order.indexOfFirst { it.id == by.id }
+        if (at >= 0) {
+            order.add(if (after) at + 1 else at, b)
+            val pose = when {
+                by.pile.isNotEmpty() -> by.pose
+                by.poseOf == app.familiar.data.Pose.LIE -> app.familiar.data.Pose.LIE.name
+                b.poseOf == app.familiar.data.Pose.LIE -> ""
+                else -> b.pose
+            }
+            // Every book keeps its place among the others; those shown here take theirs in the new order.
+            val ids = order.map { it.id }.toSet()
+            val next = order.iterator()
+            val all = data.books.sortedWith(Browse.manual).map { x -> if (x.id in ids) next.next() else x }
+            container.write {
+                all.forEachIndexed { i, x ->
+                    val y = (if (x.id == b.id) x.copy(pose = pose) else x).copy(place = i + 1)
+                    if (y != x) dao().updateBook(y)
+                }
+            }
+            if (browse.sort != Sort.MANUAL) container.scope.launch { container.settings.update { it.copy(shelfSort = Sort.MANUAL.name) } }
+        }
+    }
+    // Carried near the top or bottom, the shelf scrolls, faster the nearer.
+    val gridSpan = remember { floatArrayOf(0f, 0f) }
+    val carrying = drag.active
+    androidx.compose.runtime.LaunchedEffect(carrying) {
+        while (drag.active) {
+            androidx.compose.runtime.withFrameNanos { }
+            val y = drag.pointer.y - gridSpan[0]
+            val h = gridSpan[1]
+            val e = h * 0.12f
+            val v = when { y < e -> -(e - y) / e * 22f; y > h - e -> (y - (h - e)) / e * 22f; else -> 0f }
+            if (v != 0f) grid.scrollBy(v)
+        }
+    }
     var adding by remember { mutableStateOf(false) }
     var renaming by remember { mutableStateOf<String?>(null) }
     var removing by remember { mutableStateOf<String?>(null) }
@@ -146,10 +216,13 @@ fun ShelfTab(data: FamiliarData, go: Go) {
     var removingGenre by remember { mutableStateOf<OwnGenre?>(null) }
     // The one own genre filtered by, to rename or delete it right here.
     val oneOwn = browse.genres.singleOrNull()?.let { k -> data.genres.firstOrNull { Browse.genreKey(it) == k } }
-    Box(Modifier.fillMaxSize()) {
+    androidx.compose.runtime.CompositionLocalProvider(LocalShelfDrag provides drag) {
+    Carrying(drag, Modifier.fillMaxSize()) {
         LazyVerticalGrid(
             GridCells.Fixed(3),
-            Modifier.fillMaxSize().statusBarsPadding(),
+            Modifier.fillMaxSize().statusBarsPadding()
+                .onGloballyPositioned { c -> c.boundsInRoot().let { r -> gridSpan[0] = r.top; gridSpan[1] = r.height } },
+            state = grid,
             contentPadding = PaddingValues(start = 18.dp, end = 18.dp, bottom = 96.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(if (listMode) 10.dp else 16.dp),
@@ -160,6 +233,10 @@ fun ShelfTab(data: FamiliarData, go: Go) {
                         Text(stringResource(R.string.tab_shelf), style = UType.Display, modifier = Modifier.weight(1f))
                         IconButton(onClick = { searching = !searching; if (!searching) query = "" }) {
                             Icon(if (searching) Icons.Rounded.Close else Icons.Rounded.Search, stringResource(R.string.lib_search), tint = if (searching) U.c.accent else U.c.muted)
+                        }
+                        // Decorating the planks, only where there are planks.
+                        if (spineMode) IconButton(onClick = { decorMode = !decorMode }) {
+                            Icon(Icons.Rounded.LocalFlorist, stringResource(R.string.shelf_decorate), tint = if (decorMode) U.c.accent else U.c.muted)
                         }
                         ViewMenu(if (spineMode) View.SPINES else if (listMode) View.LIST else View.COVERS) { v ->
                             container.scope.launch { container.settings.update { it.copy(shelfList = v == View.LIST, shelfSpines = v == View.SPINES) } }
@@ -232,9 +309,26 @@ fun ShelfTab(data: FamiliarData, go: Go) {
                 }
             }
             if (view == CYCLES) items(cycles, key = { it.key }, span = { GridItemSpan(3) }) { c ->
-                if (spineMode) CycleShelf(c, room + 12, { go.series(c.name) }) { go.book(it.id) } else CycleCard(c) { go.series(c.name) }
+                if (spineMode) CycleShelf(c, room + 12, { go.series(c.name) }, { holding = it.id }) { go.book(it.id) } else CycleCard(c) { go.series(c.name) }
             }
-            else if (spineMode) items(planks, key = { row -> "plank:" + row.first().id }, span = { GridItemSpan(3) }) { row -> SpineRow(row) { go.book(it.id) } }
+            else if (spineMode) {
+                if (decorMode) item(span = { GridItemSpan(3) }) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.shelf_decorate_hint), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.weight(1f))
+                        TextButton(onClick = { decorMode = false }) { Text(stringResource(R.string.done), color = U.c.accent, style = UType.Button) }
+                    }
+                }
+                // Until a book has been turned or laid down, a word on how.
+                else if (list.isNotEmpty() && decor.isEmpty() && data.books.none { it.pose.isNotEmpty() || it.spine.isNotEmpty() || it.place != 0 }) item(span = { GridItemSpan(3) }) {
+                    Text(stringResource(R.string.pose_hint), style = UType.Small.copy(color = U.c.muted, fontStyle = FontStyle.Italic))
+                }
+                items(planks, key = { row -> "plank:" + row.first().key }, span = { GridItemSpan(3) }) { row ->
+                    Plank(
+                        row, { go.book(it.id) }, { holding = it.id }, look = look, onThing = { decorating = it },
+                        onAdd = if (decorMode) { { decorating = Decor.Placed(System.currentTimeMillis(), row.lastOrNull()?.books?.lastOrNull()?.id ?: 0L, "") } } else null,
+                    )
+                }
+            }
             else if (listMode) items(list, key = { it.id }, span = { GridItemSpan(3) }) { b -> BookRow(b, view == ALL) { go.book(b.id) } }
             else items(list, key = { it.id }) { b ->
                 Column(Modifier.clip(RoundedCornerShape(8.dp)).clickable { go.book(b.id) }) {
@@ -270,6 +364,9 @@ fun ShelfTab(data: FamiliarData, go: Go) {
             modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
         ) { Icon(Icons.Rounded.Add, stringResource(R.string.book_add)) }
     }
+    }
+    holding?.let { id -> data.books.firstOrNull { it.id == id }?.let { b -> BookLookSheet(b, data.books) { holding = null } } }
+    decorating?.let { o -> ShelfLookSheet(data.settings.shelfWood, data.settings.shelfTrim, data.settings.shelfDecor, o, data.owned) { decorating = null } }
     if (filtering) FilterSheet(
         data, all, browse,
         onChange = { b -> genreKeys = b.genres.joinToString("\n"); format = b.format; stars = b.stars; cycle = b.series },
@@ -399,6 +496,7 @@ private fun sortName(s: Sort): String = stringResource(
         Sort.PROGRESS -> R.string.sort_progress
         Sort.LENGTH -> R.string.sort_length
         Sort.SERIES -> R.string.sort_series
+        Sort.MANUAL -> R.string.sort_manual
     }
 )
 

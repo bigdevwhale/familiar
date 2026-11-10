@@ -15,7 +15,7 @@ object Backup {
         .put("books", JSONArray(s.books.map {
             JSONObject().put("id", it.id).put("title", it.title).put("author", it.author).put("pages", it.pages).put("genre", it.genre)
                 .put("shelf", it.shelf).put("page", it.page).put("added", it.added).put("started", it.started ?: JSONObject.NULL)
-                .put("finished", it.finished ?: JSONObject.NULL).put("rating", it.rating ?: JSONObject.NULL).put("cover", it.cover).put("audio", it.audio).put("series", it.series).put("volume", it.volume ?: JSONObject.NULL).put("tags", it.tags).put("sub", it.sub).put("note", it.note).put("ebook", it.ebook)
+                .put("finished", it.finished ?: JSONObject.NULL).put("rating", it.rating ?: JSONObject.NULL).put("cover", it.cover).put("audio", it.audio).put("series", it.series).put("volume", it.volume ?: JSONObject.NULL).put("tags", it.tags).put("sub", it.sub).put("note", it.note).put("ebook", it.ebook).put("pose", it.pose).put("spine", it.spine).put("place", it.place)
         }))
         .put("readings", JSONArray(s.readings.map {
             JSONObject().put("id", it.id).put("bookId", it.bookId).put("petId", it.petId).put("start", it.start).put("end", it.end)
@@ -30,7 +30,7 @@ object Backup {
             JSONObject().put("id", it.id).put("kind", it.kind).put("at", it.at).put("petId", it.petId).put("readingId", it.readingId)
         }))
         .put("covers", JSONObject().apply {
-            s.books.map { it.cover }.filter { it.isNotBlank() }.distinct().forEach { url ->
+            s.books.flatMap { listOf(it.cover, it.spine) }.filter { it.isNotBlank() }.distinct().forEach { url ->
                 picture(url)?.let { put(url, Base64.getEncoder().encodeToString(it)) }
             }
         })
@@ -53,6 +53,7 @@ object Backup {
                     id = getLong("id"), title = getString("title"), author = optString("author"), pages = getInt("pages"), genre = getString("genre"),
                     shelf = optString("shelf", Shelf.READING.name), page = optInt("page"), added = getLong("added"),
                     started = optL("started"), finished = optL("finished"), rating = optI("rating"), cover = optString("cover").let { moved[it] ?: it }, audio = optBoolean("audio"), series = optString("series"), volume = optI("volume"), tags = optString("tags"), sub = optString("sub"), note = optString("note"), ebook = optBoolean("ebook"),
+                    pose = optString("pose"), place = optInt("place"), spine = optString("spine").let { moved[it] ?: it },
                 )
             },
             readings = root.list("readings") {

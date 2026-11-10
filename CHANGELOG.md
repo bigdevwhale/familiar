@@ -6,6 +6,23 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.14.0] - 2026-11-10
+
+### Added
+- **Shelves like real ones:** in the spines view a cycle's volumes stand together in order with a brass plate under them bearing its name, and each spine shows its volume number (#34).
+- **How a book stands:** hold a book to stand it spine out, turn it cover out, or lay it down in a pile, either with its neighbours or in a pile of your choice.
+- **Spines in seven styles:** from the cover, cloth, leather, paperback, black and gold, parchment and modern, or upload a photo of the real spine.
+- **Drag to rearrange:** hold a book and drag it along the shelf or within a pile; dropped on a book in a pile it joins that pile. The shelf keeps the order as "My order".
+- **Decorated planks:** the flower button above the shelf turns on decorating: walnut, ebony, birch or white wood, brass, fairy lights, ivy or lace trim, and a plant, candles, a crystal, an hourglass, a globe, a bookend or your familiar's finds among the books, each one dragged where you want it.
+- The same choices for a book are on its page under "On the shelf of spines"; a backup keeps them, uploaded spines included.
+
+<!-- tg
+Полки корешками стали как настоящие: тома цикла стоят вместе, под ними табличка с названием, на корешках номера томов.
+Удерживайте книгу, чтобы поставить её обложкой вперёд, положить в стопку или сменить корешок: семь стилей или своё фото.
+Удерживайте и тяните, чтобы переставить книги, порядок сохранится как «Своя расстановка».
+Цветок над полкой включает украшение: дерево, гирлянда, плющ, свечи, растения и находки фамильяра.
+-->
+
 ## [1.13.3] - 2026-11-09
 
 ### Fixed

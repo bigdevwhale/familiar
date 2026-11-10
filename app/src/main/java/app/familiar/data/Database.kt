@@ -19,6 +19,12 @@ import kotlinx.coroutines.flow.Flow
 /** [ABANDONED]: put down for good, with [Book.finished] the day it was and [Book.note] why. */
 enum class Shelf { READING, WANT, DONE, PAUSED, ABANDONED }
 
+/** How a book is put on the plank: on end with its spine out, facing out, or lying in a pile. */
+enum class Pose { STAND, FACE, LIE }
+
+/** How a spine is drawn. [AUTO]: a strip of the cover if there's one, cloth otherwise. */
+enum class SpineStyle { AUTO, CLOTH, LEATHER, PAPER, NIGHT, VELLUM, MODERN }
+
 /** A book on the shelf. [page] is the last page read. */
 @Entity(tableName = "books")
 data class Book(
@@ -52,12 +58,24 @@ data class Book(
     @ColumnInfo(defaultValue = "") val note: String = "",
     /** An e-book rather than one on paper; an audiobook is neither. */
     @ColumnInfo(defaultValue = "0") val ebook: Boolean = false,
+    /** How it's put on the plank in the spines view ([Pose] name); empty for standing on end. */
+    @ColumnInfo(defaultValue = "") val pose: String = "",
+    /** How its spine looks: a [SpineStyle] name, or a picture of the reader's own ([Covers.LOCAL] address); empty for the usual. */
+    @ColumnInfo(defaultValue = "") val spine: String = "",
+    /** Where it stands when the shelf is in the reader's own order (1, 2, 3…); 0 for one never moved, which comes first. */
+    @ColumnInfo(defaultValue = "0") val place: Int = 0,
 ) {
     val tagList: List<String> get() = tags.split('\n').map { it.trim() }.filter { it.isNotEmpty() }
     /** The last page you can reach: the book's end, or no limit when its length isn't known. */
     val cap: Int get() = if (pages > 0) pages else 99_999
 
     val shelfOf: Shelf get() = runCatching { Shelf.valueOf(shelf) }.getOrDefault(Shelf.READING)
+    val poseOf: Pose get() = Pose.entries.firstOrNull { it.name == pose.substringBefore(':') } ?: Pose.STAND
+    /** The pile it was put in by hand ("LIE:<pile>"); empty when it lies with whatever neighbours lie, or stands. */
+    val pile: String get() = if (pose.startsWith("LIE:")) pose.removePrefix("LIE:") else ""
+    /** The reader's own picture of the spine, or null. */
+    val spinePicture: String? get() = spine.takeIf { it.startsWith(Covers.LOCAL) }
+    val spineStyle: SpineStyle get() = SpineStyle.entries.firstOrNull { it.name == spine } ?: SpineStyle.AUTO
     val fraction: Float get() = if (pages <= 0) 0f else (page.toFloat() / pages).coerceIn(0f, 1f)
 
     companion object {
@@ -222,9 +240,9 @@ abstract class FamiliarDao {
 // Every schema change gets a new version and a migration that keeps what's there (1.1.0 lost data without one).
 @Database(
     entities = [Book::class, Reading::class, Pet::class, Find::class],
-    version = 6,
+    version = 8,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6)],
+    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8)],
 )
 abstract class FamiliarDatabase : RoomDatabase() {
     abstract fun dao(): FamiliarDao

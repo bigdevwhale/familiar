@@ -84,6 +84,11 @@ data class Settings(
     val shelfList: Boolean = false,
     /** The shelf shown as spines on planks; wins over [shelfList]. */
     val shelfSpines: Boolean = false,
+    /** The planks of the spines view: their wood and trim ([app.familiar.ui.books.Wood], [app.familiar.ui.books.Trim] names),
+     *  and what stands at the end of each ("<plank>:<ornament>" a line, see [app.familiar.ui.books.Decor]). */
+    val shelfWood: String = "",
+    val shelfTrim: String = "",
+    val shelfDecor: String = "",
     /** The tree bears only this year's books rather than every book ever finished. */
     val treeYear: Boolean = false,
     /** The picture behind every screen ([app.familiar.ui.Backdrops] key), and when the reader's own was last picked. */
@@ -135,6 +140,9 @@ class SettingsStore(context: Context) {
         shelfSort = this[SHELF_SORT] ?: "",
         shelfList = this[SHELF_LIST] ?: false,
         shelfSpines = this[SHELF_SPINES] ?: false,
+        shelfWood = this[SHELF_WOOD] ?: "",
+        shelfTrim = this[SHELF_TRIM] ?: "",
+        shelfDecor = this[SHELF_DECOR] ?: "",
         treeYear = this[TREE_YEAR] ?: false,
         backdrop = this[BACKDROP] ?: "",
         backdropStamp = this[BACKDROP_STAMP] ?: 0L,
@@ -186,6 +194,9 @@ class SettingsStore(context: Context) {
             it[SHELF_SORT] = s.shelfSort
             it[SHELF_LIST] = s.shelfList
             it[SHELF_SPINES] = s.shelfSpines
+            it[SHELF_WOOD] = s.shelfWood
+            it[SHELF_TRIM] = s.shelfTrim
+            it[SHELF_DECOR] = s.shelfDecor
             it[TREE_YEAR] = s.treeYear
             it[BACKDROP] = s.backdrop
             it[BACKDROP_STAMP] = s.backdropStamp
@@ -233,6 +244,9 @@ class SettingsStore(context: Context) {
         val SHELF_SORT = stringPreferencesKey("shelf_sort")
         val SHELF_LIST = booleanPreferencesKey("shelf_list")
         val SHELF_SPINES = booleanPreferencesKey("shelf_spines")
+        val SHELF_WOOD = stringPreferencesKey("shelf_wood")
+        val SHELF_TRIM = stringPreferencesKey("shelf_trim")
+        val SHELF_DECOR = stringPreferencesKey("shelf_decor")
         val TREE_YEAR = booleanPreferencesKey("tree_year")
         val BACKDROP = stringPreferencesKey("backdrop")
         val BACKDROP_STAMP = longPreferencesKey("backdrop_stamp")

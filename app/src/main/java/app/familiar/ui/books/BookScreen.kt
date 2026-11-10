@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ViewWeek
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
@@ -72,6 +73,7 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
     val container = LocalContext.current.container
     val book = data.book(id)
     var deleting by remember { mutableStateOf(false) }
+    var looking by remember { mutableStateOf(false) }
     var abandoning by remember { mutableStateOf(false) }
     // The day it was finished (or put down) can be moved: an imported book arrives dated the day of the import.
     var redating by remember { mutableStateOf(false) }
@@ -184,6 +186,10 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
 
             SectionTitle(stringResource(R.string.f_shelves))
             ShelfChips(data.shelves, book.tagList.toSet()) { t -> container.write { dao().updateBook(book.copy(tags = t.joinToString(NL))) } }
+
+            // How it stands on the shelf of spines, and what its spine looks like.
+            SoftButton(stringResource(R.string.book_look), { looking = true }, Modifier.fillMaxWidth().padding(top = 12.dp), color = U.c.gold, soft = U.c.goldSoft, icon = Icons.Rounded.ViewWeek)
+            if (looking) BookLookSheet(book, data.books) { looking = false }
 
             SectionTitle(stringResource(R.string.chronicle))
             if (sittings.isEmpty()) Text(stringResource(R.string.no_sittings), style = UType.Muted)

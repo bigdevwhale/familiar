@@ -529,4 +529,25 @@ class FamiliarTest {
         val rows = app.familiar.ui.books.Spines.rows(listOf(thin, thick, thin), room = 70)
         assertEquals(listOf(listOf(1L, 2L), listOf(1L)), rows.map { r -> r.map { it.id } })
     }
+
+    @Test
+    fun cyclesStandTogetherUnderTheirName() {
+        val s = app.familiar.ui.books.Spines
+        val loose = book(1, pages = 0)
+        val v2 = book(2, pages = 0).copy(series = "Earthsea", volume = 2)
+        val other = book(3, pages = 0)
+        val v1 = book(4, pages = 0).copy(series = "earthsea", volume = 1)
+        val groups = s.groups(listOf(loose, v2, other, v1))
+        // The cycle gathers where its first volume came, its volumes in order.
+        assertEquals(listOf("", "Earthsea", ""), groups.map { it.name })
+        assertEquals(listOf(4L, 2L), groups[1].pieces.flatMap { p -> p.books.map { it.id } })
+        // Neighbours lying down make one pile; one facing out is as wide as its cover.
+        val pile = s.pieces(listOf(loose.copy(pose = "LIE"), other.copy(pose = "LIE"), v1.copy(pose = "FACE")))
+        assertEquals(listOf(app.familiar.data.Pose.LIE, app.familiar.data.Pose.FACE), pile.map { it.pose })
+        assertEquals(2, pile[0].books.size)
+        assertEquals(s.faceWidth(v1), pile[1].width)
+        // A cycle that doesn't fit after the loose book goes whole to the next plank: 22 + 12 + 46 > 70.
+        val planks = s.planks(s.groups(listOf(loose, v1, v2)), room = 70)
+        assertEquals(listOf(listOf(""), listOf("earthsea")), planks.map { r -> r.map { it.name } })
+    }
 }

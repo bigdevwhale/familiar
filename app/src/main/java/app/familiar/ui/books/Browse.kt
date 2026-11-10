@@ -9,8 +9,8 @@ import java.text.Collator
 import java.util.Locale
 
 /** How the shelf is ordered. Each has a natural direction; [Browse.reverse] turns it round. */
-/** [SERIES]: cycle by cycle, each in volume order, books outside a cycle last. */
-enum class Sort { RECENT, ADDED, TITLE, AUTHOR, RATING, PROGRESS, LENGTH, SERIES }
+/** [SERIES]: cycle by cycle, each in volume order, books outside a cycle last. [MANUAL]: as the reader dragged them. */
+enum class Sort { RECENT, ADDED, TITLE, AUTHOR, RATING, PROGRESS, LENGTH, SERIES, MANUAL }
 
 enum class Format { ANY, PAPER, EBOOK, AUDIO }
 
@@ -56,12 +56,13 @@ data class Browse(
             Sort.RATING -> compareByDescending<Book> { it.rating ?: 0 }.thenByDescending { it.finished ?: 0 }
             Sort.PROGRESS -> compareByDescending<Book> { if (it.shelfOf == Shelf.DONE) 1f else it.fraction }.thenByDescending { it.page }
             Sort.LENGTH -> compareByDescending { it.pages }
+            Sort.MANUAL -> manual
             Sort.SERIES -> compareBy<Book> { it.series.isBlank() }.then(Comparator { a, b -> words.compare(a.series.trim(), b.series.trim()) }).then(byVolume).then(Comparator { a, b -> words.compare(a.title, b.title) })
         }
         // One cycle picked: its volumes in order, whatever the sort; the sort only breaks ties.
         val chosen = if (reverse) order.reversed() else order
         val sorted = books.filter { matches(it, genreNames) }.sortedWith(if (series.isNotBlank()) byVolume.then(chosen) else chosen)
-        return if (pausedLast) sorted.sortedBy { it.shelfOf == Shelf.PAUSED } else sorted
+        return if (pausedLast && sort != Sort.MANUAL) sorted.sortedBy { it.shelfOf == Shelf.PAUSED } else sorted
     }
 
     /** Volume 1, 2, 3…; books without a number after the numbered ones. */
@@ -71,6 +72,9 @@ data class Browse(
     val saved: String get() = sort.name + if (reverse) ":r" else ""
 
     companion object {
+        /** The reader's own order: by place, books never moved first, the newest of them first. */
+        val manual: Comparator<Book> = compareBy<Book> { it.place }.thenByDescending { it.added }
+
         fun genreKey(g: Genre) = "g:" + g.name
         fun genreKey(g: OwnGenre) = "o:" + g.key
 
