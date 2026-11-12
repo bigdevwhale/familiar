@@ -144,7 +144,7 @@ internal object Newcomers {
         }
         val m = px.shade(sheet, pen.dome(50f, 52f, 26f, 30f, 0.15f), ramp, dither = 0.7f, rim = ramp[4], lo = 1)
         // A little see-through.
-        for (i in m.indices) if (m[i]) px.c[i] = (226 shl 24) or (px.c[i] and 0xFFFFFF)
+        for (i in m.indices) if (m[i]) px.map(i) { p -> if (p.al() == 0) p else (226 shl 24) or (p and 0xFFFFFF) }
         for (s in listOf(-1f, 1f)) px.shade(pen.ell(50f + 25f * s, 60f, 4.4f, 6f), pen.dome(50f + 25f * s, 59f, 4.4f, 6f), ramp, lo = 1)
         // The lantern it carries, brighter as it grows.
         if (st >= Stage.YOUNG) {

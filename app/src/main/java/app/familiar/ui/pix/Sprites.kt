@@ -56,8 +56,14 @@ class Face(val eyes: List<Pair<Int, Int>>, val eyeW: Int, val headX: Int, val he
 object Sprites {
     const val SIZE = 80
 
-    /** The classic look (drawn in code, as before 1.10) instead of the hand-drawn familiars; follows the setting. */
-    @Volatile var classic = false
+    /**
+     * The classic look (drawn in code, as before 1.10) instead of the hand-drawn familiars; follows the setting.
+     * Kept as observed state, so whatever shows a familiar draws it again the moment the setting changes.
+     */
+    private val classicState = androidx.compose.runtime.mutableStateOf(false)
+    var classic: Boolean
+        get() = classicState.value
+        set(v) { classicState.value = v }
     /** Beats in the idle loop: blinks, sparkles and other things that switch on and off keep to these. */
     const val BEATS = 12
     /** Frames painted for it: twice the beats, so whatever sways, flaps or floats moves in finer steps. */
@@ -93,7 +99,7 @@ object Sprites {
         val ctx = Ctx(look, f, ph, eyes)
         val drawn = if (classic) null else Drawn.of(look.species, look.stage)
         val face: Face? = if (look.stage == Stage.EGG) {
-            egg(body, ctx)
+            if (classic || !Drawn.egg(body, ctx)) egg(body, ctx)
             null
         } else if (drawn != null) {
             Drawn.paint(body, drawn, ctx)
@@ -189,9 +195,11 @@ object Sprites {
             if (c.al() == 0) continue
             val up = (bottom - y) / (bottom - top + 1f)
             if (up + noise(x / 2, y / 2, 5) * 0.16f > stone * 1.2f - 0.08f) continue
-            val l = lum(c)
-            val v = (l * 1.15f * (ramp.size - 1) + bayer(x, y) * 0.6f).roundToInt().coerceIn(0, ramp.size - 1)
-            px.c[y * px.w + x] = (c.al() shl 24) or (ramp[if (c == OUT) 0 else v] and 0xFFFFFF)
+            px.map(y * px.w + x) { p ->
+                if (p.al() == 0) return@map p
+                val v = (lum(p) * 1.15f * (ramp.size - 1) + bayer(x, y) * 0.6f).roundToInt().coerceIn(0, ramp.size - 1)
+                (p.al() shl 24) or (ramp[if (p == OUT) 0 else v] and 0xFFFFFF)
+            }
         }
         if (ash) {
             for (i in 0 until 9) {
@@ -372,15 +380,14 @@ object Sprites {
             Species.MAGPIE -> 200f to 1.4f
         }
         val hsv = FloatArray(3)
-        for (i in px.c.indices) {
-            val c = px.c[i]
-            if (c.al() == 0 || c and 0xFFFFFF == OUT and 0xFFFFFF || c and 0xFFFFFF == EYE and 0xFFFFFF) continue
+        for (i in px.c.indices) px.map(i) { c ->
+            if (c.al() == 0 || c and 0xFFFFFF == OUT and 0xFFFFFF || c and 0xFFFFFF == EYE and 0xFFFFFF) return@map c
             android.graphics.Color.RGBToHSV(c.r(), c.g(), c.b(), hsv)
-            if (hsv[1] < 0.12f) continue
+            if (hsv[1] < 0.12f) return@map c
             hsv[0] = (hsv[0] + shift) % 360f
             hsv[1] = (hsv[1] * sat).coerceIn(0f, 1f)
             if (sat < 0.2f) hsv[2] = (hsv[2] * 1.12f + 0.08f).coerceAtMost(1f)
-            px.c[i] = (c.al() shl 24) or (android.graphics.Color.HSVToColor(hsv) and 0xFFFFFF)
+            (c.al() shl 24) or (android.graphics.Color.HSVToColor(hsv) and 0xFFFFFF)
         }
     }
 
@@ -896,7 +903,7 @@ object Sprites {
             // Pale border and an eyespot.
             val inner = pen.path(mirror = m).m(wx(46f), 47f).c(wx(36f), 31f, wx(20f), 21f, wx(10f), 24f).c(wx(7f), 35f, wx(14f), 48f, wx(26f), 53f).q(wx(38f), 55f, wx(46f), 52f).l(wx(46f), 47f).shape()
             val im = px.cover(inner)
-            for (i in um.indices) if (um[i] && !im[i] && px.c[i] and 0xFFFFFF != R.night[0] and 0xFFFFFF) px.c[i] = (0xFF shl 24) or (R.lilac[4] and 0xFFFFFF)
+            for (i in um.indices) if (um[i] && !im[i] && px.c[i] and 0xFFFFFF != R.night[0] and 0xFFFFFF) px.put(i, (0xFF shl 24) or (R.lilac[4] and 0xFFFFFF))
             val sx = if (m) 100f - wx(22f) else wx(22f)
             px.shade(pen.ell(sx, 34f, 4.6f, 4.6f), pen.dome(sx, 33f, 4.6f, 4.6f), R.lilac, lo = 3, line = R.night[1])
             px.shade(pen.ell(sx, 34f, 2f, 2f), facing(), R.night, outline = false, lo = 1, hi = 2)

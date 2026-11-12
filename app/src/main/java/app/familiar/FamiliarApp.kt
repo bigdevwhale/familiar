@@ -13,6 +13,8 @@ import app.familiar.widget.DenWidget
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class AppContainer(private val context: Context) {
@@ -57,7 +59,14 @@ class FamiliarApp : Application() {
             container.changed()
         }
         // The familiars' look follows the setting, for the screens and the widgets alike.
-        container.scope.launch { container.settings.settings.collect { app.familiar.ui.pix.Sprites.classic = it.classicArt } }
+        container.scope.launch {
+            container.settings.settings.map { it.classicArt }.distinctUntilChanged().collect { classic ->
+                val changed = app.familiar.ui.pix.Sprites.classic != classic
+                app.familiar.ui.pix.Sprites.classic = classic
+                // The widget is drawn once, not watched: draw it again in the new look.
+                if (changed) app.familiar.widget.DenWidget.refresh(this@FamiliarApp)
+            }
+        }
         // Covers still being looked up for imported books when the app was last closed.
         container.scope.launch { runCatching { Import.covers(filesDir, container.db.dao()) { container.changed() } } }
     }

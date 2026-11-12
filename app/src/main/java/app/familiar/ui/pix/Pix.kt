@@ -179,23 +179,67 @@ fun log(cy: Float, ry: Float): (Float, Float) -> V3 = { _, y ->
     V3(0f, dy, sqrt(max(0f, 1 - dy * dy)))
 }
 
+/** How much finer than a [Px]'s own grid its pictures are kept: drawn art shows at this many pixels per pixel. */
+const val DETAIL = 2
+
+/**
+ * A canvas of [w] x [h] pixels. It keeps a copy [DETAIL] times finer ([fine]): whatever is painted here by
+ * code lands on both, as blocks in the fine one, while drawn pictures laid on with [blit] keep their own
+ * finer pixels there. Reading ([get], [has], [c]) is on the coarse grid, so all the drawing code stays the same.
+ */
 class Px(val w: Int, val h: Int) {
     val c = IntArray(w * h)
+    val fw = w * DETAIL
+    val fh = h * DETAIL
+    val fine = IntArray(fw * fh)
 
     operator fun get(x: Int, y: Int): Int = if (x in 0 until w && y in 0 until h) c[y * w + x] else 0
     fun has(x: Int, y: Int) = get(x, y).al() > 0
 
+    private fun mixed(base: Int, color: Int, alpha: Int): Int {
+        if (alpha >= 255 || base.al() == 0) return (min(255, if (base.al() == 0) alpha else 255) shl 24) or (color and 0xFFFFFF)
+        val m = mixc(base, color, alpha / 255f)
+        return (max(base.al(), alpha) shl 24) or (m and 0xFFFFFF)
+    }
+
+    /** The fine pixels under coarse pixel [i]. */
+    inline fun under(i: Int, f: (Int) -> Unit) {
+        val x = (i % w) * DETAIL; val y = (i / w) * DETAIL
+        for (dy in 0 until DETAIL) for (dx in 0 until DETAIL) f((y + dy) * fw + x + dx)
+    }
+
     fun set(x: Int, y: Int, color: Int, alpha: Int = 255) {
         if (x !in 0 until w || y !in 0 until h || alpha <= 0) return
         val i = y * w + x
-        val base = c[i]
-        if (alpha >= 255 || base.al() == 0) {
-            c[i] = (min(255, if (base.al() == 0) alpha else 255) shl 24) or (color and 0xFFFFFF)
-            return
-        }
-        val m = mixc(base, color, alpha / 255f)
-        c[i] = (max(base.al(), alpha) shl 24) or (m and 0xFFFFFF)
+        c[i] = mixed(c[i], color, alpha)
+        under(i) { j -> fine[j] = mixed(fine[j], color, alpha) }
     }
+
+    /** Pixel [i] becomes [color] outright, alpha and all, on both grids. */
+    fun put(i: Int, color: Int) {
+        c[i] = color
+        under(i) { j -> fine[j] = color }
+    }
+
+    /** Pixel [i] is turned by [f], on both grids: each fine pixel under it by the same rule. */
+    inline fun map(i: Int, f: (Int) -> Int) {
+        c[i] = f(c[i])
+        under(i) { j -> fine[j] = f(fine[j]) }
+    }
+
+    /** The part [x0], [y0], [cw] x [ch] of this, as its own canvas. */
+    fun crop(x0: Int, y0: Int, cw: Int, ch: Int): Px {
+        val out = Px(cw, ch)
+        for (y in 0 until ch) for (x in 0 until cw) out.c[y * cw + x] = this[x0 + x, y0 + y]
+        for (y in 0 until ch * DETAIL) for (x in 0 until cw * DETAIL) {
+            val sx = x0 * DETAIL + x; val sy = y0 * DETAIL + y
+            if (sx in 0 until fw && sy in 0 until fh) out.fine[y * out.fw + x] = fine[sy * fw + sx]
+        }
+        return out
+    }
+
+    /** Fills the fine copy from the coarse one, a block per pixel: for a picture loaded without a finer one. */
+    fun coarsen() { for (i in c.indices) under(i) { j -> fine[j] = c[i] } }
 
     fun rect(x: Int, y: Int, w: Int, h: Int, color: Int, alpha: Int = 255) {
         for (j in y until y + h) for (i in x until x + w) set(i, j, color, alpha)
@@ -289,7 +333,19 @@ class Px(val w: Int, val h: Int) {
             if (m[y * w + x]) continue
             if ((x > 0 && m[y * w + x - 1]) || (x < w - 1 && m[y * w + x + 1]) || (y > 0 && m[(y - 1) * w + x]) || (y < h - 1 && m[(y + 1) * w + x])) add += y * w + x
         }
-        add.forEach { set(it % w, it / w, color) }
+        // On the coarse grid as always; on the fine one a line one fine pixel thick round what is drawn
+        // there, so a drawn picture is lined at its own detail rather than in coarse blocks.
+        val near = BooleanArray(w * h)
+        add.forEach { c[it] = (0xFF shl 24) or (color and 0xFFFFFF); near[it] = true }
+        for (i in m.indices) if (m[i]) near[i] = true
+        val solid = BooleanArray(fine.size) { fine[it].al() >= 128 }
+        for (y in 0 until fh) for (x in 0 until fw) {
+            val j = y * fw + x
+            if (solid[j] || !near[(y / DETAIL) * w + x / DETAIL]) continue
+            if ((x > 0 && solid[j - 1]) || (x < fw - 1 && solid[j + 1]) || (y > 0 && solid[j - fw]) || (y < fh - 1 && solid[j + fw])) {
+                fine[j] = (0xFF shl 24) or (color and 0xFFFFFF)
+            }
+        }
     }
 
     /** Soft light in stepped rings, over what's already drawn ([onlyDrawn]) or anywhere. */
@@ -303,16 +359,24 @@ class Px(val w: Int, val h: Int) {
         }
     }
 
+    /** Lays [o] over this at [ox], [oy]: each grid onto its own, so its fine pixels stay fine. */
     fun blit(o: Px, ox: Int, oy: Int) {
         for (y in 0 until o.h) for (x in 0 until o.w) {
             val p = o.c[y * o.w + x]
-            if (p.al() > 0) set(ox + x, oy + y, p, p.al())
+            val tx = ox + x; val ty = oy + y
+            if (p.al() > 0 && tx in 0 until w && ty in 0 until h) c[ty * w + tx] = mixed(c[ty * w + tx], p, p.al())
+        }
+        for (y in 0 until o.fh) for (x in 0 until o.fw) {
+            val p = o.fine[y * o.fw + x]
+            val tx = ox * DETAIL + x; val ty = oy * DETAIL + y
+            if (p.al() > 0 && tx in 0 until fw && ty in 0 until fh) fine[ty * fw + tx] = mixed(fine[ty * fw + tx], p, p.al())
         }
     }
 
+    /** The fine copy, [DETAIL] times this canvas's size: what goes on screen. */
     fun bitmap(): ImageBitmap {
-        val b = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
-        b.setPixels(c, 0, w, 0, 0, w, h)
+        val b = android.graphics.Bitmap.createBitmap(fw, fh, android.graphics.Bitmap.Config.ARGB_8888)
+        b.setPixels(fine, 0, fw, 0, 0, fw, fh)
         return b.asImageBitmap()
     }
 }

@@ -493,6 +493,33 @@ class FamiliarTest {
     }
 
     @Test
+    fun aCycleStandsInVolumeOrderWhateverTheSort() {
+        // #47: the second volume was added and read later, so "recent" puts it first; it must stand after the first.
+        val one = book(1).copy(title = "One", series = "Earthsea", volume = 1, added = at(10))
+        val loose = book(2).copy(title = "Loose", added = at(5))
+        val two = book(3).copy(title = "Two", series = "Earthsea", volume = 2, added = at(1))
+        val br = app.familiar.ui.books.Browse(sort = app.familiar.ui.books.Sort.ADDED)
+        assertEquals(listOf("One", "Loose", "Two"), br.apply(listOf(one, loose, two), emptyList(), locale = Locale.ENGLISH).map { it.title })
+        // The reader's own order stays as dragged.
+        val manual = br.copy(sort = app.familiar.ui.books.Sort.MANUAL)
+        assertEquals(listOf("Two", "Loose", "One"), manual.apply(listOf(one.copy(place = 3), loose.copy(place = 2), two.copy(place = 1)), emptyList(), locale = Locale.ENGLISH).map { it.title })
+    }
+
+    @Test
+    fun aDayMissedInTheMiddleOfABookStaysEmpty() {
+        // #48: started 5 days ago, read 3 days ago and yesterday; the day between had no reading.
+        val b = book(9).copy(started = at(5))
+        val s = stats(listOf(read(3, 10, book = 9), read(1, 10, book = 9)), listOf(b))
+        val days = app.familiar.domain.dayBooks(s, YearMonth.from(today))
+        fun ids(n: Long) = days[today.minusDays(n)]?.map { it.book.id }
+        if (today.minusDays(2).month == today.month) assertEquals(null, ids(2))
+        if (today.minusDays(3).month == today.month) assertEquals(listOf(9L), ids(3))
+        if (today.minusDays(1).month == today.month) assertEquals(listOf(9L), ids(1))
+        // Before its first sitting it still fills its days, as a book brought over would.
+        if (today.minusDays(4).month == today.month) assertEquals(listOf(9L), ids(4))
+    }
+
+    @Test
     fun theDayShowsTheBookFinishedOrReadMost() {
         val books = listOf(book(1), book(2), book(3, done = 2))
         val s = stats(listOf(read(1, 10, book = 1), read(1, 40, book = 2), read(2, 5, book = 1)), books)

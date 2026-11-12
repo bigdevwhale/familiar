@@ -6,6 +6,28 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.15.0] - 2026-11-12
+
+### Changed
+- **Drawn anew, twice as fine:** the familiars and their eggs, the den with every piece of furniture and its seasonal decorations, the tree of stories, the finds in the casket and the dreams are all redrawn, and show with twice the detail of before. Blinking, hats, glows and everything else that moves still works over them.
+- **Earned by reading, not by growing up:** the kitsune grows a tail for every genre you finish, in that genre's colour, and no longer gets them just by reaching a new stage (#41). In the same way the dragon keeps the books it has read beside it, the sprout opens a flower for every morning of reading, the chimera sews on a patch for every genre of your own, the magpie keeps a gem in its nest for every subgenre, and the moth gains a star for every night of reading.
+- The kitsune only talks of counting and curling up in her tails once she has two or more (#40).
+
+### Added
+- **Swipe between shelves:** on the Shelf screen, swipe left or right to go to the next shelf tab (#45).
+
+### Fixed
+- **A day you didn't read stays empty in the calendar:** a book read in the app marked every day between its sittings, so a missed day showed its cover; now only the days it was read are marked (#48).
+- **A cycle stands in order:** sorted by recent or by date added, the second volume could stand before the first; a cycle's volumes now keep their order under any sort but your own (#47).
+- Switching between the hand-drawn and the classic look in the settings now changes the familiars at once, the widget included.
+
+<!-- tg
+Фамильяры, яйца, логово, древо, находки и сны перерисованы и стали вдвое детальнее.
+Хвосты кицунэ, книги дракона, цветы ростка, заплатки химеры и камушки сороки теперь появляются за прочитанное, а не просто с возрастом.
+Полки на экране «Полка» можно листать свайпом, а тома цикла стоят по порядку.
+Пропущенный день больше не закрашивается в календаре, а смена вида фамильяров в настройках срабатывает сразу.
+-->
+
 ## [1.14.0] - 2026-11-10
 
 ### Added

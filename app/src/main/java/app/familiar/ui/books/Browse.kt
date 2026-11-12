@@ -62,7 +62,22 @@ data class Browse(
         // One cycle picked: its volumes in order, whatever the sort; the sort only breaks ties.
         val chosen = if (reverse) order.reversed() else order
         val sorted = books.filter { matches(it, genreNames) }.sortedWith(if (series.isNotBlank()) byVolume.then(chosen) else chosen)
-        return if (pausedLast && sort != Sort.MANUAL) sorted.sortedBy { it.shelfOf == Shelf.PAUSED } else sorted
+        val shelved = if (pausedLast && sort != Sort.MANUAL) sorted.sortedBy { it.shelfOf == Shelf.PAUSED } else sorted
+        return if (sort == Sort.MANUAL) shelved else inVolumeOrder(shelved)
+    }
+
+    /**
+     * A cycle's books keep the places the order gave them, but take them in volume order: sorted by when they
+     * were read, the second volume mustn't stand before the first (#47). The reader's own order is left alone.
+     */
+    private fun inVolumeOrder(books: List<Book>): List<Book> {
+        val out = books.toMutableList()
+        books.withIndex().filter { it.value.series.isNotBlank() }.groupBy { it.value.series.trim().lowercase() }.values.forEach { cycle ->
+            if (cycle.size < 2) return@forEach
+            val ordered = cycle.map { it.value }.sortedWith(byVolume.thenBy { it.added })
+            cycle.map { it.index }.zip(ordered).forEach { (i, b) -> out[i] = b }
+        }
+        return out
     }
 
     /** Volume 1, 2, 3…; books without a number after the numbered ones. */

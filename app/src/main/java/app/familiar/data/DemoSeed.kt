@@ -128,21 +128,23 @@ object DemoSeed {
         }
         Library.settleForms(dao)
         dao.insertPet(Pet(species = Species.GHOST.name, name = if (ru) "Шуршик" else "Rustle", joined = at(today.minusDays(5), 21, 0), mana = 420, trait = app.familiar.domain.Trait.BRAVE.name))
-        // A casket already half full.
-        val finds = listOf("BOOKMARK", "ACORN", "TEACUP", "DRAGON_SCALE", "MAGNIFIER", "MAGNIFIER", "SPIDER", "LOVE_LETTER", "QUILL", "SPECTACLES", "MOON_PEBBLE", "BELL")
-        finds.forEachIndexed { i, k -> dao.insertFind(Find(kind = k, at = at(start.plusDays(i * 6L), 21, 0), petId = fox)) }
+        // The whole casket found, so every trinket can be looked at.
+        val finds = app.familiar.domain.Trinket.entries.map { it.name }
+        finds.forEachIndexed { i, k -> dao.insertFind(Find(kind = k, at = at(start.plusDays(i * 74L / finds.size), 21, 0), petId = fox)) }
         // Ratings on the finished ones.
         dao.books().filter { it.shelfOf == Shelf.DONE }.forEachIndexed { i, b -> dao.updateBook(b.copy(rating = listOf(5, 4, 5, 5, 4, 5, 4)[i % 7])) }
+        // Every piece bought, so each can be put in the den; these seven stand in it.
         val den = listOf(app.familiar.domain.Item.WINDOW_MOON, app.familiar.domain.Item.BOOKSHELF, app.familiar.domain.Item.RUG_RED, app.familiar.domain.Item.CAULDRON, app.familiar.domain.Item.LANTERN, app.familiar.domain.Item.CANDLES, app.familiar.domain.Item.MANDRAKE)
         val pets = dao.pets()
         settings.update {
             it.copy(
                 onboarded = true, name = if (ru) "Мира" else "Mira", remindAt = 21 * 60, theme = ThemeMode.DARK,
-                owned = den.map { d -> d.name }.toSet(), placed = den.map { d -> d.name }.toSet(), spent = den.sumOf { d -> d.price } + met, yearGoal = 12, dailyGoal = 30,
+                owned = app.familiar.domain.Item.entries.map { d -> d.name }.toSet(), placed = den.map { d -> d.name }.toSet(), spent = den.sumOf { d -> d.price } + met, yearGoal = 12, dailyGoal = 30,
                 seenUnlocks = Species.entries.map { s -> s.name }.toSet(),
                 seenStages = pets.flatMap { p -> app.familiar.domain.Stage.entries.map { st -> "${p.id}:${st.name}" } }.toSet(),
                 candles = 1,
-                dreams = setOf(Genre.FANTASY.name, Genre.MYSTERY.name, Genre.HORROR.name, Genre.SCIFI.name, Genre.ROMANCE.name),
+                // Every dream already dreamt, so the whole album can be looked at.
+                dreams = Genre.entries.map { g -> g.name }.toSet(),
                 // A friend's tanuki staying the day, with a book to recommend.
                 guest = app.familiar.domain.Visit(
                     Species.TANUKI, if (ru) "Моти" else "Mochi", 900, false, app.familiar.domain.Form.NONE, app.familiar.domain.Trait.PLAYFUL, if (ru) "Аня" else "Anna",

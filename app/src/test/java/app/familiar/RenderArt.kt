@@ -69,7 +69,9 @@ class RenderArt {
     fun evolutions() {
         val ru = System.getProperty("render.lang") == "ru"
         val forms = app.familiar.domain.Form.entries.drop(1)
-        val k = 3
+        // Four screen pixels to a sprite pixel: two to each of its finer ones, as the phone shows them.
+        val k = 4
+        val d = app.familiar.ui.pix.DETAIL
         val cell = Sprites.SIZE * k
         val left = 400
         val top = 260
@@ -102,12 +104,13 @@ class RenderArt {
         val names = if (ru) listOf("Мимик", "Кицунэ", "Слайм", "Дракончик", "Феникс", "Грифон", "Совомедведь", "Лунный мотылёк", "Тануки", "Росток", "Призрак", "Книжный червь", "Химера", "Сорока")
         else listOf("Mimic", "Kitsune", "Slime", "Dragon", "Phoenix", "Griffin", "Owlbear", "Moon moth", "Tanuki", "Sprout", "Ghost", "Bookworm", "Chimera", "Magpie")
         fun put(px: Px, x0: Int, y0: Int) {
-            for (y in 0 until px.h) for (x in 0 until px.w) {
-                val p = px.c[y * px.w + x]
+            val f = k / d
+            for (y in 0 until px.fh) for (x in 0 until px.fw) {
+                val p = px.fine[y * px.fw + x]
                 val a = (p ushr 24) and 0xFF
                 if (a == 0) continue
-                for (j in 0 until k) for (i in 0 until k) {
-                    val bx = x0 + x * k + i; val by = y0 + y * k + j
+                for (j in 0 until f) for (i in 0 until f) {
+                    val bx = x0 + x * f + i; val by = y0 + y * f + j
                     bmp.setPixel(bx, by, blend(bmp.getPixel(bx, by), p, a / 255f))
                 }
             }
@@ -121,6 +124,29 @@ class RenderArt {
         }
         val docs = File(System.getProperty("render.docs") ?: out.path)
         File(if (ru) out else docs, if (ru) "evolutions_ru.png" else "evolutions.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    /** The drawn familiars as the phone shows them (the fine grid): every species through its stages, with what it earned. */
+    @Test
+    fun drawn() {
+        val d = app.familiar.ui.pix.DETAIL
+        val k = 2
+        val cell = Sprites.SIZE * d * k
+        val rows = Species.entries.map { sp -> Stage.entries.map { Sprites.frame(look(sp, it), 0) } }
+        val bmp = Bitmap.createBitmap(Stage.entries.size * cell, rows.size * cell, Bitmap.Config.ARGB_8888)
+        bmp.eraseColor(0xFF2A2030.toInt())
+        rows.forEachIndexed { r, row ->
+            row.forEachIndexed { c, px ->
+                for (y in 0 until px.fh) for (x in 0 until px.fw) {
+                    val p = px.fine[y * px.fw + x]
+                    val a = (p ushr 24) and 0xFF
+                    if (a == 0) continue
+                    val col = blend(0xFF2A2030.toInt(), p, a / 255f)
+                    for (j in 0 until k) for (i in 0 until k) bmp.setPixel(c * cell + x * k + i, r * cell + y * k + j, col)
+                }
+            }
+        }
+        File(out, "drawn.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
     /** The classic look (the setting «Classic»): every familiar through its stages, grown forms and seasonal hats. */

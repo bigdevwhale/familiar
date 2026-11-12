@@ -15,12 +15,17 @@ object Lines {
 
     fun of(locale: Locale): Map<Species, Map<State, List<String>>> = if (locale.language == "ru") RU else EN
 
-    /** A line for [state], picked by [seed] so it holds still for a while. */
-    fun line(locale: Locale, sp: Species, state: State, name: String, seed: Int): String {
+    /**
+     * A line for [state], picked by [seed] so it holds still for a while. A line marked {tails} speaks of the
+     * kitsune's tails, so it is only said once she has two or more ([tails], one for every genre read), and one
+     * marked {genre} of a tail in a book's colour, once she has one.
+     */
+    fun line(locale: Locale, sp: Species, state: State, name: String, seed: Int, tails: Int = Int.MAX_VALUE): String {
         val st = if (state == State.ASH && sp != Species.PHOENIX) State.STONE else state
         val list = of(locale)[sp]?.get(st).orEmpty().ifEmpty { common(locale)[st].orEmpty() }
+            .filter { (!it.startsWith("{tails}") || tails >= 2) && (!it.startsWith("{genre}") || tails >= 1) }
         if (list.isEmpty()) return ""
-        return list[Math.floorMod(seed, list.size)].replace("{n}", name)
+        return list[Math.floorMod(seed, list.size)].removePrefix("{tails}").removePrefix("{genre}").replace("{n}", name)
     }
 
     fun mood(locale: Locale, mood: Mood, name: String): String? {
@@ -87,8 +92,8 @@ object Lines {
             State.FED to listOf("{n} burps up a comma, very pleased.", "{n} snores with its lid half open."),
         ),
         Species.KITSUNE to mapOf(
-            State.HUNGRY to listOf("{n} sniffs the cover of your book.", "{n} counts her tails and wonders which one comes next.", "{n} flicks a tail at the bookshelf."),
-            State.FED to listOf("{n} curls up in her tails like a blanket.", "{n} grooms a tail the colour of your last book."),
+            State.HUNGRY to listOf("{n} sniffs the cover of your book.", "{tails}{n} counts her tails and wonders which one comes next.", "{n} flicks a tail at the bookshelf."),
+            State.FED to listOf("{tails}{n} curls up in her tails like a blanket.", "{genre}{n} grooms a tail the colour of your last book.", "{n} curls up with her tail round her paws."),
         ),
         Species.SLIME to mapOf(
             State.HUNGRY to listOf("{n} wobbles sadly. Nothing new inside.", "{n} tries to swallow the TV remote. Not that."),
@@ -147,8 +152,8 @@ object Lines {
             State.FED to listOf("{n} довольно отрыгивает запятую.", "{n} храпит, приоткрыв крышку."),
         ),
         Species.KITSUNE to mapOf(
-            State.HUNGRY to listOf("{n} принюхивается к обложке твоей книги.", "{n} пересчитывает хвосты и гадает, какой будет следующим.", "{n} машет хвостом в сторону книжной полки."),
-            State.FED to listOf("{n} сворачивается в хвостах, как в одеяле.", "{n} вылизывает хвост цвета последней книги."),
+            State.HUNGRY to listOf("{n} принюхивается к обложке твоей книги.", "{tails}{n} пересчитывает хвосты и гадает, какой будет следующим.", "{n} машет хвостом в сторону книжной полки."),
+            State.FED to listOf("{tails}{n} сворачивается в хвостах, как в одеяле.", "{genre}{n} вылизывает хвост цвета последней книги.", "{n} сворачивается клубочком, укрыв лапки хвостом."),
         ),
         Species.SLIME to mapOf(
             State.HUNGRY to listOf("{n} грустно колышется. Внутри ничего нового.", "{n} пытается проглотить пульт от телевизора. Не то."),

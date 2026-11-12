@@ -101,26 +101,32 @@ fun breath(look: Look, t: Float): Float {
     return (0.5f - 0.5f * cos(t / period * 2 * Math.PI.toFloat())) * 0.016f
 }
 
-/** Painted frames are kept per look: drawing a familiar takes a few dozen milliseconds. */
+/** Painted frames are kept per look and art style: drawing a familiar takes a few dozen milliseconds. */
 private object FrameCache {
-    private val map = object : LinkedHashMap<Look, List<ImageBitmap>>(16, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Look, List<ImageBitmap>>?) = size > 16
+    private val map = object : LinkedHashMap<Pair<Look, Boolean>, List<ImageBitmap>>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Pair<Look, Boolean>, List<ImageBitmap>>?) = size > 16
     }
 
-    @Synchronized fun get(look: Look) = map[look]
-    @Synchronized fun put(look: Look, frames: List<ImageBitmap>) { map[look] = frames }
+    @Synchronized fun get(look: Look) = map[look to Sprites.classic]
+    @Synchronized fun put(look: Look, classic: Boolean, frames: List<ImageBitmap>) { map[look to classic] = frames }
 }
 
-fun framesOf(look: Look): List<ImageBitmap> = FrameCache.get(look) ?: Sprites.frames(look).map { it.bitmap() }.also { FrameCache.put(look, it) }
+fun framesOf(look: Look): List<ImageBitmap> {
+    val classic = Sprites.classic
+    return FrameCache.get(look) ?: Sprites.frames(look).map { it.bitmap() }.also { FrameCache.put(look, classic, it) }
+}
 
 /**
  * Draws pixel frames scaled up in whole steps, crisp, centred and resting on the bottom. [stretch] makes it
  * a little taller from the same bottom edge, for a breath.
  */
 fun androidx.compose.ui.graphics.drawscope.DrawScope.pixels(img: ImageBitmap, tint: androidx.compose.ui.graphics.ColorFilter? = null, bottom: Boolean = false, stretch: Float = 0f) {
-    val k = maxOf(1, minOf(size.width / img.width, size.height / img.height).toInt())
-    val w = img.width * k
-    val h = img.height * k
+    // Sized by the picture's own grid (it comes DETAIL times finer, from Px.bitmap), in whole steps of it.
+    val lw = img.width / app.familiar.ui.pix.DETAIL
+    val lh = img.height / app.familiar.ui.pix.DETAIL
+    val k = maxOf(1, minOf(size.width / lw, size.height / lh).toInt())
+    val w = lw * k
+    val h = lh * k
     val tall = (h * (1f + stretch)).toInt()
     val y = if (bottom) (size.height - h).toInt() else (size.height - h).toInt().coerceAtLeast(0) / 2
     drawImage(
@@ -135,7 +141,9 @@ fun androidx.compose.ui.graphics.drawscope.DrawScope.pixels(img: ImageBitmap, ti
 /** A familiar, alive: it breathes, blinks and hops with a heart when you tap it. */
 @Composable
 fun FamiliarArt(look: Look, modifier: Modifier = Modifier, fps: Float = 6f, tint: androidx.compose.ui.graphics.ColorFilter? = null, onTap: (() -> Unit)? = null) {
-    val frames by produceState(FrameCache.get(look), look) { value = withContext(Dispatchers.Default) { framesOf(look) } }
+    // Drawn again when the art style is switched in the settings, not only when the familiar changes.
+    val classic = Sprites.classic
+    val frames by produceState(FrameCache.get(look), look, classic) { value = withContext(Dispatchers.Default) { framesOf(look) } }
     val t by rememberTime()
     val beats by rememberBeats(fps)
     val hop = remember { Animatable(0f) }

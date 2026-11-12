@@ -4,7 +4,7 @@ for the app, and finds where each sprite's eyes are so the app can blink and clo
 
     python tools/familiars.py
 
-Writes app/src/main/resources/familiars/<species>_<stage>.png, faces.txt next to them, and a debug
+Writes app/src/main/resources/familiars/<species>_<stage>.png (and a twice finer <species>_<stage>@2x.png), faces.txt next to them, and a debug
 sheet with the eyes boxed to app/build/art/familiars.png.
 """
 import os
@@ -28,30 +28,14 @@ MAX_W, MAX_H = 78, 76
 
 # Eyes the finder gets wrong, by hand: (x0, y0, x1, y1) of each eye in sprite pixels.
 EYES = {
-    "kitsune_young": [(29, 47, 36, 54), (40, 47, 47, 54)],
-    "kitsune_adult": [(29, 40, 36, 47), (41, 40, 48, 47)],
-    "sprout_baby": [(31, 55, 38, 61), (41, 55, 48, 61)],
-    "sprout_young": [(31, 51, 38, 58), (43, 51, 50, 58)],
-    "sprout_adult": [(29, 45, 37, 52), (42, 45, 50, 52)],
-    "sprout_ancient": [(28, 39, 36, 47), (44, 39, 52, 47)],
-    "griffin_baby": [(30, 55, 35, 60), (40, 55, 45, 60)],
-    "owlbear_baby": [(30, 53, 36, 58), (42, 53, 47, 58)],
-    "mimic_baby": [(29, 48, 36, 57), (44, 48, 51, 57)],
-    "mimic_young": [(24, 34, 35, 45), (45, 34, 56, 45)],
-    "mimic_adult": [(21, 25, 33, 35), (47, 25, 59, 35)],
-    "mimic_ancient": [(17, 15, 31, 27), (48, 15, 62, 27)],
-    "tanuki_baby": [(29, 51, 36, 58), (40, 51, 46, 58)],
-    "tanuki_young": [(26, 42, 33, 50), (40, 42, 47, 50)],
-    "tanuki_adult": [(22, 29, 31, 39), (37, 29, 46, 39)],
-    "tanuki_ancient": [(19, 22, 29, 32), (34, 22, 44, 32)],
-    "chimera_baby": [(31, 51, 38, 58), (41, 51, 48, 58)],
-    "chimera_young": [(29, 42, 37, 50), (41, 41, 49, 49)],
-    "chimera_adult": [(28, 32, 37, 41), (41, 32, 50, 41)],
-    "chimera_ancient": [(28, 24, 37, 34), (42, 22, 51, 32)],
-    "magpie_baby": [(30, 49, 35, 55), (40, 49, 45, 55)],
-    "magpie_young": [(26, 41, 32, 48), (37, 40, 43, 47)],
-    "magpie_adult": [(21, 32, 28, 40), (34, 29, 41, 36)],
-    "magpie_ancient": [(20, 18, 28, 27), (32, 20, 41, 28)],
+    "kitsune_young": [(31, 48, 38, 55), (41, 48, 48, 55)],
+    "moth_young": [(32, 53, 37, 58), (42, 53, 47, 58)],
+    "sprout_ancient": [(28, 41, 37, 50), (45, 41, 53, 50)],
+    "chimera_adult": [(30, 34, 37, 41), (43, 34, 50, 41)],
+    "magpie_baby": [(29, 46, 36, 51), (39, 46, 45, 51)],
+    "magpie_young": [(27, 38, 33, 44), (37, 38, 43, 44)],
+    "magpie_adult": [(21, 28, 28, 35), (33, 28, 40, 35)],
+    "magpie_ancient": [(19, 21, 27, 28), (33, 21, 41, 28)],
 }
 
 
@@ -90,10 +74,23 @@ def unchecker(rgb):
     return ~gone
 
 
+def keyed(rgb):
+    """Pixels of the flat magenta (#FF00FF) the sheets are drawn on, with the blend into it at the edges."""
+    c = rgb.astype(int)
+    # Plainly the key colour, and the blend next to it; violet fur and pink blush further in stay.
+    strict = (c[..., 0] > 190) & (c[..., 2] > 190) & (c[..., 1] < 100)
+    blend = np.minimum(c[..., 0], c[..., 2]) - c[..., 1] > 70
+    return strict | (blend & ndimage.binary_dilation(strict, iterations=2))
+
+
 def load(path):
     im = np.array(Image.open(path).convert("RGBA"))
     a = im[..., 3]
-    if (a == 0).mean() > 0.05:
+    border = np.concatenate([im[0, :, :3], im[-1, :, :3], im[:, 0, :3], im[:, -1, :3]])
+    if (a == 0).mean() <= 0.05 and keyed(border[None])[0].mean() > 0.8:
+        solid = ~ndimage.binary_dilation(keyed(im[..., :3]), iterations=1)
+        im[..., 3] = np.where(solid, 255, 0)
+    elif (a == 0).mean() > 0.05:
         solid = a >= 128
     else:
         solid = unchecker(im[..., :3])
@@ -257,9 +254,6 @@ def copy_eye(sprite, src, dst):
 
 # Small sprites whose eyes came out uneven, mended from the better one: (from box, to box).
 MEND = {
-    "tanuki_baby": ((28, 51, 36, 58), (40, 51, 48, 58)),
-    # Drawn winking: the right eye is opened from the left.
-    "tanuki_young": ((26, 42, 35, 52), (39, 41, 48, 51)),
 }
 
 
@@ -378,6 +372,70 @@ def eye_mask(sprite, box, glasses=False, core=False):
     return m
 
 
+# The eggs, two sheets of seven (art/eggs/eggs_1.png, eggs_2.png), in this order.
+EGGS = [SPECIES[:7], SPECIES[7:]]
+EGG_W, EGG_H = 34, 42
+
+
+def eggs():
+    """Cuts the egg sheets into egg_<species>.png, all at one scale, standing on the ground line."""
+    parts = []
+    for n, names in enumerate(EGGS, start=1):
+        im, solid = load(os.path.join(ROOT, "art", "eggs", f"eggs_{n}.png"))
+        for name, (s, e) in zip(names, figures(solid, count=len(names))):
+            m = solid[:, s:e]
+            ys = np.nonzero(m.any(axis=1))[0]
+            xs = np.nonzero(m.any(axis=0))[0]
+            x0, y0, x1, y1 = s + xs[0], ys[0], s + xs[-1] + 1, ys[-1] + 1
+            part = im[y0:y1, x0:x1].copy()
+            part[..., 3] = np.where(solid[y0:y1, x0:x1], part[..., 3], 0)
+            parts.append((name, part))
+    k = min(min(EGG_W / p.shape[1], EGG_H / p.shape[0]) for _, p in parts)
+    for name, part in parts:
+        w, h = max(1, round(part.shape[1] * k)), max(1, round(part.shape[0] * k))
+        sprite = np.zeros((SIZE, SIZE, 4), np.uint8)
+        ox, oy = (SIZE - w) // 2, GROUND + 1 - h
+        sprite[oy:oy + h, ox:ox + w] = crisp(part, w, h)
+        outline(sprite)
+        Image.fromarray(sprite, "RGBA").save(os.path.join(OUT, f"egg_{name}.png"))
+        fine(part, w, h, ox, oy, f"egg_{name}")
+    print("eggs scale", round(k, 4))
+
+
+DETAIL = 2
+
+
+def fine(part, w, h, ox, oy, name):
+    """The same sprite DETAIL times finer (name@2x.png), standing exactly where the coarse one does:
+    what the app shows, while the coarse one is what its code reads (eyes, hats, the top of the head)."""
+    d = DETAIL
+    sprite = np.zeros((SIZE * d, SIZE * d, 4), np.uint8)
+    sprite[oy * d:(oy + h) * d, ox * d:(ox + w) * d] = crisp(part, w * d, h * d)
+    outline(sprite)
+    Image.fromarray(sprite, "RGBA").save(os.path.join(OUT, f"{name}@{d}x.png"))
+
+
+# Parts the app puts on by itself (art/parts), sized (w, h) on the sprite grid: the kitsune's tail, one fanned
+# out for every genre read; the dragon's books, the sprout's flowers, the chimera's patches, the magpie's gems.
+PARTS = {"kitsune_tail": (22, 40), "part_book": (8, 24), "part_flower": (12, 12), "part_patch": (14, 14), "part_gem": (10, 10)}
+
+
+def parts():
+    for name, (pw, ph) in PARTS.items():
+        im, solid = load(os.path.join(ROOT, "art", "parts", name + ".png"))
+        ys, xs = np.nonzero(solid)
+        part = im[ys.min():ys.max() + 1, xs.min():xs.max() + 1].copy()
+        part[..., 3] = np.where(solid[ys.min():ys.max() + 1, xs.min():xs.max() + 1], part[..., 3], 0)
+        k = min(pw / part.shape[1], ph / part.shape[0])
+        w, h = max(1, round(part.shape[1] * k)), max(1, round(part.shape[0] * k))
+        for d, suffix in ((1, ""), (DETAIL, f"@{DETAIL}x")):
+            sprite = np.zeros((ph * d, pw * d, 4), np.uint8)
+            ox, oy = (pw - w) // 2, ph - h
+            sprite[oy * d:(oy + h) * d, ox * d:(ox + w) * d] = crisp(part, w * d, h * d)
+            outline(sprite)
+            Image.fromarray(sprite, "RGBA").save(os.path.join(OUT, f"{name}{suffix}.png"))
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     os.makedirs(os.path.dirname(DEBUG), exist_ok=True)
@@ -416,6 +474,7 @@ def main():
                 copy_eye(sprite, *MEND[name])
             outline(sprite)
             Image.fromarray(sprite, "RGBA").save(os.path.join(OUT, name + ".png"))
+            fine(part, w, h, ox, oy, name)
             eyes = EYES.get(name)
             if eyes is None:
                 found = find_eyes(part, solid[y0:y1, x0:x1])
@@ -466,7 +525,8 @@ def main():
                         for X in (a * 3, c * 3 - 1):
                             px[col * SIZE * 3 + X, row * SIZE * 3 + Y] = (0, 255, 120, 255)
         print(sp, "scale", round(k, 4), [(b[2] - b[0], b[3] - b[1]) for b in crops])
-    with open(os.path.join(OUT, "faces.txt"), "w", encoding="utf-8") as f:
+    with open(os.path.join(OUT, "faces.txt"), "w", encoding="utf-8", newline="
+") as f:
         f.write("# sprite  left eye x0 y0 x1 y1  right eye x0 y0 x1 y1 (written by tools/familiars.py)\n")
         f.write("\n".join(faces) + "\n")
     sheet.save(DEBUG)
@@ -474,3 +534,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+    eggs()
+    parts()

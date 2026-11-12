@@ -89,9 +89,9 @@ class DenWidget : AppWidgetProvider() {
                     form = if (stage >= Stage.ADULT) app.familiar.domain.Form.of(it.form) else app.familiar.domain.Form.NONE,
                 )
                 val px = Sprites.frame(look, 0)
-                val raw = Bitmap.createBitmap(px.c, px.w, px.h, Bitmap.Config.ARGB_8888)
+                val raw = Bitmap.createBitmap(px.fine, px.fw, px.fh, Bitmap.Config.ARGB_8888)
                 // Scaled up without smoothing so the pixels stay crisp.
-                Bitmap.createScaledBitmap(raw, px.w * 3, px.h * 3, false)
+                Bitmap.createScaledBitmap(raw, px.fw * 2, px.fh * 2, false)
             }
             val open = PendingIntent.getActivity(
                 context, 5000,

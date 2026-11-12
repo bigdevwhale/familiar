@@ -22,10 +22,9 @@ internal object Wardrobe {
         if (look.form != Form.NONE && !face.drawn) {
             val c = tint(look.form)
             val k = when (look.form) { Form.SHADOW -> 0.4f; Form.SAGE -> 0.24f; else -> 0.32f }
-            for (i in body.c.indices) {
-                val p = body.c[i]
-                if (p.al() == 0 || p and 0xFFFFFF == OUT and 0xFFFFFF || p and 0xFFFFFF == EYE and 0xFFFFFF || lum(p) > 0.9f) continue
-                body.c[i] = (p.al() shl 24) or (mixc(p, c, k) and 0xFFFFFF)
+            for (i in body.c.indices) body.map(i) { p ->
+                if (p.al() == 0 || p and 0xFFFFFF == OUT and 0xFFFFFF || p and 0xFFFFFF == EYE and 0xFFFFFF || lum(p) > 0.9f) p
+                else (p.al() shl 24) or (mixc(p, c, k) and 0xFFFFFF)
             }
         }
         val hx = face.headX

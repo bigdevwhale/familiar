@@ -96,7 +96,7 @@ object Alarms {
             st.stone > 0.3f -> Lines.State.STONE
             else -> Lines.State.HUNGRY
         }
-        val text = Lines.line(locale, sp, state, pet.name, LocalDate.now(zone).toEpochDay().toInt())
+        val text = Lines.line(locale, sp, state, pet.name, LocalDate.now(zone).toEpochDay().toInt(), app.familiar.domain.Genre.tails.count { it in st.genresFinished })
         val n = NotificationCompat.Builder(context, CHANNEL_REMIND)
             .setSmallIcon(R.drawable.ic_notification)
             .setColor(ContextCompat.getColor(context, R.color.accent))

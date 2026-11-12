@@ -160,9 +160,12 @@ private fun TreePage(data: FamiliarData, go: Go) {
             val img = bm[(t * 4).toInt() % bm.size]
             pixels(img)
             // Fireflies over the tree, as big as its pixels, drifting smoothly between them.
-            val k = maxOf(1, minOf(size.width / img.width, size.height / img.height).toInt()).toFloat()
-            val ox = ((size.width - img.width * k) / 2).toInt()
-            val oy = (size.height - img.height * k).toInt().coerceAtLeast(0) / 2
+            // The picture is DETAIL times finer than the tree's grid, which the fireflies keep to.
+            val lw = img.width / app.familiar.ui.pix.DETAIL
+            val lh = img.height / app.familiar.ui.pix.DETAIL
+            val k = maxOf(1, minOf(size.width / lw, size.height / lh).toInt()).toFloat()
+            val ox = ((size.width - lw * k) / 2).toInt()
+            val oy = (size.height - lh * k).toInt().coerceAtLeast(0) / 2
             Scenes.fireflies(finished.size, t).forEach { fly ->
                 if (fly.light < 0.05f) return@forEach
                 val x = ox + fly.x * k

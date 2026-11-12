@@ -63,8 +63,10 @@ fun DenScene(
             List(Room.FRAMES) { Room.scene(placed, books, night, it, season).bitmap() }
         }.also { RoomCache.put(key, it) }
     }
-    val pet by produceState(null as List<ImageBitmap>?, look) { value = withContext(Dispatchers.Default) { framesOf(look) } }
-    val visitor by produceState(null as List<ImageBitmap>?, guest) { value = guest?.let { withContext(Dispatchers.Default) { framesOf(it) } } }
+    // Drawn again when the art style is switched in the settings, not only when the familiar changes.
+    val classic = app.familiar.ui.pix.Sprites.classic
+    val pet by produceState(null as List<ImageBitmap>?, look, classic) { value = withContext(Dispatchers.Default) { framesOf(look) } }
+    val visitor by produceState(null as List<ImageBitmap>?, guest, classic) { value = guest?.let { withContext(Dispatchers.Default) { framesOf(it) } } }
     val t by rememberTime()
     val hop = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
@@ -101,18 +103,20 @@ fun DenScene(
         drawRect(androidx.compose.ui.graphics.Color(0xFF2A2030), size = size)
         drawImage(f, dstOffset = IntOffset(ox, oy), dstSize = IntSize(Room.W * k, Room.H * k), filterQuality = FilterQuality.None)
         // Familiars stand on the floor and breathe up from it; the hop lifts them smoothly, off the room's grid.
+        // Pictures come DETAIL times finer than the room's grid (Px.bitmap): placed by that grid.
+        val d = app.familiar.ui.pix.DETAIL
         fun familiar(img: ImageBitmap, x: Int, y: Int, stretch: Float) {
-            val tall = (img.height * k * (1f + stretch)).toInt()
-            drawImage(img, dstOffset = IntOffset(x, y + img.height * k - tall), dstSize = IntSize(img.width * k, tall), filterQuality = FilterQuality.None)
+            val tall = (img.height / d * k * (1f + stretch)).toInt()
+            drawImage(img, dstOffset = IntOffset(x, y + img.height / d * k - tall), dstSize = IntSize(img.width / d * k, tall), filterQuality = FilterQuality.None)
         }
         visitor?.let { v ->
             // The guest sits to the left, a little out of step with the host.
             val img = v.at(t * 5 + 3)
-            familiar(img, ox + (Room.W / 2 - 44 - img.width / 2) * k, oy + (Room.FLOOR_Y - img.height + 1) * k, guest?.let { breath(it, t + 0.8f) } ?: 0f)
+            familiar(img, ox + (Room.W / 2 - 44 - img.width / d / 2) * k, oy + (Room.FLOOR_Y - img.height / d + 1) * k, guest?.let { breath(it, t + 0.8f) } ?: 0f)
         }
         pet?.let { p ->
             val img = p.at(t * 6)
-            familiar(img, ox + (Room.W - img.width) / 2 * k, oy + (Room.FLOOR_Y - img.height + 3) * k - (hop.value * 6 * k).toInt(), breath(look, t))
+            familiar(img, ox + (Room.W - img.width / d) / 2 * k, oy + (Room.FLOOR_Y - img.height / d + 3) * k - (hop.value * 6 * k).toInt(), breath(look, t))
         }
     }
 }

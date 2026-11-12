@@ -421,8 +421,11 @@ private fun speech(data: FamiliarData, sp: Species, name: String, seed: Int): St
             3 -> Lines.season(l, data.season, name)?.let { return it }
         }
     }
-    return Lines.line(l, sp, state, name, seed)
+    return Lines.line(l, sp, state, name, seed, tails(s))
 }
+
+/** The kitsune's tails: one for every genre read. */
+private fun tails(s: app.familiar.domain.Stats) = app.familiar.domain.Genre.tails.count { it in s.genresFinished }
 
 /** Growth and today's feeding, side by side in one small card. */
 @Composable

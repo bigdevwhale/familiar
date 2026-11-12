@@ -17,7 +17,7 @@ object Scenes {
         px.shade(ellipse(18f, 67f, 15f, 3.6f), dome(18f, 66f, 15f, 3.6f), R.gold, spec = true)
         px.shade(ellipse(31f, 61f, 3.6f, 3.6f), dome(31f, 60f, 3.6f, 3.6f), R.gold)
         px.shade(ellipse(31f, 61f, 1.8f, 1.8f), facing(), Ramp(0), outline = false)
-        for (x in 0 until px.w) for (y in 0 until px.h) if (px[x, y] == (0xFF shl 24)) px.c[y * px.w + x] = 0
+        for (x in 0 until px.w) for (y in 0 until px.h) if (px[x, y] == (0xFF shl 24)) px.put(y * px.w + x, 0)
         // Wax with drips.
         px.shade(rect(11f, top, 14f, 64.5f - top), column(18f, 7f), R.cream, rim = R.cream[5], lo = 1)
         px.shade(ellipse(18f, top + 0.5f, 7f, 1.6f), facing(0f, -1f, 0.5f), R.cream, outline = false, lo = 3)
@@ -76,68 +76,43 @@ object Scenes {
 
     class Fruit(val index: Int, val x: Int, val y: Int)
 
+    /** Where the leaves are on each drawn tree (tools/scenery.py): centre and radii of the crown, then the hollow. */
+    private val crowns: Map<String, FloatArray> by lazy {
+        Painted.lines("tree/crowns.txt").associate { p -> p[0] to p.drop(1).map { it.toFloat() }.toFloatArray() }
+    }
+
+    /** The drawn tree for [n] books: a young one at first, a grand old one once the shelf is full. */
+    private fun size(n: Int) = when {
+        n < 8 -> "small"
+        n < 24 -> "medium"
+        else -> "large"
+    }
+
     /**
      * The tree of stories: one glowing fruit for every finished book, in its genre's colour.
-     * The crown fills out as books are added. Returns the picture and where each fruit hangs.
+     * The tree grows as books are added. Returns the picture and where each fruit hangs.
      */
     fun tree(fruits: List<Int>, f: Int, night: Boolean): Pair<Px, List<Fruit>> {
         val px = Px(128, 112)
         val n = fruits.size
-        val grow = 0.62f + 0.38f * (n / 40f).coerceAtMost(1f)
-        val cx = 64f
-        val cy = 44f
-        val rx = 54f * grow
-        val ry = 34f * grow
-        // Ground and roots.
-        px.shade(ellipse(64f, 106f, 40f, 4.5f), facing(0f, -1f, 0.6f), if (night) R.leaf else R.leaf, outline = false, lo = 1, hi = 3)
-        for (s in listOf(-1f, 1f)) {
-            val root = poly(64f + 4 * s, 98f, 64f + 16 * s, 104f, 64f + 24 * s, 107f, 64f + 14 * s, 106f, 64f + 3 * s, 104f)
-            px.shade(root, facing(s * 0.4f, -0.3f, 1f), R.wood, lo = 1)
-        }
-        // Branches reaching into the crown.
-        for ((bx, by) in listOf(30f to 36f, 98f to 36f, 42f to 22f, 86f to 22f, 64f to 16f)) {
-            val tx = 64f + (bx - 64f) * grow
-            val ty = 46f + (by - 46f) * grow
-            val dx = (tx - 64f) / 14f
-            for (i in 0..14) {
-                val t = i / 14f
-                val x = 64f + (tx - 64f) * t + dx * sin(t * PI.toFloat()) * 2f
-                val y = 70f + (ty - 70f) * t
-                val w = 3.2f - t * 2f
-                px.shade(ellipse(x, y, w, w), dome(x, y, w, w), R.wood, outline = false, lo = 1, hi = 4)
-            }
-        }
-        val trunk = poly(*(floatArrayOf(55f, 104f) + bez(55f, 104f, 59f, 90f, 59f, 72f, 58f, 54f) + floatArrayOf(70f, 54f) + bez(70f, 54f, 69f, 72f, 69f, 90f, 73f, 104f)))
-        px.shade(trunk, column(64f, 9f), R.wood, texture = { x, y -> noise(x / 2, y / 5, 13) * 0.3f + if ((x + y / 6) % 5 == 0) -0.2f else 0f }, rim = R.wood[5])
+        val name = size(n)
+        Painted.lay(px, "tree/$name")
+        val crown = crowns[name]
+        val (cx, cy, rx, ry) = crown?.toList() ?: listOf(64f, 40f, 40f, 26f)
         // The hollow, where two eyes glint now and then.
-        px.shade(ellipse(64f, 82f, 4f, 5.5f), facing(), Ramp(R.wood[0], R.mouth[0]), lo = 1, hi = 1)
-        if (f % 12 != 5) { px.set(62, 81, R.gold[5]); px.set(66, 81, R.gold[5]) }
-        // The crown: clumps of leaves round the edge, even on both sides, the upper ones behind the
-        // lower so each clump shows its rounded top. Their edges inside are dark leaf, not ink.
-        val blobs = 12
-        val clumps = List(blobs) { i ->
-            val a = (i + 0.5f) * 2 * PI.toFloat() / blobs
-            val r = (15f + (noise(minOf(i, (blobs + 5 - i) % blobs), 2, 9) + 0.5f) * 6f) * grow
-            Triple(cx + cos(a) * rx * 0.62f, cy + sin(a) * ry * 0.55f, r)
-        }.sortedBy { it.second }
-        clumps.forEachIndexed { i, (bx, by, r) ->
-            px.shade(ellipse(bx, by, r * 1.1f, r * 0.9f), dome(bx, by - 2, r * 1.1f, r * 0.9f), R.leaf, texture = { x, y -> if (noise(x / 2, y / 2, i) > 0.3f) 0.15f else 0f }, rim = R.leaf[5], dither = 0.6f, line = R.leaf[1])
+        if (crown != null && crown.size >= 6 && f % 12 != 5) {
+            val hx = crown[4].toInt(); val hy = crown[5].toInt() - 1
+            val gap = if (name == "small") 1 else 2
+            px.set(hx - gap, hy, R.gold[5]); px.set(hx + gap, hy, R.gold[5])
         }
-        px.shade(ellipse(cx, cy - 2, rx * 0.75f, ry * 0.75f), dome(cx, cy - 6, rx * 0.75f, ry * 0.75f), R.leaf, texture = { x, y -> if (noise(x / 2, y / 2, 50) > 0.3f) 0.15f else 0f }, dither = 0.6f, outline = false)
-        // A few lit tufts on the sunny upper left.
-        for ((tx, ty, tr) in listOf(Triple(-0.38f, -0.42f, 9f), Triple(0.05f, -0.6f, 8f), Triple(-0.62f, -0.05f, 7f))) {
-            val x = cx + tx * rx
-            val y = cy + ty * ry
-            px.shade(ellipse(x, y, tr * grow, tr * 0.7f * grow), dome(x - 2, y - 3, tr * grow, tr * 0.7f * grow), R.leaf, dither = 0.6f, outline = false, lo = 3)
-        }
-        // Fruits, on a sunflower spiral.
+        // Fruits, on a sunflower spiral over the crown.
         val slots = maxOf(n, 14)
         val out = ArrayList<Fruit>()
         fruits.forEachIndexed { i, c ->
             val r = sqrt((i + 0.5f) / slots)
             val a = i * 137.508f * PI.toFloat() / 180f
-            val x = cx + cos(a) * rx * 0.86f * r
-            val y = cy + sin(a) * ry * 0.86f * r
+            val x = cx + cos(a) * rx * r
+            val y = cy + sin(a) * ry * r
             val ramp = R.around(c)
             // Each fruit glows steadily and swells a little once a turn, at its own moment.
             val bright = (f + i * 5) % 12 == 0
@@ -146,8 +121,6 @@ object Scenes {
             px.set(x.toInt() - 1, y.toInt() - 3, R.wood[2])
             out += Fruit(i, x.toInt(), y.toInt())
         }
-        val solid = BooleanArray(px.w * px.h) { px.c[it].al() >= 160 }
-        px.ring(solid, OUT)
         return px to out
     }
 

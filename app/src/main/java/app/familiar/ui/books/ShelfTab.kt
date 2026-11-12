@@ -1,5 +1,8 @@
 package app.familiar.ui.books
 
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -216,11 +219,33 @@ fun ShelfTab(data: FamiliarData, go: Go) {
     var removingGenre by remember { mutableStateOf<OwnGenre?>(null) }
     // The one own genre filtered by, to rename or delete it right here.
     val oneOwn = browse.genres.singleOrNull()?.let { k -> data.genres.firstOrNull { Browse.genreKey(it) == k } }
+    // The tabs in the order they stand, so a swipe sideways goes to the one beside (#45).
+    val tabs = listOf(ALL, Shelf.READING.name, Shelf.WANT.name, Shelf.DONE.name) +
+        listOfNotNull(Shelf.ABANDONED.name.takeIf { a -> view == a || data.books.any { it.shelfOf == Shelf.ABANDONED } }) +
+        listOf(CYCLES) + data.shelves.map { OWN + it }
+    val tabRow = androidx.compose.foundation.lazy.rememberLazyListState()
+    // The tab picked by a swipe comes into sight in the row of tabs.
+    LaunchedEffect(view) { tabs.indexOf(view).takeIf { it >= 0 }?.let { tabRow.animateScrollToItem(maxOf(0, it - 1)) } }
+    val swipe = with(androidx.compose.ui.platform.LocalDensity.current) { 80.dp.toPx() }
     androidx.compose.runtime.CompositionLocalProvider(LocalShelfDrag provides drag) {
     Carrying(drag, Modifier.fillMaxSize()) {
         LazyVerticalGrid(
             GridCells.Fixed(3),
             Modifier.fillMaxSize().statusBarsPadding()
+                // Sideways across the shelf: the next tab or the one before. A book being carried, the row of
+                // tabs and the chips scroll on their own and don't count.
+                .pointerInput(tabs, view) {
+                    var moved = 0f
+                    detectHorizontalDragGestures(onDragStart = { moved = 0f }, onDragEnd = {
+                        val i = tabs.indexOf(view)
+                        val next = when {
+                            moved < -swipe -> i + 1
+                            moved > swipe -> i - 1
+                            else -> i
+                        }
+                        if (i >= 0 && next != i && next in tabs.indices) view = tabs[next]
+                    }) { change, amount -> change.consume(); moved += amount }
+                }
                 .onGloballyPositioned { c -> c.boundsInRoot().let { r -> gridSpan[0] = r.top; gridSpan[1] = r.height } },
             state = grid,
             contentPadding = PaddingValues(start = 18.dp, end = 18.dp, bottom = 96.dp),
@@ -245,7 +270,7 @@ fun ShelfTab(data: FamiliarData, go: Go) {
                     if (searching) UTextField(query, { query = it.take(60) }, Modifier.padding(top = 6.dp), placeholder = stringResource(R.string.lib_search_hint))
                     Spacer(Modifier.height(8.dp))
                     // Which shelf: tabs, underlined when open, so they never look like the filters below.
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                    LazyRow(state = tabRow, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                         fun count(sh: Shelf) = data.books.count { it.shelfOf == sh || sh == Shelf.READING && it.shelfOf == Shelf.PAUSED }
                         item { ShelfTabLabel(stringResource(R.string.lib_all), view == ALL, count = data.books.size) { view = ALL } }
                         // The abandoned shelf only once a book has been put down.

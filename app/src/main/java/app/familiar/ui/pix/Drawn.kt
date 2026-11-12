@@ -17,7 +17,7 @@ import kotlin.math.sin
  * the moth's stars) is painted over the picture here.
  */
 internal object Drawn {
-    class Sprite(val c: IntArray, val eyes: List<IntArray>, val lids: BooleanArray?) {
+    class Sprite(val c: IntArray, val eyes: List<IntArray>, val lids: BooleanArray?, val fine: IntArray? = null) {
         /** Rows and columns the picture covers. */
         val top: Int; val bottom: Int; val left: Int; val right: Int
         init {
@@ -29,7 +29,7 @@ internal object Drawn {
         }
     }
 
-    private val cache = HashMap<String, Sprite?>()
+    private val cache = HashMap<String, Sprite>()
 
     private val faces: Map<String, List<IntArray>> by lazy {
         val text = Drawn::class.java.getResourceAsStream("/familiars/faces.txt")?.bufferedReader()?.use { it.readText() }.orEmpty()
@@ -47,8 +47,9 @@ internal object Drawn {
         if (st == Stage.EGG) return null
         val key = name(sp, st)
         return synchronized(cache) {
-            cache.getOrPut(key) {
-                runCatching {
+            // Only a picture that loaded is kept: one that couldn't be read (the app was starting while it was
+            // being updated) is tried again next time, rather than leaving the old look until the app restarts.
+            cache[key] ?: runCatching {
                     val bmp = Drawn::class.java.getResourceAsStream("/familiars/$key.png")?.use { android.graphics.BitmapFactory.decodeStream(it) }
                         ?: return@runCatching null
                     val n = Sprites.SIZE
@@ -62,9 +63,13 @@ internal object Drawn {
                         m.recycle()
                         BooleanArray(n * n) { e[it].al() > 0 }
                     }
-                    Sprite(c, faces[key].orEmpty(), lids)
-                }.getOrNull()
-            }
+                    // The picture DETAIL times finer, which is what shows; the coarse one is what the code reads.
+                    val f = n * DETAIL
+                    val fine = Drawn::class.java.getResourceAsStream("/familiars/$key@${DETAIL}x.png")?.use { android.graphics.BitmapFactory.decodeStream(it) }?.let { b ->
+                        IntArray(f * f).also { a -> if (b.width == f && b.height == f) b.getPixels(a, 0, f, 0, 0, f, f); b.recycle() }
+                    }
+                    Sprite(c, faces[key].orEmpty(), lids, fine)
+                }.onFailure { android.util.Log.w("Drawn", "can't load $key", it) }.getOrNull()?.also { cache[key] = it }
         }
     }
 
@@ -79,17 +84,24 @@ internal object Drawn {
         val headY = if (eyes.isNotEmpty()) eyes.sumOf { it[1] + it[3] } / (2 * eyes.size) else s.top + dy + 12
 
         if (look.species == Species.GHOST) wisps(px, s, ctx, headY, front = false)
+        // What it has earned by reading and wears behind it: the kitsune's tails, the dragon's books.
+        if (look.species == Species.KITSUNE) tails(px, s, ctx, dy)
+        if (look.species == Species.DRAGON) hoard(px, s, ctx, dy)
         val n = Sprites.SIZE
         val c = colours(s, look.species, look.form, look.shiny)
-        for (y in 0 until n) for (x in 0 until n) {
-            val p = c[y * n + x]
-            if (p.al() > 0) px.set(x, y + dy, p, p.al())
-        }
+        val pic = Px(n, n)
+        c.copyInto(pic.c)
+        val fine = fineColours(s, look.species, look.form, look.shiny)
+        if (fine != null) fine.copyInto(pic.fine) else pic.coarsen()
+        px.blit(pic, 0, dy)
         // The wisps on the near side of their circle pass in front of the ghost.
         if (look.species == Species.GHOST) wisps(px, s, ctx, headY, front = true)
         when (look.species) {
             Species.SLIME -> swallowed(px, s, ctx, dy, eyes)
             Species.MOTH -> stars(px, s, ctx, dy)
+            Species.SPROUT -> blooms(px, s, ctx, dy)
+            Species.CHIMERA -> patches(px, s, ctx, dy, eyes)
+            Species.MAGPIE -> shinies(px, s, ctx, dy)
             else -> {}
         }
         // The lids of a pair match: the same width and height, at one level unless the face is tilted.
@@ -299,16 +311,28 @@ internal object Drawn {
     fun colours(s: Sprite, sp: Species, form: Form, shiny: Boolean): IntArray {
         if (form == Form.NONE && !shiny) return s.c
         return synchronized(recolours) {
-            recolours.getOrPut(Triple(s, sp, form to shiny)) {
-                val own = palettes[sp].orEmpty()
-                val tone = tones[form]
-                val bands = if (tone == null) own else own.take(body(sp)).map { b ->
-                    // A rare one in a form is a lighter, warmer turn of the same shade.
-                    val hue = if (shiny) (tone.hue + 28f) % 360f else tone.hue
-                    Band(b.from, b.to, hue, if (b.pale) tone.sat + 0.6f else tone.sat, tone.value * if (shiny) 1.1f else 1f, b.pale)
-                }
-                recolour(s, sp, bands)
-            }
+            recolours.getOrPut(Triple(s, sp, form to shiny)) { recolour(s.c, 1, s, sp, bands(sp, form, shiny)) }
+        }
+    }
+
+    /** The fine picture in the same colours as [colours], or null when there is no fine one. */
+    private fun fineColours(s: Sprite, sp: Species, form: Form, shiny: Boolean): IntArray? {
+        val fine = s.fine ?: return null
+        if (form == Form.NONE && !shiny) return fine
+        return synchronized(fineRecolours) {
+            fineRecolours.getOrPut(Triple(s, sp, form to shiny)) { recolour(fine, DETAIL, s, sp, bands(sp, form, shiny)) }
+        }
+    }
+
+    private val fineRecolours = HashMap<Triple<Sprite, Species, Pair<Form, Boolean>>, IntArray>()
+
+    private fun bands(sp: Species, form: Form, shiny: Boolean): List<Band> {
+        val own = palettes[sp].orEmpty()
+        val tone = tones[form] ?: return own
+        return own.take(body(sp)).map { b ->
+            // A rare one in a form is a lighter, warmer turn of the same shade.
+            val hue = if (shiny) (tone.hue + 28f) % 360f else tone.hue
+            Band(b.from, b.to, hue, if (b.pale) tone.sat + 0.6f else tone.sat, tone.value * if (shiny) 1.1f else 1f, b.pale)
         }
     }
 
@@ -316,12 +340,15 @@ internal object Drawn {
      * Moves the given hue bands of the picture to their new hue, scaling saturation and brightness. Everything
      * else stays as drawn: the eyes, blush, mouth and tongue, the outline, white and black, and what it carries.
      */
-    private fun recolour(s: Sprite, sp: Species, bands: List<Band>): IntArray {
+    private fun recolour(src: IntArray, k: Int, s: Sprite, sp: Species, bands: List<Band>): IntArray {
         val hsv = FloatArray(3)
-        return IntArray(s.c.size) { i ->
-            val p = s.c[i]
+        val n = Sprites.SIZE
+        return IntArray(src.size) { i ->
+            val p = src[i]
+            // [src] is [k] times finer than the sprite: an eye's pixel there is under an eye's pixel here.
+            val lid = s.lids?.get((i / (n * k)) / k * n + (i % (n * k)) / k) == true
             // Blush is a light pink (plenty of green in it); a pure red, the phoenix's flame, isn't.
-            if (p.al() == 0 || s.lids?.get(i) == true || (pink(p) && p.g() > 100)) return@IntArray p
+            if (p.al() == 0 || lid || (pink(p) && p.g() > 100)) return@IntArray p
             android.graphics.Color.RGBToHSV(p.r(), p.g(), p.b(), hsv)
             // Outline, deep shadow, the dark of a mouth.
             if (hsv[2] < 0.22f) return@IntArray p
@@ -413,9 +440,9 @@ internal object Drawn {
         }
     }
 
-    /** The moth: past the stars it was drawn with, one more glints on the night of its wings for every night of reading. */
+    /** The moth: a star glints on its wings for every night of reading (the wings are drawn plain). */
     private fun stars(px: Px, s: Sprite, ctx: Sprites.Ctx, dy: Int) {
-        val extra = (ctx.look.stars - 6).coerceIn(0, 30)
+        val extra = ctx.look.stars.coerceIn(0, 30)
         val hsv = FloatArray(3)
         var placed = 0
         var k = 0
@@ -426,7 +453,7 @@ internal object Drawn {
             val c = px[x, y]
             if (c.al() == 0) continue
             android.graphics.Color.RGBToHSV(c.r(), c.g(), c.b(), hsv)
-            if (hsv[0] !in 225f..290f || hsv[2] > 0.62f || hsv[2] < 0.18f || hsv[1] < 0.25f) continue
+            if (hsv[0] !in 225f..300f || hsv[2] > 0.8f || hsv[2] < 0.18f || hsv[1] < 0.2f) continue
             val on = (placed + ctx.f) % 7 != 0
             px.set(x, y, if (on) R.gold[4] else WHITE)
             placed++
@@ -448,5 +475,220 @@ internal object Drawn {
             val fl = poly(fx, fy - 3.5f, fx + 1.8f, fy, fx + 0.8f, fy + 1.6f, fx - 0.8f, fy + 1.6f, fx - 1.8f, fy)
             px.shade(fl, facing(), R.sky, outline = false, lo = 3)
         }
+    }
+
+    /**
+     * The kitsune: a tail for every genre it has read, each in that genre's colour, fanned out behind it
+     * (one, in its own orange, before any).
+     */
+    private fun tails(px: Px, s: Sprite, ctx: Sprites.Ctx, dy: Int) {
+        val tail = Painted.of("familiars/kitsune_tail") ?: return
+        val colours = ctx.look.tails.take(9)
+        val n = maxOf(1, colours.size)
+        val h = (s.bottom - s.top).toFloat()
+        // Long enough to show round it, short enough that a fan of nine stays on the picture.
+        val k = h * (if (n > 5) 0.58f else 0.64f) / tail.h
+        val bx = (s.left + s.right) / 2f + 0.5f
+        val by = s.bottom + dy + 1f - h * 0.24f
+        // The outer ones first, so the middle tails lie over them.
+        for (i in (0 until n).sortedByDescending { abs(it - (n - 1) / 2f) }) {
+            val spread = minOf(68f, 26f + 7f * n)
+            val ang = if (n == 1) 52f else -spread + 2 * spread * i / (n - 1)
+            val sway = sin(ctx.ph * 2 * PI.toFloat() + i * 0.8f) * 4f
+            part(px, tail, bx, by, (ang + sway) * PI.toFloat() / 180f, k, colours.getOrNull(i), ORANGE)
+        }
+    }
+
+    /**
+     * Lays the drawn part [l] (art/parts) on both grids: its bottom middle at [bx], [by], turned by [a] radians
+     * clockwise from upright and scaled by [k]. Its own colour (the hues [own] allows) takes the hue of [colour]
+     * (null leaves it as drawn); the rest (gold bands, a yellow heart, a cream tip, the outline) stays.
+     */
+    private fun part(px: Px, l: Painted.Layer, bx: Float, by: Float, a: Float, k: Float, colour: Int?, own: (Float) -> Boolean = RED) {
+        val ca = cos(a); val sa = sin(a)
+        val hsv = FloatArray(3)
+        var hue = 0f; var sat = 0f; var value = 0f
+        if (colour != null) {
+            android.graphics.Color.RGBToHSV(colour.r(), colour.g(), colour.b(), hsv)
+            hue = hsv[0]; sat = hsv[1]; value = hsv[2]
+        }
+        val cache = HashMap<Int, Int>()
+        fun tint(c: Int): Int = if (colour == null) c else cache.getOrPut(c) {
+            android.graphics.Color.RGBToHSV(c.r(), c.g(), c.b(), hsv)
+            if (hsv[1] < 0.3f || hsv[2] < 0.3f || !own(hsv[0])) return@getOrPut c
+            hsv[0] = hue
+            hsv[1] = (hsv[1] * (0.25f + sat * 0.85f)).coerceIn(0f, 1f)
+            hsv[2] = (hsv[2] * (0.5f + value * 0.55f)).coerceIn(0f, 1f)
+            (c.al() shl 24) or (android.graphics.Color.HSVToColor(hsv) and 0xFFFFFF)
+        }
+        val reach = maxOf(l.w, l.h) * k + 2
+        for (d in listOf(1, DETAIL)) {
+            val w = px.w * d; val hh = px.h * d
+            val src = if (d == 1) l.px.c else l.px.fine
+            val sw = l.px.w * d; val sh = l.px.h * d
+            val dst = if (d == 1) px.c else px.fine
+            // The part's own bottom middle, on this grid.
+            val ox = (l.left + l.right + 1) / 2f * d; val oy = (l.bottom + 1f) * d
+            val x0 = ((bx - reach) * d).toInt().coerceAtLeast(0); val x1 = ((bx + reach) * d).toInt().coerceAtMost(w - 1)
+            val y0 = ((by - reach) * d).toInt().coerceAtLeast(0); val y1 = ((by + reach) * d).toInt().coerceAtMost(hh - 1)
+            for (y in y0..y1) for (x in x0..x1) {
+                val ux = (x + 0.5f) / d - bx; val uy = (y + 0.5f) / d - by
+                // Back into the upright part.
+                val sx = kotlin.math.floor((ux * ca + uy * sa) / k * d + ox).toInt()
+                val sy = kotlin.math.floor((-ux * sa + uy * ca) / k * d + oy).toInt()
+                if (sx !in 0 until sw || sy !in 0 until sh) continue
+                val c = src[sy * sw + sx]
+                if (c.al() < 128) continue
+                dst[y * w + x] = tint(c) or (0xFF shl 24)
+            }
+        }
+    }
+
+    /** [part] standing upright with its middle at [cx], [cy], [size] pixels across at its widest. */
+    private fun partAt(px: Px, l: Painted.Layer, cx: Float, cy: Float, size: Float, colour: Int?, own: (Float) -> Boolean = RED) {
+        val k = size / maxOf(l.w, l.h)
+        part(px, l, cx, cy + l.h * k / 2f, 0f, k, colour, own)
+    }
+
+    /** The hues the parts are drawn in, which take a genre's colour: red (book, patch, gem), pink petals, orange fur. */
+    private val RED: (Float) -> Boolean = { it < 20f || it > 335f }
+    private val PINK: (Float) -> Boolean = { it > 290f || it < 15f }
+    private val ORANGE: (Float) -> Boolean = { it in 5f..45f }
+
+    /** The dragon: the books it has read, standing on end on either side of it, in their genres' colours. */
+    private fun hoard(px: Px, s: Sprite, ctx: Sprites.Ctx, dy: Int) {
+        val books = ctx.look.hoard.take(16)
+        val book = Painted.of("familiars/part_book") ?: return
+        if (books.isEmpty()) return
+        // How wide the dragon sits at its feet.
+        val fy = s.bottom - 2
+        var l = s.right; var r = s.left
+        for (x in s.left..s.right) if (s.c[fy * Sprites.SIZE + x].al() > 0) { l = minOf(l, x); r = maxOf(r, x) }
+        val h0 = (s.bottom - s.top) * 0.3f
+        books.forEachIndexed { i, colour ->
+            val left = i % 2 == 0
+            val j = i / 2
+            val h = h0 * (0.85f + (noise(i, 2, 21) + 0.5f) * 0.3f)
+            val k = h / book.h
+            val w = book.w * k
+            val x = if (left) l + 2 - (j + 0.5f) * (w + 0.5f) else r - 1 + (j + 0.5f) * (w + 0.5f)
+            if (x - w / 2 < 0 || x + w / 2 > Sprites.SIZE) return@forEachIndexed
+            // Leaning a touch, now one way, now the other.
+            val lean = (noise(i, 5, 21) * 0.25f)
+            part(px, book, x, s.bottom + dy + 1f, lean, k, colour)
+        }
+    }
+
+    /** The sprout: a flower for every morning of reading, along the top of its leaves. */
+    private fun blooms(px: Px, s: Sprite, ctx: Sprites.Ctx, dy: Int) {
+        val n = ctx.look.blooms.coerceAtMost(9)
+        val flower = Painted.of("familiars/part_flower") ?: return
+        if (n == 0) return
+        val m = Sprites.SIZE
+        fun leaf(c: Int) = c.al() > 0 && c.g() > c.r() + 12 && c.g() > c.b() + 20
+        // The top edge of the leaves, column by column.
+        val tops = (s.left..s.right).mapNotNull { x ->
+            (s.top..s.bottom).firstOrNull { y -> leaf(s.c[y * m + x]) }?.let { y -> x to y }
+        }
+        if (tops.size < 3) return
+        val petals = listOf(null, WHITE, R.lilac[4], R.pink[2], R.gold[4])
+        val size = ((s.bottom - s.top) * 0.13f).coerceIn(5f, 8f)
+        for (i in 0 until n) {
+            val t = if (n == 1) 0.5f else 0.15f + 0.7f * i / (n - 1)
+            val (x, top) = tops[(t * (tops.size - 1)).roundToInt()]
+            partAt(px, flower, x + 0.5f, top + size * 0.35f + (i % 2) * 2 + dy, size, petals[i % petals.size], PINK)
+        }
+    }
+
+    /** The chimera: a patch sewn on for every genre of your own. */
+    private fun patches(px: Px, s: Sprite, ctx: Sprites.Ctx, dy: Int, eyes: List<IntArray>) {
+        val colours = ctx.look.patches.take(6)
+        val patch = Painted.of("familiars/part_patch") ?: return
+        if (colours.isEmpty()) return
+        val m = Sprites.SIZE
+        // Below the face: past the eyes, the cheeks and the mouth.
+        val below = (eyes.maxOfOrNull { it[3] } ?: s.top) + 3 + (s.bottom - s.top) / 9
+        // Its pale fur, not the outline, horns, wings or tail.
+        fun fur(x: Int, y: Int): Boolean {
+            if (x !in 0 until m || y !in 0 until m) return false
+            val c = s.c[y * m + x]
+            return c.al() > 0 && lum(c) in 0.45f..0.97f && c.r() > c.b() + 15 && !pink(c)
+        }
+        val cx = (s.left + s.right) / 2f
+        val taken = ArrayList<Pair<Int, Int>>()
+        val r = if (s.bottom - s.top > 50) 4 else 3
+        var k = 0
+        for (colour in colours) {
+            var spot: Pair<Int, Int>? = null
+            while (spot == null && k < 400) {
+                val x = (cx + noise(k, 1, 77) * (s.right - s.left) * 0.7f).roundToInt()
+                val y = (below + (noise(k, 2, 77) + 0.5f) * (s.bottom - below)).roundToInt()
+                k++
+                val clear = taken.all { (tx, ty) -> abs(tx - x) > r * 2 || abs(ty - y) > r * 2 }
+                // Mostly on fur: a hair of mane or a shadow in it doesn't matter.
+                var on = 0; var all = 0
+                for (ey in -r..r) for (ex in -r..r) if (ex * ex + ey * ey <= r * r) { all++; if (fur(x + ex, y + ey)) on++ }
+                val inside = on >= all * 0.85f
+                if (clear && inside) spot = x to y
+            }
+            val (x, y) = spot ?: break
+            taken += spot
+            partAt(px, patch, x + 0.5f, y + 0.5f + dy, r * 2f + 1.5f, colour)
+        }
+    }
+
+    /** The magpie: a shiny thing on the rim of its nest for every subgenre read. */
+    private fun shinies(px: Px, s: Sprite, ctx: Sprites.Ctx, dy: Int) {
+        val colours = ctx.look.patches.take(8)
+        val gem = Painted.of("familiars/part_gem") ?: return
+        if (colours.isEmpty()) return
+        val m = Sprites.SIZE
+        val hsv = FloatArray(3)
+        fun twig(c: Int): Boolean {
+            if (c.al() == 0) return false
+            android.graphics.Color.RGBToHSV(c.r(), c.g(), c.b(), hsv)
+            return hsv[0] in 15f..45f && hsv[1] > 0.35f && hsv[2] > 0.3f
+        }
+        // The nest is the woven part at the bottom: its top edge, column by column.
+        val low = s.bottom - (s.bottom - s.top) / 3
+        val rim = (s.left..s.right).mapNotNull { x ->
+            (low - 4..s.bottom).firstOrNull { y -> y in 0 until m && twig(s.c[y * m + x]) }?.let { y -> x to y }
+        }
+        if (rim.size < 6) return
+        val size = ((s.bottom - s.top) * 0.09f).coerceIn(4f, 6f)
+        colours.forEachIndexed { i, colour ->
+            // Out from the middle, one side then the other.
+            val t = 0.5f + (if (i % 2 == 0) -1 else 1) * (0.12f + 0.1f * (i / 2))
+            val (x, y0) = rim[(t.coerceIn(0.05f, 0.95f) * (rim.size - 1)).roundToInt()]
+            val y = y0 + dy + 1
+            partAt(px, gem, x + 0.5f, y.toFloat(), size, colour)
+            if ((ctx.f + i * 3) % Sprites.BEATS == 0) Sprites.stamp(px, Sprites.SPARK, x - 2, y - 7, WHITE, WHITE, 200)
+        }
+    }
+
+    /**
+     * Paints the drawn egg of the familiar in [ctx] (art/eggs, cut by tools/familiars.py): it rocks once it is
+     * more than half hatched, cracks open across its middle as it fills, and glows just before it hatches.
+     * False when there is no drawn egg, so the old one is painted instead.
+     */
+    fun egg(px: Px, ctx: Sprites.Ctx): Boolean {
+        val l = Painted.of("familiars/egg_" + ctx.look.species.name.lowercase()) ?: return false
+        val h = ctx.look.hatch
+        val wob = if (h > 0.55f && ctx.f % 6 < 2) (if (ctx.f % 2 == 0) -1 else 1) else 0
+        px.blit(l.px, wob, 0)
+        if (h > 0.25f) {
+            // A zigzag crack round the middle, longer the closer it is to hatching.
+            val pts = listOf(0f to 0.48f, 0.14f to 0.4f, 0.28f to 0.52f, 0.43f to 0.4f, 0.57f to 0.54f, 0.72f to 0.42f, 0.86f to 0.5f, 1f to 0.44f)
+            val n = (2 + (h - 0.25f) / 0.75f * (pts.size - 2)).toInt().coerceIn(2, pts.size)
+            val shell = Px(px.w, px.h)
+            for (i in 0 until n - 1) {
+                val (ax, ay) = pts[i]; val (bx, by) = pts[i + 1]
+                shell.line(l.left + wob + (ax * l.w).toInt(), l.top + (ay * l.h).toInt(), l.left + wob + (bx * l.w).toInt(), l.top + (by * l.h).toInt(), OUT)
+            }
+            // Only over the shell, not out past its edge.
+            for (i in shell.c.indices) if (shell.c[i].al() > 0 && px.c[i].al() > 0) px.put(i, OUT)
+        }
+        if (h > 0.8f) px.glow(px.w / 2f, l.top + l.h * 0.5f, l.w * 0.8f, rgb(255, 236, 170), 90)
+        return true
     }
 }
