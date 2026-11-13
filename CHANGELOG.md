@@ -6,6 +6,19 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.15.1] - 2026-11-13
+
+### Fixed
+- **A day you didn't read stays empty in the calendar, for a new book too:** a book set on the Reading shelf and first opened a few days later filled the days in between with its cover, though nothing was read on them. Once you read in the app, only the days you read are marked; books brought over from elsewhere still fill the days before that (#50, #51).
+- **A new genre grows a new tail:** the kitsune's tails behind her back hid behind her, so a new genre's tail seemed to recolour an old one; they now rise above her back (#49).
+- The label with the familiar's kind and age moved to the top corner of the den, so it no longer covers the familiar or what the slime holds (#35).
+
+<!-- tg
+Новая книга больше не закрашивает в календаре дни, когда вы не читали.
+Хвост кицунэ за новый жанр теперь виден, а не прячется за спиной.
+Надпись с видом фамильяра переехала в верхний угол и больше не закрывает предметы внутри слизня.
+-->
+
 ## [1.15.0] - 2026-11-12
 
 ### Changed

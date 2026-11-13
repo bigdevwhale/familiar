@@ -161,7 +161,8 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
                 onTap = { if (asleep || now < wokenUntil) wokenUntil = System.currentTimeMillis() + 8_000 },
                 onStroke = { purrUntil = System.currentTimeMillis() + 2_500 },
             )
-            if (pet != null && sp != null) Row(Modifier.align(Alignment.BottomStart).padding(12.dp)) {
+            // Up in the corner, across from the dream: along the floor it covered the familiar, and what the slime holds (#35).
+            if (pet != null && sp != null) Row(Modifier.align(Alignment.TopStart).padding(10.dp)) {
                 val form = Form.of(pet.form)
                 Tag("${if (pet.shiny) "✦ " else ""}${speciesName(sp)} · ${stageName(s.stage)}" + if (form != Form.NONE && s.stage >= Stage.ADULT) " · " + formName(form) else "")
             }

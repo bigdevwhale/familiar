@@ -520,6 +520,22 @@ class FamiliarTest {
     }
 
     @Test
+    fun aBookShelvedAfterReadingBeganFillsNoMissedDay() {
+        // #50, #51: one book read 6 and 4 days ago; another set on the shelf 3 days ago and first read yesterday.
+        val old = book(10).copy(started = at(8))
+        val new = book(11).copy(started = at(3))
+        val s = stats(listOf(read(6, 10, book = 10), read(4, 10, book = 10), read(1, 10, book = 11)), listOf(old, new))
+        val days = app.familiar.domain.dayBooks(s, YearMonth.from(today))
+        fun ids(n: Long) = days[today.minusDays(n)]?.map { it.book.id }
+        assertEquals(null, ids(5))
+        assertEquals(null, ids(3))
+        assertEquals(null, ids(2))
+        assertEquals(listOf(11L), ids(1))
+        // Before reading was logged here at all, the book brought over still fills its days.
+        assertEquals(listOf(10L), ids(7))
+    }
+
+    @Test
     fun theDayShowsTheBookFinishedOrReadMost() {
         val books = listOf(book(1), book(2), book(3, done = 2))
         val s = stats(listOf(read(1, 10, book = 1), read(1, 40, book = 2), read(2, 5, book = 1)), books)

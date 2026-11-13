@@ -487,7 +487,7 @@ internal object Drawn {
         val n = maxOf(1, colours.size)
         val h = (s.bottom - s.top).toFloat()
         // Long enough to show round it, short enough that a fan of nine stays on the picture.
-        val k = h * (if (n > 5) 0.58f else 0.64f) / tail.h
+        val k = h * 0.64f / tail.h
         val bx = (s.left + s.right) / 2f + 0.5f
         val by = s.bottom + dy + 1f - h * 0.24f
         // The outer ones first, so the middle tails lie over them.
@@ -495,7 +495,9 @@ internal object Drawn {
             val spread = minOf(68f, 26f + 7f * n)
             val ang = if (n == 1) 52f else -spread + 2 * spread * i / (n - 1)
             val sway = sin(ctx.ph * 2 * PI.toFloat() + i * 0.8f) * 4f
-            part(px, tail, bx, by, (ang + sway) * PI.toFloat() / 180f, k, colours.getOrNull(i), ORANGE)
+            // The ones behind the back grow longer, so they rise over it instead of hiding.
+            val long = 1f + 0.4f * (1f - abs(ang) / 90f)
+            part(px, tail, bx, by, (ang + sway) * PI.toFloat() / 180f, k * long, colours.getOrNull(i), ORANGE)
         }
     }
 

@@ -166,8 +166,8 @@ class DayBook(val book: Book, val finished: Boolean)
  * first), then those read, the most read first. A day with nothing logged shows the books open then,
  * from the day each was started to the day it was finished (#30), the latest started first, so books
  * brought over from elsewhere fill their days too. A book still being read fills them only up to its last sitting,
- * and a book read here fills only the days before its first sitting: after that its sittings are its days, so a
- * day it wasn't read stays empty (#48).
+ * and a book read here fills only the days before the first sitting logged in the app at all: from then on the
+ * sittings are the days, so a day nothing was read stays empty (#48, #50, #51).
  */
 fun dayBooks(s: Stats, month: YearMonth): Map<LocalDate, List<DayBook>> {
     fun date(t: Long) = Instant.ofEpochMilli(t).atZone(s.zone).toLocalDate()
@@ -193,8 +193,10 @@ fun dayBooks(s: Stats, month: YearMonth): Map<LocalDate, List<DayBook>> {
     // shelf and not opened yet, or a day nothing was read, mustn't show as a day of reading.
     val sittings = s.readings.filter { it.counts }.groupBy { it.bookId }
     val lastSitting = sittings.mapValues { (_, l) -> date(l.maxOf { it.end }) }
-    // Once a book is read here, its own sittings mark its days; only the time before them is filled in.
-    val firstSitting = sittings.mapValues { (_, l) -> date(l.minOf { it.end }) }
+    // Once reading is logged here, sittings mark the days; a book read here fills only the time before the
+    // first sitting in the app, of any book. Not before its own first one: a book set on the shelf on the 9th
+    // and first opened on the 11th would paint the 10th, a day nothing was read.
+    val logSince = sittings.values.flatten().minOfOrNull { date(it.end) }
     val spans = s.books.mapNotNull { b ->
         val start = b.started?.let { date(it) } ?: return@mapNotNull null
         val open = when (b.shelfOf) {
@@ -202,7 +204,7 @@ fun dayBooks(s: Stats, month: YearMonth): Map<LocalDate, List<DayBook>> {
             Shelf.READING, Shelf.PAUSED -> lastSitting[b.id]
             else -> null
         } ?: return@mapNotNull null
-        val end = firstSitting[b.id]?.minusDays(1)?.let { minOf(it, open) } ?: open
+        val end = if (b.id in sittings && logSince != null) minOf(logSince.minusDays(1), open) else open
         Triple(b, start, end).takeIf { !start.isAfter(last) && !end.isBefore(first) && !end.isBefore(start) && end.toEpochDay() - start.toEpochDay() <= MAX_SPAN }
     }.sortedByDescending { it.second }
     var d = first
