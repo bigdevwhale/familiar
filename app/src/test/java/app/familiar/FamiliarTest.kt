@@ -93,6 +93,16 @@ class FamiliarTest {
     }
 
     @Test
+    fun ebookPagesAreShorter() {
+        // 45 screens in 10 minutes: too quick for paper, fine for an e-reader.
+        fun at(ebook: Boolean) = Mana.feast(Species.MIMIC, Mana.Sitting(45, true, 10, 0f, false, Genre.FANTASY, null, 300, 1, 0, false, "", ebook = ebook))
+        assertTrue(at(ebook = false).sniffed)
+        assertFalse(at(ebook = true).sniffed)
+        // Still not unlimited: 200 in 10 minutes is doubted either way.
+        assertTrue(Mana.feast(Species.MIMIC, Mana.Sitting(200, true, 10, 0f, false, Genre.FANTASY, null, 300, 1, 0, false, "", ebook = true)).sniffed)
+    }
+
+    @Test
     fun favourites() {
         fun fav(sp: Species, s: Mana.Sitting) = Mana.feast(sp, s).parts.any { it.first == Part.FAVOURITE }
         assertTrue(fav(Species.KITSUNE, sitting(genre = Genre.HORROR, prev = Genre.FANTASY)))

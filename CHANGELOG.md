@@ -6,6 +6,15 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.15.2] - 2026-11-13
+
+### Fixed
+- **E-book pages are shorter, and the familiar knows it:** a screen of an e-reader holds far less than a printed page, so honest fast reading of an e-book made the familiar sniff with doubt and cut the mana. For a book marked as an e-book it now believes twice the pace: up to 5 pages a minute instead of 2.5.
+
+<!-- tg
+Фамильяр больше не принюхивается с подозрением к быстрому чтению электронных книг: страницы в читалке короче, и для книги с пометкой «Электронная» он верит вдвое большей скорости.
+-->
+
 ## [1.15.1] - 2026-11-13
 
 ### Fixed

@@ -168,6 +168,9 @@ object Mana {
     /** Faster than this many pages a minute is more than a person reads; the rest counts half. */
     const val MAX_PACE = 2.5f
 
+    /** An e-reader's page is a screen, often half a printed one or less. */
+    const val MAX_PACE_EBOOK = 5f
+
     /** Minutes counted for a ritual without a page, at most. */
     const val MAX_MINUTES = 180
 
@@ -192,6 +195,8 @@ object Mana {
         val morning: Boolean = false,
         /** The book is in one of the reader's own genres or subgenres. */
         val own: Boolean = false,
+        /** Read as an e-book, whose pages are shorter. */
+        val ebook: Boolean = false,
     )
 
     private fun loves(sp: Species, s: Sitting): Boolean = when (sp) {
@@ -224,7 +229,7 @@ object Mana {
         var pages = s.pages
         parts += Part.PAGES to s.pages
         if (s.timed) {
-            val allowed = (s.minutes * MAX_PACE + 5).toInt()
+            val allowed = (s.minutes * (if (s.ebook) MAX_PACE_EBOOK else MAX_PACE) + 5).toInt()
             if (s.pages > allowed) {
                 val cut = (s.pages - allowed) / 2
                 parts += Part.SNIFF to -cut
