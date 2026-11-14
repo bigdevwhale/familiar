@@ -99,7 +99,7 @@ fun FurnishScreen(data: FamiliarData, go: Go) {
                     Spacer(Modifier.height(4.dp))
                 }
             }
-            items(Item.entries, key = { it.name }) { item ->
+            items(Room.shop, key = { it.name }) { item ->
                 val owned = item.name in s.owned
                 val standing = item.name in s.placed
                 UCard(padding = PaddingValues(10.dp)) {

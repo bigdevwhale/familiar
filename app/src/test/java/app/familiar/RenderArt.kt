@@ -101,8 +101,8 @@ class RenderArt {
         val divider = android.graphics.Paint().apply { color = 0x55B9A8E8; strokeWidth = 3f }
         val dx = left + stages.size * cell + gap / 2f
         c.drawLine(dx, top - 60f, dx, h - 60f, divider)
-        val names = if (ru) listOf("Мимик", "Кицунэ", "Слайм", "Дракончик", "Феникс", "Грифон", "Совомедведь", "Лунный мотылёк", "Тануки", "Росток", "Призрак", "Книжный червь", "Химера", "Сорока")
-        else listOf("Mimic", "Kitsune", "Slime", "Dragon", "Phoenix", "Griffin", "Owlbear", "Moon moth", "Tanuki", "Sprout", "Ghost", "Bookworm", "Chimera", "Magpie")
+        val names = if (ru) listOf("Мимик", "Кицунэ", "Слайм", "Дракончик", "Феникс", "Грифон", "Совомедведь", "Лунный мотылёк", "Тануки", "Росток", "Призрак", "Книжный червь", "Химера", "Сорока", "Гидра", "Кот-баюн", "Улитка", "Саламандра", "Автоматон", "Пикси", "Ворон", "Сфинкс", "Почтовый совёнок")
+        else listOf("Mimic", "Kitsune", "Slime", "Dragon", "Phoenix", "Griffin", "Owlbear", "Moon moth", "Tanuki", "Sprout", "Ghost", "Bookworm", "Chimera", "Magpie", "Hydra", "Bayun cat", "Snail", "Salamander", "Automaton", "Pixie", "Raven", "Sphinx", "Post owlet")
         fun put(px: Px, x0: Int, y0: Int) {
             val f = k / d
             for (y in 0 until px.fh) for (x in 0 until px.fw) {
@@ -118,7 +118,7 @@ class RenderArt {
         Species.entries.forEachIndexed { r, sp ->
             val y0 = top + r * cell
             c.drawText(names[r], 50f, y0 + cell / 2f + 16f, name)
-            if (sp.ordinal >= Species.CHIMERA.ordinal) c.drawText(if (ru) "новый!" else "new!", 52f, y0 + cell / 2f + 56f, android.graphics.Paint(sub).apply { textSize = 28f; color = 0xFFF2C14E.toInt() })
+            if (sp.ordinal >= Species.HYDRA.ordinal) c.drawText(if (ru) "новый!" else "new!", 52f, y0 + cell / 2f + 56f, android.graphics.Paint(sub).apply { textSize = 28f; color = 0xFFF2C14E.toInt() })
             Stage.entries.forEachIndexed { i, st -> put(Sprites.frame(look(sp, st), 0), left + i * cell, y0) }
             forms.forEachIndexed { i, f -> put(Sprites.frame(look(sp, Stage.ADULT).copy(form = f), 2), left + (stages.size + i) * cell + gap, y0) }
         }
@@ -165,7 +165,31 @@ class RenderArt {
         }
     }
 
-    private val newcomers = listOf(Species.TANUKI, Species.SPROUT, Species.GHOST, Species.WYRM, Species.CHIMERA, Species.MAGPIE)
+    private val newcomers = Species.entries.filter { it.ordinal >= Species.HYDRA.ordinal }
+
+    /** Every medal of the achievements: a row per measure, its steps left to right, then the shadow of one not earned. */
+    @Test
+    fun medals() {
+        val k = 3
+        val cell = app.familiar.ui.pix.Badges.SIZE * k + 8
+        val feats = app.familiar.domain.Feat.entries
+        // Two measures to a row; the longest has eight steps and its shadow.
+        val rowW = 9 * cell
+        val bmp = Bitmap.createBitmap(rowW * 2, ((feats.size + 1) / 2) * cell, Bitmap.Config.ARGB_8888)
+        bmp.eraseColor(0xFF2A2030.toInt())
+        feats.forEachIndexed { n, f ->
+            val x0 = (n % 2) * rowW; val y0 = (n / 2) * cell
+            val list = f.steps.indices.map { app.familiar.domain.Achievement(f, it) }
+            (list.map { app.familiar.ui.pix.Badges.draw(f, it.rank, true) } + app.familiar.ui.pix.Badges.draw(f, 0, false)).forEachIndexed { i, px ->
+                for (y in 0 until px.h) for (x in 0 until px.w) {
+                    val p = px.c[y * px.w + x]
+                    if ((p ushr 24) and 0xFF == 0) continue
+                    for (j in 0 until k) for (q in 0 until k) bmp.setPixel(x0 + i * cell + x * k + q, y0 + y * k + j, p or (0xFF shl 24))
+                }
+            }
+        }
+        File(out, "medals.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
 
     @Test
     fun newcomers() = sheet("newcomers", newcomers.map { sp -> Stage.entries.map { Sprites.frame(look(sp, it), 0) } + listOf(Sprites.frame(look(sp, Stage.ADULT).copy(shiny = true), 0)) }, scale = 4)
@@ -348,6 +372,23 @@ class RenderArt {
         val bmp = Bitmap.createBitmap(cw * 3, app.familiar.ui.pix.Room.H * 4, Bitmap.Config.ARGB_8888)
         rows[0].forEachIndexed { c, px -> for (y in 0 until px.h) for (x in 0 until px.w) { val p = px.c[y * px.w + x]; if ((p ushr 24) == 0) continue; for (j in 0 until 4) for (i in 0 until 4) bmp.setPixel(c * cw + x * 4 + i, y * 4 + j, blend(0xFF000000.toInt(), p, ((p ushr 24) and 0xFF) / 255f)) } }
         File(out, "room.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    /** The visiting card that is sent to a friend, in Russian and in English. */
+    @Test
+    fun visitCard() {
+        val now = System.currentTimeMillis()
+        val pet = app.familiar.data.Pet(id = 1, species = Species.KITSUNE.name, name = "Юзу", joined = now - 90 * 86_400_000L, mana = 1500, active = true, form = app.familiar.domain.Form.ASTRAL.name)
+        val book = app.familiar.data.Book(id = 1, title = "Волшебник Земноморья", author = "Урсула Ле Гуин", pages = 320, genre = Genre.FANTASY.name, shelf = app.familiar.data.Shelf.DONE.name, added = now, finished = now, rating = 5)
+        val placed = listOf("WINDOW_MOON", "BOOKSHELF", "BANNER", "LANTERN", "RUG_RED", "CAULDRON", "MANDRAKE", "CANDLES").toSet()
+        for (lang in listOf("ru", "en")) {
+            org.robolectric.RuntimeEnvironment.setQualifiers(lang)
+            val context = org.robolectric.RuntimeEnvironment.getApplication()
+            val data = app.familiar.ui.FamiliarData(listOf(book), emptyList(), listOf(pet), app.familiar.data.Settings(name = "Мира", owned = placed, placed = placed), now)
+            val card = app.familiar.domain.Visit(Species.KITSUNE, pet.name, pet.mana, false, app.familiar.domain.Form.ASTRAL, app.familiar.domain.Trait.CURIOUS, "Мира", book.title, book.author, Genre.FANTASY).encode()
+            val bmp = app.familiar.ui.den.VisitCard.draw(context, data, card, book)
+            File(out, "visit_$lang.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        }
     }
 
     @Test

@@ -25,6 +25,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.FormatQuote
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -85,6 +86,7 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
     val book = data.book(ritual?.bookId ?: id)
     var finishing by remember { mutableStateOf(false) }
     var discarding by remember { mutableStateOf(false) }
+    var quoting by remember { mutableStateOf(false) }
 
     fun update(change: (Ritual) -> Ritual) {
         container.scope.launch { container.settings.update { st -> st.copy(ritual = st.ritual?.let(change)) } }
@@ -129,7 +131,9 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
     BackHandler { go.back() }
 
     val now = rememberNow(1000)
-    val elapsed = (now - ritual.start).coerceAtLeast(0)
+    // Once the sleep timer has gone off the record stands still: nothing after it is counted.
+    val slept = ritual.sleepAt in (ritual.start + 1)..now
+    val elapsed = (ritual.endAt(now) - ritual.start).coerceAtLeast(0)
     val left = 1f - elapsed / (s.candleMin * 60_000f)
     // An audiobook counts itself: every minute listened is a minute further.
     val heard = (ritual.fromPage + (elapsed / 60_000).toInt()).coerceAtMost(book.cap)
@@ -146,11 +150,12 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
                     if (closing) return@SittingForm
                     closing = true
                     container.scope.launch {
-                        val end = System.currentTimeMillis()
+                        val end = ritual.endAt(System.currentTimeMillis())
                         val r = Library.sit(
                             container.db.dao(), book, ritual.fromPage, input.toPage, ritual.start, end, timed = true,
                             stillSec = (ritual.stillMs / 1000).toInt(), listened = listening, item = input.item, finish = input.finish,
-                            guarded = s.guardedDays,
+                            guarded = s.guardedDays, ambience = if (listening) "" else s.ambience.name,
+                            guest = data.guest != null, companionId = s.companion,
                         )
                         container.settings.update { it.copy(ritual = null) }
                         container.changed()
@@ -170,14 +175,17 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
         ) {
             // A book on paper can be listened to this time, and back again.
             if (!book.audio) Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 6.dp)) {
-                Chip(stringResource(R.string.mode_read), !ritual.listen, { update { it.copy(listen = false) } })
+                // Back to the page: the sleep timer was for listening.
+                Chip(stringResource(R.string.mode_read), !ritual.listen, { update { it.copy(listen = false, sleepAt = 0) } })
                 Chip(stringResource(R.string.mode_listen), ritual.listen, { update { it.copy(listen = true) } })
             }
             Box(Modifier.fillMaxWidth().height(300.dp)) {
-                if (listening) Gramophone(Modifier.align(Alignment.Center).width(260.dp).fillMaxHeight())
+                if (listening) Gramophone(Modifier.align(Alignment.Center).width(260.dp).fillMaxHeight(), playing = !slept)
                 else Candle(left, Modifier.align(Alignment.Center).width(150.dp).fillMaxHeight())
-                data.look(sleeping = down)?.let { look ->
-                    FamiliarArt(look, Modifier.align(Alignment.BottomEnd).size(120.dp), fps = if (down) 2f else 5f)
+                // It dozes with the phone face down, and falls asleep with you when the sleep timer stops the record.
+                val dozing = down || (listening && slept)
+                data.look(sleeping = dozing)?.let { look ->
+                    FamiliarArt(look, Modifier.align(Alignment.BottomEnd).size(120.dp), fps = if (dozing) 2f else 5f)
                 }
             }
             val min = elapsed / 60_000
@@ -212,7 +220,7 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
                     } else {
                         Text(stringResource(R.string.page_n, ritual.page), style = UType.Title)
                         Text("+${ritual.page - ritual.fromPage}", style = UType.Strong.copy(color = U.c.mana))
-                        val cheapest = app.familiar.domain.Item.entries.filter { it.name !in s.owned }.minOfOrNull { it.price }
+                        val cheapest = app.familiar.ui.pix.Room.shop.filter { it.name !in s.owned }.minOfOrNull { it.price }
                         app.familiar.domain.Nudge.next(data.stats, app.familiar.domain.Den.sparks(data.pets, s.spent), cheapest, book, ritual.page - ritual.fromPage)?.let { n ->
                             Text(app.familiar.ui.nudgeText(n, data.pet?.name ?: ""), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 4.dp))
                         }
@@ -227,6 +235,10 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
                         }
                     }
                 }
+            }
+            if (listening) {
+                Spacer(Modifier.height(14.dp))
+                SleepTimer(ritual, now, slept) { at -> update { it.copy(sleepAt = at) } }
             }
             Spacer(Modifier.height(16.dp))
             if (!listening) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -246,12 +258,18 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
                 Text(stringResource(R.string.still_text, data.pet?.name ?: ""), style = UType.Muted)
                 if (ritual.stillMs > 60_000) Text(stringResource(R.string.still_minutes, (ritual.stillMs / 60_000).toInt()), style = UType.Small.copy(color = U.c.leaf), modifier = Modifier.padding(top = 4.dp))
             }
+            Spacer(Modifier.height(10.dp))
+            // A line worth keeping, copied out without leaving the candle.
+            SoftButton(stringResource(R.string.quote_add), { quoting = true }, Modifier.fillMaxWidth(), color = U.c.gold, soft = U.c.goldSoft, icon = Icons.Rounded.FormatQuote)
             Spacer(Modifier.height(16.dp))
         }
         PrimaryButton(
             stringResource(if (listening) R.string.audio_finish else R.string.ritual_finish), { finishing = true },
             Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 12.dp).navigationBarsPadding(), color = U.c.ember,
         )
+    }
+    if (quoting) app.familiar.ui.books.QuoteDialog(book, null, { quoting = false }, page = if (book.audio || s.pagesAtEnd || listening) 0 else ritual.page) { text, page ->
+        container.write { dao().insertQuote(app.familiar.data.Quote(bookId = book.id, text = text, page = page, at = System.currentTimeMillis())) }
     }
     if (discarding) ConfirmDialog(
         title = stringResource(R.string.ritual_discard_title),
@@ -270,11 +288,37 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
     )
 }
 
+/** [playing] false: the record has stopped (the sleep timer went off). */
 @Composable
-private fun Gramophone(modifier: Modifier) {
+private fun Gramophone(modifier: Modifier, playing: Boolean = true) {
     val frames = remember { List(4) { Scenes.gramophone(it).bitmap() } }
     val t by rememberTime()
-    Canvas(modifier) { pixels(frames[(t * 4).toInt() % frames.size], bottom = true) }
+    Canvas(modifier) { pixels(frames[if (playing) (t * 4).toInt() % frames.size else 0], bottom = true) }
+}
+
+/** Falling asleep to a book: the record stops by itself after so many minutes, and what plays is paused. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun SleepTimer(ritual: Ritual, now: Long, slept: Boolean, set: (Long) -> Unit) {
+    UCard {
+        Text(stringResource(R.string.sleep_timer), style = UType.Strong)
+        Spacer(Modifier.height(2.dp))
+        Text(
+            when {
+                slept -> stringResource(R.string.sleep_done, app.familiar.ui.timeShort(ritual.sleepAt))
+                ritual.sleepAt > now -> stringResource(R.string.sleep_left, ((ritual.sleepAt - now) / 60_000 + 1).toInt())
+                else -> stringResource(R.string.sleep_text)
+            },
+            style = UType.Muted.copy(color = if (slept) U.c.leaf else U.c.muted),
+        )
+        Spacer(Modifier.height(8.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Chip(stringResource(R.string.off), ritual.sleepAt == 0L, { set(0L) })
+            app.familiar.notify.SleepTimer.MINUTES.forEach { m ->
+                Chip(stringResource(R.string.sleep_min, m), false, { set(System.currentTimeMillis() + m * 60_000L) })
+            }
+        }
+    }
 }
 
 @Composable

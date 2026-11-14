@@ -31,6 +31,8 @@ import androidx.compose.material.icons.rounded.Casino
 import androidx.compose.material.icons.rounded.Chair
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.EmojiEvents
+import androidx.compose.material.icons.rounded.FormatQuote
 import androidx.compose.material.icons.rounded.Inventory2
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.QrCode2
@@ -81,6 +83,7 @@ import app.familiar.ui.components.CelebrateDialog
 import app.familiar.ui.components.DenScene
 import app.familiar.ui.components.DreamArt
 import app.familiar.ui.components.FamiliarArt
+import app.familiar.ui.components.SectionTitle
 import app.familiar.ui.components.PrimaryButton
 import app.familiar.ui.components.SoftButton
 import app.familiar.ui.components.TrinketArt
@@ -151,11 +154,16 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
         val books = s.finished.map { Genre.of(it.genre).argb.toInt() }.takeLast(24)
         val dream = remember(data.readings, data.now / 600_000) { Dreams.of(data.readings, data.books, data.now, ZoneId.systemDefault()) }
             ?.takeIf { data.settings.dreamDay != s.today.toString() && pet != null && s.stage != Stage.EGG }
+        // The room and what the familiar says are one card: its line is the caption under the picture.
+        Column(Modifier.fillMaxWidth().clip(U.RXl).background(U.c.surface).border(1.dp, U.c.line, U.RXl)) {
         Box(Modifier.fillMaxWidth().aspectRatio(Room.W / Room.H.toFloat())) {
             if (look != null) DenScene(
                 look, placed, books, night, Modifier.fillMaxSize(),
                 season = data.season,
                 guest = data.guestLook,
+                // The companion sleeps when the familiar does, and purrs along when it is stroked.
+                companion = data.companionLook(sleeping = asleep, happy = purring && !asleep),
+                sky = app.familiar.domain.Sky.of(s.today),
                 hops = if (trait == Trait.PLAYFUL) 2 else 1,
                 stroke = if (trait == Trait.GRUMPY) 560f else 260f,
                 onTap = { if (asleep || now < wokenUntil) wokenUntil = System.currentTimeMillis() + 8_000 },
@@ -180,32 +188,14 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
                 now < wokenUntil && bedtime -> Lines.line(l, sp, Lines.State.WOKEN, pet.name, seed)
                 else -> speech(data, sp, pet.name, seed)
             }
-            Spacer(Modifier.height(10.dp))
             Text(
                 line,
                 style = UType.Body.copy(fontSize = 14.sp, textAlign = TextAlign.Center),
-                modifier = Modifier.fillMaxWidth().clip(U.RMd).background(U.c.surface).border(1.dp, U.c.line, U.RMd).padding(horizontal = 14.dp, vertical = 10.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
             )
-            val sparks = Den.sparks(data.pets, data.settings.spent)
-            val cheapest = Item.entries.filter { it.name !in data.settings.owned }.minOfOrNull { it.price }
-            Nudge.next(s, sparks, cheapest, data.reading.firstOrNull())?.let { n ->
-                Spacer(Modifier.height(8.dp))
-                Row(
-                    Modifier.fillMaxWidth().clip(U.RMd).background(U.c.manaSoft).padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(Icons.Rounded.AutoAwesome, null, tint = U.c.mana, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(nudgeText(n, pet.name), style = UType.Small.copy(color = U.c.ink))
-                }
-            }
         }
-        // How it's doing, right under it: growth and today's feeding side by side.
-        if (pet != null) {
-            Spacer(Modifier.height(10.dp))
-            Vitals(data, go)
         }
-        // A familiar turning to stone matters more than anything else on the page.
+        // A familiar turning to stone matters more than anything else on the page: right under it.
         if (pet != null && s.stone > 0f) {
             Spacer(Modifier.height(10.dp))
             Notice(
@@ -213,6 +203,11 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
                 stringResource(if (sp == Species.PHOENIX) R.string.ash_text else R.string.stone_text, pet.name),
                 U.c.accent,
             )
+        }
+        // How it's doing: growth and today's feeding, and the nearest little goal.
+        if (pet != null) {
+            Spacer(Modifier.height(10.dp))
+            Vitals(data, go)
         }
         // With several books open, the card shows the one picked on it (the latest by default).
         var picked by rememberSaveable { mutableLongStateOf(-1L) }
@@ -288,10 +283,6 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
                 }
             }
         }
-        if (pet != null && sp != null) {
-            Spacer(Modifier.height(10.dp))
-            Rooms(data, go)
-        }
         if (data.settings.burnedNews.isNotEmpty()) {
             Spacer(Modifier.height(10.dp))
             val days = data.settings.burnedNews.sorted().mapNotNull { runCatching { java.time.LocalDate.parse(it) }.getOrNull() }
@@ -315,6 +306,11 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
                     Text(stringResource(R.string.season_text, trinketName(t).lowercase(locale())), style = UType.Small.copy(color = U.c.ink))
                 }
             }
+        }
+        if (pet != null && sp != null) {
+            SectionTitle(stringResource(R.string.den_more))
+            Rooms(data, go)
+            NextFeat(data, go)
         }
     }
     if (dreaming && pet != null) {
@@ -418,6 +414,7 @@ private fun speech(data: FamiliarData, sp: Species, name: String, seed: Int): St
         // Now and then it reacts to the last book, the season or its own character.
         when (Math.floorMod(seed, 4)) {
             0 -> Lines.mood(l, s.mood, name)?.let { return it }
+            2 -> data.companion?.let { return Lines.duo(l, name, it.name, seed / 4) }
             1 -> data.trait?.let { return Lines.trait(l, it, name, seed / 4) }
             3 -> Lines.season(l, data.season, name)?.let { return it }
         }
@@ -458,11 +455,24 @@ private fun Vitals(data: FamiliarData, go: Go) {
                 Bar(s.fed, color = U.c.ember, track = U.c.emberSoft)
             }
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(10.dp))
+        // The nearest little goal ("only 6 more pages and…"), or else how far the next stage is.
+        val sparks = Den.sparks(data.pets, data.settings.spent)
+        val cheapest = Room.shop.filter { it.name !in data.settings.owned }.minOfOrNull { it.price }
+        val nudge = Nudge.next(s, sparks, cheapest, data.reading.firstOrNull())
         Row(verticalAlignment = Alignment.CenterVertically) {
+            if (nudge != null) {
+                Icon(Icons.Rounded.AutoAwesome, null, tint = U.c.mana, modifier = Modifier.size(15.dp))
+                Spacer(Modifier.width(6.dp))
+            }
             Text(
-                if (next == null) stringResource(R.string.mana_max) else if (s.stage == Stage.EGG) stringResource(R.string.mana_to_hatch, next.from - pet.mana) else stringResource(R.string.mana_to_next, stageName(next), next.from - pet.mana),
-                style = UType.Small.copy(color = U.c.muted), modifier = Modifier.weight(1f),
+                when {
+                    nudge != null -> nudgeText(nudge, pet.name)
+                    next == null -> stringResource(R.string.mana_max)
+                    s.stage == Stage.EGG -> stringResource(R.string.mana_to_hatch, next.from - pet.mana)
+                    else -> stringResource(R.string.mana_to_next, stageName(next), next.from - pet.mana)
+                },
+                style = UType.Small.copy(color = if (nudge != null) U.c.ink else U.c.muted), modifier = Modifier.weight(1f),
             )
             // Guardian candles waiting to keep the streak.
             if (data.settings.candles > 0) Text(
@@ -473,31 +483,82 @@ private fun Vitals(data: FamiliarData, go: Go) {
     }
 }
 
-/** The rest of the den, a tap away each: furnishing, the casket, the bestiary and visits. */
+/** The rest of the den, a tap away each: six doors of one size, three to a row, each with what waits behind it. */
 @Composable
 private fun Rooms(data: FamiliarData, go: Go) {
     val s = data.stats
     val sparks = Den.sparks(data.pets, data.settings.spent)
     val eggs = s.unlocked.count { u -> data.pets.none { it.species == u.name } }
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        RoomTile(Icons.Rounded.Chair, stringResource(R.string.den_tile), "\u2726 $sparks", U.c.gold, U.c.goldSoft, Modifier.weight(1f)) { go.furnish() }
-        RoomTile(Icons.Rounded.Inventory2, stringResource(R.string.casket), "${data.owned.size}/${Trinket.entries.size}", U.c.accent, U.c.accentSoft, Modifier.weight(1f)) { go.casket() }
-        RoomTile(
-            Icons.Rounded.Pets, stringResource(R.string.bestiary),
-            if (eggs > 0) stringResource(R.string.eggs_short, eggs) else "${data.pets.size}/${Species.entries.size}",
-            if (eggs > 0) U.c.gold else U.c.leaf, if (eggs > 0) U.c.goldSoft else U.c.leafSoft, Modifier.weight(1f),
-        ) { go.bestiary() }
-        RoomTile(Icons.Rounded.QrCode2, stringResource(R.string.visit), null, U.c.mana, U.c.manaSoft, Modifier.weight(1f)) { go.visit() }
+    val feats = app.familiar.domain.Feats.all
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            RoomTile(Icons.Rounded.Chair, stringResource(R.string.den_furnish), "\u2726 $sparks", U.c.gold, U.c.goldSoft, Modifier.weight(1f)) { go.furnish() }
+            RoomTile(
+                Icons.Rounded.Pets, stringResource(R.string.bestiary),
+                if (eggs > 0) stringResource(R.string.eggs_short, eggs) else "${data.pets.size}/${Species.entries.size}",
+                U.c.leaf, U.c.leafSoft, Modifier.weight(1f), badge = eggs > 0,
+            ) { go.bestiary() }
+            RoomTile(Icons.Rounded.EmojiEvents, stringResource(R.string.feats), "${feats.count { it.id in data.earned }}/${feats.size}", U.c.ember, U.c.emberSoft, Modifier.weight(1f)) { go.feats() }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            RoomTile(Icons.Rounded.Inventory2, stringResource(R.string.casket), "${data.owned.size}/${Trinket.entries.size}", U.c.accent, U.c.accentSoft, Modifier.weight(1f)) { go.casket() }
+            RoomTile(Icons.Rounded.FormatQuote, stringResource(R.string.quotes), data.quotes.size.toString(), U.c.accent, U.c.accentSoft, Modifier.weight(1f)) { go.quotes() }
+            RoomTile(
+                Icons.Rounded.QrCode2, stringResource(R.string.visit),
+                if (data.guest != null) stringResource(R.string.den_guest_here) else stringResource(R.string.den_visit_sub),
+                U.c.mana, U.c.manaSoft, Modifier.weight(1f),
+            ) { go.visit() }
+        }
+    }
+}
+
+/**
+ * The medal nearest to earning: its picture, how far along it is, and what it is for. Only measures with some
+ * way to go and a start made, so it is always something within reach.
+ */
+@Composable
+private fun NextFeat(data: FamiliarData, go: Go) {
+    val l = locale()
+    val next = remember(data.feats, data.earned) {
+        app.familiar.domain.Feats.all
+            .filter { it.id !in data.earned && !it.feat.hidden && it.target > 1 }
+            .map { it to ((data.feats[it.feat] ?: 0) / it.target.toFloat()) }
+            .filter { it.second > 0f }
+            .maxByOrNull { it.second }
+    } ?: return
+    val (a, share) = next
+    val have = data.feats[a.feat] ?: 0
+    Spacer(Modifier.height(8.dp))
+    UCard(onClick = { go.feats() }, padding = PaddingValues(horizontal = 14.dp, vertical = 12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            app.familiar.ui.components.BadgeArt(a, false, Modifier.size(44.dp))
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.feat_next).uppercase(), style = UType.Eyebrow)
+                Text(app.familiar.content.FeatNames.name(l, a), style = UType.Strong, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(app.familiar.content.FeatNames.what(l, a), style = UType.Small.copy(color = U.c.muted), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(6.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Bar(share, Modifier.weight(1f), color = U.c.gold, track = U.c.goldSoft)
+                    Spacer(Modifier.width(8.dp))
+                    Text(String.format(l, "%,d / %,d", have, a.target), style = UType.Small)
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun RoomTile(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String?, color: Color, soft: Color, modifier: Modifier, onClick: () -> Unit) {
+private fun RoomTile(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String?, color: Color, soft: Color, modifier: Modifier, badge: Boolean = false, onClick: () -> Unit) {
     Column(
-        modifier.clip(U.RMd).background(soft).clickable(onClick = onClick).padding(vertical = 10.dp, horizontal = 4.dp),
+        modifier.clip(U.RMd).background(soft).clickable(onClickLabel = label, onClick = onClick).padding(vertical = 12.dp, horizontal = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(icon, null, tint = color, modifier = Modifier.size(22.dp))
+        Box {
+            Icon(icon, null, tint = color, modifier = Modifier.size(24.dp))
+            // Something waits behind this door (an egg to take).
+            if (badge) Box(Modifier.align(Alignment.TopEnd).padding(start = 18.dp).size(9.dp).clip(androidx.compose.foundation.shape.CircleShape).background(U.c.danger))
+        }
         Spacer(Modifier.height(4.dp))
         Text(label, style = UType.Small.copy(color = U.c.ink, fontWeight = FontWeight.SemiBold), maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(value ?: " ", style = UType.Small.copy(color = color), maxLines = 1)

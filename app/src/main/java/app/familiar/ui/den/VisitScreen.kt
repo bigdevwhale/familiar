@@ -3,9 +3,6 @@ package app.familiar.ui.den
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Typeface
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -52,7 +49,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.content.res.ResourcesCompat
 import app.familiar.R
 import app.familiar.container
 import app.familiar.data.Library
@@ -72,7 +68,6 @@ import app.familiar.ui.components.SoftButton
 import app.familiar.ui.components.TopBar
 import app.familiar.ui.components.TrinketArt
 import app.familiar.ui.components.UCard
-import app.familiar.ui.pix.Sprites
 import app.familiar.ui.theme.U
 import app.familiar.ui.theme.UType
 import app.familiar.ui.trinketName
@@ -119,7 +114,8 @@ fun VisitScreen(data: FamiliarData, go: Go) {
             val now = System.currentTimeMillis()
             val stamp = v.key + "|" + data.stats.today
             val gift = if (stamp in container.settings.now().gifts) null else Library.guestGift(container.db.dao(), v.key.hashCode().toLong() + now / 86_400_000, now)
-            container.settings.update { it.copy(guest = text!!, guestUntil = now + 24 * 3_600_000L, gifts = (it.gifts + stamp).toList().takeLast(60).toSet()) }
+            // A guest counts once a day, however many times its card is shown.
+            container.settings.update { it.copy(guest = text!!, guestUntil = now + 24 * 3_600_000L, gifts = (it.gifts + stamp).toList().takeLast(60).toSet(), visits = it.visits + if (stamp in it.gifts) 0 else 1) }
             withContext(Dispatchers.Main) { welcomed = v to gift }
         }
     }
@@ -153,7 +149,7 @@ fun VisitScreen(data: FamiliarData, go: Go) {
                 Spacer(Modifier.height(12.dp))
                 PrimaryButton(stringResource(R.string.visit_share), {
                     container.scope.launch {
-                        val f = withContext(Dispatchers.Default) { Postcard.save(context, cardImage(context, data, qr), "visit.png") }
+                        val f = withContext(Dispatchers.Default) { Postcard.save(context, VisitCard.draw(context, data, card, book), "visit.png") }
                         withContext(Dispatchers.Main) { Postcard.send(context, f) }
                     }
                 }, Modifier.fillMaxWidth(), icon = Icons.Rounded.Share)
@@ -208,22 +204,3 @@ private fun read(context: Context, uri: Uri): String? = runCatching {
     val source = RGBLuminanceSource(bmp.width, bmp.height, pixels)
     MultiFormatReader().decode(BinaryBitmap(HybridBinarizer(source)), mapOf(DecodeHintType.TRY_HARDER to true, DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE))).text
 }.getOrNull()
-
-/** The visiting card as a picture: the familiar, its name and the code. */
-private fun cardImage(context: Context, data: FamiliarData, qr: Bitmap): Bitmap {
-    val w = 1080
-    val h = 1440
-    val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-    val cv = Canvas(bmp)
-    cv.drawColor(0xFFF3EBDD.toInt())
-    val look = data.look()!!
-    Postcard.blit(cv, Sprites.frame(look, 0), (w - Sprites.SIZE * 5) / 2, 30, 5)
-    val serif = ResourcesCompat.getFont(context, R.font.cormorant_bold) ?: Typeface.SERIF
-    val title = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 92f; color = 0xFF2A2030.toInt(); textAlign = Paint.Align.CENTER }
-    cv.drawText(data.pet?.name.orEmpty(), w / 2f, 520f, title)
-    cv.drawBitmap(Bitmap.createScaledBitmap(qr, 760, 760, false), (w - 760) / 2f, 570f, null)
-    val sans = ResourcesCompat.getFont(context, R.font.nunito_semibold) ?: Typeface.SANS_SERIF
-    val faint = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = sans; textSize = 32f; color = 0xFF9A8E92.toInt(); textAlign = Paint.Align.CENTER }
-    cv.drawText(context.getString(R.string.postcard_footer), w / 2f, h - 50f, faint)
-    return bmp
-}

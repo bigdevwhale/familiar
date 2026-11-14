@@ -29,7 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private data class RoomKey(val placed: Set<Item>, val books: List<Int>, val night: Boolean, val season: Season)
+private data class RoomKey(val placed: Set<Item>, val books: List<Int>, val night: Boolean, val season: Season, val sky: app.familiar.domain.Sky)
 
 private object RoomCache {
     private var key: RoomKey? = null
@@ -41,7 +41,8 @@ private object RoomCache {
 
 /**
  * The den with the familiar in it, both in the same pixels. Tap to make it hop ([hops] times),
- * stroke it ([stroke] pixels' worth) to make it purr. A [guest] sits beside it for a day.
+ * stroke it ([stroke] pixels' worth) to make it purr. A [guest] sits beside it for a day; a [companion]
+ * lives on its other side and hops along a moment after. Outside the window the weather is [sky].
  */
 @Composable
 fun DenScene(
@@ -52,23 +53,27 @@ fun DenScene(
     modifier: Modifier = Modifier,
     season: Season = Season.NONE,
     guest: Look? = null,
+    companion: Look? = null,
+    sky: app.familiar.domain.Sky = app.familiar.domain.Sky.CLEAR,
     hops: Int = 1,
     stroke: Float = 260f,
     onTap: () -> Unit = {},
     onStroke: () -> Unit = {},
 ) {
-    val key = RoomKey(placed, books, night, season)
+    val key = RoomKey(placed, books, night, season, sky)
     val room by produceState(RoomCache.get(key), key) {
         value = RoomCache.get(key) ?: withContext(Dispatchers.Default) {
-            List(Room.FRAMES) { Room.scene(placed, books, night, it, season).bitmap() }
+            List(Room.FRAMES) { Room.scene(placed, books, night, it, season, sky).bitmap() }
         }.also { RoomCache.put(key, it) }
     }
     // Drawn again when the art style is switched in the settings, not only when the familiar changes.
     val classic = app.familiar.ui.pix.Sprites.classic
     val pet by produceState(null as List<ImageBitmap>?, look, classic) { value = withContext(Dispatchers.Default) { framesOf(look) } }
     val visitor by produceState(null as List<ImageBitmap>?, guest, classic) { value = guest?.let { withContext(Dispatchers.Default) { framesOf(it) } } }
+    val mate by produceState(null as List<ImageBitmap>?, companion, classic) { value = companion?.let { withContext(Dispatchers.Default) { framesOf(it) } } }
     val t by rememberTime()
     val hop = remember { Animatable(0f) }
+    val mateHop = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     var stroked = 0f
     Canvas(
@@ -82,6 +87,12 @@ fun DenScene(
                             hop.animateTo(1f, tween(140))
                             hop.animateTo(0f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
                         }
+                    }
+                    // The companion sees it and hops too, a beat late (unless it is asleep).
+                    if (companion != null && !companion.sleeping) scope.launch {
+                        kotlinx.coroutines.delay(180)
+                        mateHop.animateTo(1f, tween(140))
+                        mateHop.animateTo(0f, spring(dampingRatio = Spring.DampingRatioMediumBouncy))
                     }
                 }
             }
@@ -114,9 +125,16 @@ fun DenScene(
             val img = v.at(t * 5 + 3)
             familiar(img, ox + (Room.W / 2 - 44 - img.width / d / 2) * k, oy + (Room.FLOOR_Y - img.height / d + 1) * k, guest?.let { breath(it, t + 0.8f) } ?: 0f)
         }
+        // With a companion (and no guest on the other side) the two share the middle of the room.
+        val shift = if (companion != null && guest == null) -16 else 0
+        mate?.let { m ->
+            // The companion sits to the right, a little behind and out of step.
+            val img = m.at(t * 5 + 7)
+            familiar(img, ox + (Room.W / 2 + (if (guest == null) 34 else 44) - img.width / d / 2) * k, oy + (Room.FLOOR_Y - img.height / d + 1) * k - (mateHop.value * 5 * k).toInt(), companion?.let { breath(it, t + 1.3f) } ?: 0f)
+        }
         pet?.let { p ->
             val img = p.at(t * 6)
-            familiar(img, ox + (Room.W - img.width / d) / 2 * k, oy + (Room.FLOOR_Y - img.height / d + 3) * k - (hop.value * 6 * k).toInt(), breath(look, t))
+            familiar(img, ox + ((Room.W - img.width / d) / 2 + shift) * k, oy + (Room.FLOOR_Y - img.height / d + 3) * k - (hop.value * 6 * k).toInt(), breath(look, t))
         }
     }
 }

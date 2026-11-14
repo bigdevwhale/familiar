@@ -76,8 +76,7 @@ internal object Drawn {
     /** Paints [s] onto [px] for this frame and returns where its face is. */
     fun paint(px: Px, s: Sprite, ctx: Sprites.Ctx): Face {
         val look = ctx.look
-        val floats = look.species == Species.MOTH || look.species == Species.GHOST
-        val dy = (if (floats) sin(ctx.ph * 2 * PI.toFloat()) * 1.5f - 2f else 0f).roundToInt() + if (look.chew && ctx.f % 2 == 1) 1 else 0
+        val dy = (if (look.species.floats) sin(ctx.ph * 2 * PI.toFloat()) * 1.5f - 2f else 0f).roundToInt() + if (look.chew && ctx.f % 2 == 1) 1 else 0
         val eyes = s.eyes.map { intArrayOf(it[0], it[1] + dy, it[2], it[3] + dy) }
         val cx = (s.left + s.right) / 2f
         val headX = if (eyes.size == 2) (eyes[0][0] + eyes[1][2]) / 2 else cx.toInt()
@@ -284,6 +283,25 @@ internal object Drawn {
         Species.CHIMERA to listOf(Band(18f, 52f, 200f, 0.5f, 1.05f), Band(270f, 340f, 175f, 0.85f, 1.0f)),
         // An amethyst magpie with a golden sheen; the nest stays.
         Species.MAGPIE to listOf(Band(170f, 260f, 285f, 1.1f, 1.05f)),
+        // The nine drawn last, in the colours their sheets were asked for (tools/draw.py).
+        // An amethyst hydra, from jade.
+        Species.HYDRA to listOf(Band(140f, 200f, 278f, 0.9f, 1.02f)),
+        // A ginger storyteller, from smoky blue.
+        Species.BAYUN to listOf(Band(200f, 262f, 28f, 2.1f, 1.12f)),
+        // A mint snail, from butter yellow; the shell stays.
+        Species.SNAIL to listOf(Band(38f, 66f, 152f, 0.8f, 1.0f)),
+        // A blue-flame salamander, from ember orange.
+        Species.SALAMANDER to listOf(Band(8f, 46f, 205f, 0.85f, 1.0f)),
+        // A silver automaton, from brass.
+        Species.AUTOMATON to listOf(Band(20f, 52f, 190f, 0.4f, 1.08f)),
+        // A golden pixie, from her pinkish lilac (hair, dress and petals).
+        Species.PIXIE to listOf(Band(282f, 338f, 44f, 0.95f, 1.08f)),
+        // A plum raven, from indigo.
+        Species.RAVEN to listOf(Band(205f, 268f, 325f, 0.75f, 1.2f)),
+        // A rose-quartz sphinx, from sand.
+        Species.SPHINX to listOf(Band(24f, 54f, 345f, 0.55f, 1.05f)),
+        // A snowy owlet, from warm brown.
+        Species.OWLET to listOf(Band(14f, 44f, 210f, 0.3f, 1.22f)),
     )
 
     /** How many of a species' bands are its body (the rest are wings, bands, leaves): what a form recolours. */
@@ -332,7 +350,9 @@ internal object Drawn {
         return own.take(body(sp)).map { b ->
             // A rare one in a form is a lighter, warmer turn of the same shade.
             val hue = if (shiny) (tone.hue + 28f) % 360f else tone.hue
-            Band(b.from, b.to, hue, if (b.pale) tone.sat + 0.6f else tone.sat, tone.value * if (shiny) 1.1f else 1f, b.pale)
+            // A grey coat (the storyteller cat) has little colour to scale: it is given more, or a form wouldn't show.
+            val grey = if (sp == Species.BAYUN) 2.6f else 1f
+            Band(b.from, b.to, hue, if (b.pale) tone.sat + 0.6f else tone.sat * grey, tone.value * if (shiny) 1.1f else 1f, b.pale)
         }
     }
 
@@ -348,8 +368,11 @@ internal object Drawn {
             // [src] is [k] times finer than the sprite: an eye's pixel there is under an eye's pixel here.
             val lid = s.lids?.get((i / (n * k)) / k * n + (i % (n * k)) / k) == true
             // Blush is a light pink (plenty of green in it); a pure red, the phoenix's flame, isn't.
-            if (p.al() == 0 || lid || (pink(p) && p.g() > 100)) return@IntArray p
+            if (p.al() == 0 || lid) return@IntArray p
             android.graphics.Color.RGBToHSV(p.r(), p.g(), p.b(), hsv)
+            // The pixie's hair and dress are a pink lilac that would pass for blush; her blush is redder than them.
+            val lilac = sp == Species.PIXIE && hsv[0] in 282f..338f
+            if (pink(p) && p.g() > 100 && !lilac) return@IntArray p
             // Outline, deep shadow, the dark of a mouth.
             if (hsv[2] < 0.22f) return@IntArray p
             // A red mouth or tongue: much more red than blue, on a face that isn't red itself.

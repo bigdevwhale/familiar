@@ -2,8 +2,8 @@ You are a reading mage, and every mage needs a familiar. Yours lives on mana, an
 
 Familiar is a reading tracker with a pixel-art pet. Read, and it hatches from an egg, grows through five stages and changes with what you read. Forget about books and it slowly turns to stone, until a few pages break the spell. Free, no ads, no account.
 
-🥚 FOURTEEN FAMILIARS
-• Mimic, kitsune, slime, dragon, phoenix, griffin, owlbear, moon moth, tanuki, sprout, ghost, bookworm, chimera and magpie
+🥚 TWENTY-THREE FAMILIARS
+• Mimic, kitsune, slime, dragon, phoenix, griffin, owlbear, moon moth, tanuki, sprout, ghost, bookworm, chimera, magpie, hydra, Bayun cat, snail, salamander, automaton, pixie, raven, sphinx and post owlet
 • Each loves its own kind of reading: long books, night reading, streaks, audiobooks, horror, a new genre after the last
 • Three can hatch at the start; the rest are found by reading
 • A grown familiar takes one of five forms after the books it was fed on: astral, shadow, bloom, sage or wild
@@ -20,6 +20,7 @@ Familiar is a reading tracker with a pixel-art pet. Read, and it hatches from an
 • Every mana leaves a spark, and sparks buy furniture: a window with the real day or night, a bookshelf in the colours of your finished books, a cauldron, a telescope, fairy lights
 • Stroke your familiar and it purrs; after midnight it sleeps
 • Finds from the stories, dreams after evening reading, seasonal holidays
+• A second familiar can live beside yours; 197 achievements with medals
 
 📚 YOUR LIBRARY
 • Find books in Fantlab and Open Library with real covers, or type them in and pick your own picture

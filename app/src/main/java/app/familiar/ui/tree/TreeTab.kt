@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AutoStories
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.HistoryEdu
 import androidx.compose.material.icons.rounded.Insights
@@ -187,6 +188,19 @@ private fun TreePage(data: FamiliarData, go: Go) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.saga_title, s.today.year), style = UType.Strong)
                     Text(stringResource(R.string.saga_sub), style = UType.Muted)
+                }
+            }
+        }
+        // The year as a story to leaf through; in January it is still the year just ended.
+        val wrapYear = app.familiar.domain.Wrapped.yearToShow(s.today)
+        Spacer(Modifier.height(8.dp))
+        UCard(onClick = { go.wrapped(wrapYear) }) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Rounded.AutoStories, null, tint = U.c.gold)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.wrap_card, wrapYear), style = UType.Strong)
+                    Text(stringResource(R.string.wrap_card_sub), style = UType.Muted)
                 }
             }
         }

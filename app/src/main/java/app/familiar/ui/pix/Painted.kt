@@ -41,6 +41,18 @@ internal object Painted {
             }.toIntArray()
         }
 
+        /**
+         * The glass of a window in it, by day or by night: bluish pixels with glass all round them, so rain or
+         * snow painted there falls behind the frame and never on the wall.
+         */
+        val pane: BooleanArray by lazy {
+            fun glass(i: Int): Boolean { val c = px.c[i]; return c.al() > 0 && c.b() > c.r() + 10 && c.b() >= c.g() - 25 }
+            BooleanArray(px.w * px.h) { i ->
+                val x = i % px.w; val y = i / px.w
+                x in 1 until px.w - 1 && y in 1 until px.h - 1 && (-1..1).all { dy -> (-1..1).all { dx -> glass((y + dy) * px.w + x + dx) } }
+            }
+        }
+
         /** Where the flames burn in it: the middle of each patch of bright yellow-orange, left to right. */
         val flames: List<Pair<Float, Float>> by lazy {
             val hot = BooleanArray(px.w * px.h) { val c = px.c[it]; c.al() > 0 && c.r() > 225 && c.g() > 150 && c.b() < 140 }

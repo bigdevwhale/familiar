@@ -30,3 +30,10 @@ fun DreamArt(g: Genre, modifier: Modifier = Modifier, fps: Float = 3f) {
     val t by rememberTime()
     Canvas(modifier) { frames?.let { pixels(it[(t * fps).toInt() % it.size]) } }
 }
+
+/** An achievement's medal; one not [earned] yet is a grey shadow. */
+@Composable
+fun BadgeArt(a: app.familiar.domain.Achievement, earned: Boolean, modifier: Modifier = Modifier) {
+    val img = remember(a.id, earned) { app.familiar.ui.pix.Badges.draw(a.feat, a.rank, earned).bitmap() }
+    Canvas(modifier) { pixels(img) }
+}

@@ -1,6 +1,7 @@
 package app.familiar.ui.books
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +33,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -65,8 +67,31 @@ class PlankLook(val wood: Wood = Wood.OAK, val trim: Trim = Trim.NONE) {
     }
 }
 
-/** Things to stand among the books, drawn here; the familiar's finds stand there too ("T:<trinket>"). */
-enum class Ornament { PLANT, CANDLES, CRYSTAL, HOURGLASS, GLOBE, BOOKEND }
+/**
+ * Things to stand among the books, with how tall they stand (dp); the familiar's finds stand there too
+ * ("T:<trinket>"). Each is a drawn picture (art/shelf, cut by tools/scenery.py); the first six are also drawn
+ * in code, for while a picture is missing. One that has neither isn't offered.
+ */
+enum class Ornament(val tall: Int, val inCode: Boolean = false) {
+    PLANT(92, true), CANDLES(78, true), CRYSTAL(60, true), HOURGLASS(70, true), GLOBE(84, true), BOOKEND(96, true),
+    TEAPOT(52), POTIONS(70), OWL(66), DRAGON(64), LAMP(90), CACTUS(72), SKULL(56), TERRARIUM(70);
+
+    /** It can be shown: drawn, or drawn in code. */
+    val ready: Boolean get() = inCode || ShelfArt.of(this) != null
+}
+
+/** The drawn ornaments, loaded once each from resources/shelf (the twice finer picture, shown crisp). */
+object ShelfArt {
+    private val cache = HashMap<Ornament, androidx.compose.ui.graphics.ImageBitmap?>()
+
+    fun of(o: Ornament): androidx.compose.ui.graphics.ImageBitmap? = synchronized(cache) {
+        cache.getOrPut(o) {
+            val name = "/shelf/" + o.name.lowercase()
+            (ShelfArt::class.java.getResourceAsStream("$name@2x.png") ?: ShelfArt::class.java.getResourceAsStream("$name.png"))
+                ?.use { android.graphics.BitmapFactory.decodeStream(it) }?.asImageBitmap()
+        }
+    }
+}
 
 /**
  * What stands among the books: each thing ([key], an [Ornament] name or "T:<trinket>") right after the book
@@ -79,9 +104,22 @@ object Decor {
 
     data class Placed(val id: Long, val after: Long, val key: String)
 
+    /**
+     * What stands on the shelf. Each thing stands in one place only: if the same one was saved twice (the "+" once
+     * always added a new one, so a thing could stand twice and seem impossible to take away), the first is kept.
+     */
     fun parse(saved: String): List<Placed> = saved.split('\n').mapNotNull { l ->
         val p = l.split('|')
         if (p.size != 3 || p[2].isEmpty()) null else Placed(p[0].toLongOrNull() ?: return@mapNotNull null, p[1].toLongOrNull() ?: 0L, p[2])
+    }.distinctBy { it.key }
+
+    /**
+     * [saved] with [key] put in the place of [target] ("" takes whatever stands there away). A thing that already
+     * stands elsewhere moves here instead of standing twice.
+     */
+    fun put(saved: String, target: Placed, key: String): String {
+        val rest = parse(saved).filter { it.id != target.id && (key.isEmpty() || it.key != key) }
+        return encode(if (key.isEmpty()) rest else rest + target.copy(key = key))
     }
 
     fun encode(l: List<Placed>) = l.joinToString("\n") { "${it.id}|${it.after}|${it.key}" }
@@ -91,7 +129,7 @@ object Decor {
 
     fun width(key: String): Int = when {
         key.startsWith(FIND) -> 40
-        key == Ornament.CANDLES.name || key == Ornament.PLANT.name -> 52
+        key == Ornament.CANDLES.name || key == Ornament.PLANT.name || key == Ornament.TEAPOT.name || key == Ornament.DRAGON.name || key == Ornament.TERRARIUM.name -> 52
         else -> 44
     }
 }
@@ -207,8 +245,20 @@ fun Ornament(key: String) {
         return
     }
     val o = Ornament.entries.firstOrNull { it.name == key } ?: return
-    val h = when (o) { Ornament.PLANT -> 92; Ornament.CANDLES -> 78; Ornament.CRYSTAL -> 60; Ornament.HOURGLASS -> 70; Ornament.GLOBE -> 84; Ornament.BOOKEND -> 96 }
-    Canvas(Modifier.size(w.dp, h.dp)) { ornament(o) }
+    val art = ShelfArt.of(o)
+    if (art != null) {
+        // The picture, crisp, standing on the plank at the bottom of its place.
+        Canvas(Modifier.size(w.dp, o.tall.dp)) {
+            val k = minOf(size.width / art.width, size.height / art.height)
+            val dw = (art.width * k).toInt(); val dh = (art.height * k).toInt()
+            drawImage(
+                art, dstOffset = androidx.compose.ui.unit.IntOffset(((size.width - dw) / 2).toInt(), (size.height - dh).toInt()),
+                dstSize = androidx.compose.ui.unit.IntSize(dw, dh), filterQuality = androidx.compose.ui.graphics.FilterQuality.None,
+            )
+        }
+        return
+    }
+    if (o.inCode) Canvas(Modifier.size(w.dp, o.tall.dp)) { ornament(o) }
 }
 
 private fun DrawScope.ornament(o: Ornament) {
@@ -216,6 +266,8 @@ private fun DrawScope.ornament(o: Ornament) {
     val h = size.height
     val d = 1.dp.toPx()
     when (o) {
+        // Only ever drawn pictures.
+        Ornament.TEAPOT, Ornament.POTIONS, Ornament.OWL, Ornament.DRAGON, Ornament.LAMP, Ornament.CACTUS, Ornament.SKULL, Ornament.TERRARIUM -> {}
         Ornament.PLANT -> {
             // A terracotta pot with a leafy plant.
             val potTop = h * 0.62f
@@ -315,12 +367,12 @@ private fun DrawScope.ornament(o: Ornament) {
 fun ShelfLookSheet(wood: String, trim: String, decor: String, target: Decor.Placed, finds: Set<Trinket>, onDismiss: () -> Unit) {
     val container = LocalContext.current.container
     val look = PlankLook.of(wood, trim)
-    val here = Decor.parse(decor).firstOrNull { it.id == target.id }?.key.orEmpty()
+    val placed = Decor.parse(decor)
+    val here = placed.firstOrNull { it.id == target.id }?.key.orEmpty()
+    // What already stands somewhere else on the shelf: picking it moves it here.
+    val elsewhere = placed.filter { it.id != target.id }.map { it.key }.toSet()
     fun put(key: String) = container.scope.launch {
-        container.settings.update { s ->
-            val rest = Decor.parse(s.shelfDecor).filter { it.id != target.id }
-            s.copy(shelfDecor = Decor.encode(if (key.isEmpty()) rest else rest + target.copy(key = key)))
-        }
+        container.settings.update { s -> s.copy(shelfDecor = Decor.put(s.shelfDecor, target, key)) }
     }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = U.c.bg) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).navigationBarsPadding().padding(bottom = 40.dp)) {
@@ -341,9 +393,10 @@ fun ShelfLookSheet(wood: String, trim: String, decor: String, target: Decor.Plac
             }
             SectionTitle(stringResource(R.string.shelf_decor_here))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Tile(stringResource(R.string.decor_none), here.isEmpty(), { put("") }) {}
-                Ornament.entries.forEach { o ->
-                    Tile(stringResource(ornamentName(o)), here == o.name, { put(o.name) }) { Ornament(o.name) }
+                // For a thing that stands here, taking it away; for a new place, leaving it empty.
+                Tile(stringResource(if (here.isEmpty()) R.string.decor_none else R.string.decor_remove), here.isEmpty(), { put("") }) {}
+                Ornament.entries.filter { it.ready }.forEach { o ->
+                    Tile(stringResource(ornamentName(o)), here == o.name, { put(o.name) }, moves = o.name in elsewhere) { Ornament(o.name) }
                 }
             }
             if (finds.isNotEmpty()) {
@@ -351,7 +404,7 @@ fun ShelfLookSheet(wood: String, trim: String, decor: String, target: Decor.Plac
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     finds.sortedBy { it.ordinal }.forEach { t ->
                         val key = Decor.FIND + t.name
-                        Tile(null, here == key, { put(key) }) { TrinketArt(t, Modifier.size(40.dp)) }
+                        Tile(null, here == key, { put(key) }, moves = key in elsewhere) { TrinketArt(t, Modifier.size(40.dp)) }
                     }
                 }
             }
@@ -359,19 +412,30 @@ fun ShelfLookSheet(wood: String, trim: String, decor: String, target: Decor.Plac
     }
 }
 
-/** One thing to put on the plank, ringed while it's the one there. */
+/** One thing to put on the plank, ringed while it's the one there; [moves]: it stands elsewhere and would move here. */
 @Composable
-private fun Tile(name: String?, on: Boolean, onClick: () -> Unit, art: @Composable () -> Unit) {
+private fun Tile(name: String?, on: Boolean, onClick: () -> Unit, moves: Boolean = false, art: @Composable () -> Unit) {
     Column(
         Modifier.width(76.dp).clip(RoundedCornerShape(10.dp))
             .border(2.dp, if (on) U.c.accent else U.c.line, RoundedCornerShape(10.dp))
             .clickable(onClick = onClick).padding(6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(Modifier.height(if (name == null) 44.dp else 100.dp), contentAlignment = Alignment.BottomCenter) {
+        // Every tile the same size, whatever stands in it and however long its name.
+        Box(Modifier.fillMaxWidth().height(if (name == null) 44.dp else 100.dp), contentAlignment = Alignment.BottomCenter) {
             art()
+            // It stands elsewhere on the shelf: a mark over the picture, not a line that makes the tile taller.
+            if (moves) Text(
+                stringResource(R.string.decor_elsewhere),
+                style = UType.Small.copy(color = U.c.bg, fontSize = androidx.compose.ui.unit.TextUnit(9f, androidx.compose.ui.unit.TextUnitType.Sp)),
+                maxLines = 1,
+                modifier = Modifier.align(Alignment.TopCenter).clip(RoundedCornerShape(6.dp)).background(U.c.gold).padding(horizontal = 4.dp),
+            )
         }
-        if (name != null) Text(name, style = UType.Small.copy(color = if (on) U.c.accent else U.c.muted), textAlign = TextAlign.Center, maxLines = 2)
+        if (name != null) Text(
+            name, style = UType.Small.copy(color = if (on) U.c.accent else U.c.muted), textAlign = TextAlign.Center,
+            minLines = 2, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -388,4 +452,7 @@ private fun trimName(t: Trim) = when (t) {
 private fun ornamentName(o: Ornament) = when (o) {
     Ornament.PLANT -> R.string.decor_plant; Ornament.CANDLES -> R.string.decor_candles; Ornament.CRYSTAL -> R.string.decor_crystal
     Ornament.HOURGLASS -> R.string.decor_hourglass; Ornament.GLOBE -> R.string.decor_globe; Ornament.BOOKEND -> R.string.decor_bookend
+    Ornament.TEAPOT -> R.string.decor_teapot; Ornament.POTIONS -> R.string.decor_potions; Ornament.OWL -> R.string.decor_owl
+    Ornament.DRAGON -> R.string.decor_dragon; Ornament.LAMP -> R.string.decor_lamp; Ornament.CACTUS -> R.string.decor_cactus
+    Ornament.SKULL -> R.string.decor_skull; Ornament.TERRARIUM -> R.string.decor_terrarium
 }

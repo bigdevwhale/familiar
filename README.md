@@ -30,7 +30,7 @@ You are a reading mage, and every mage needs a familiar. Yours lives on mana, an
 
 ## The familiars
 
-<img src="docs/familiars.png" alt="The fourteen familiars: mimic, kitsune, slime, dragon, phoenix, griffin, owlbear, moon moth, tanuki, sprout, ghost, bookworm, chimera and magpie" width="100%" />
+<img src="docs/familiars.png" alt="The familiars: mimic, kitsune, slime, dragon, phoenix, griffin, owlbear, moon moth, tanuki, sprout, ghost, bookworm, chimera and magpie" width="100%" />
 
 All the art is pixel art painted by the app itself (shaded shapes, hue-shifted ramps, dither, rim light), so every familiar shows what *you* read:
 
@@ -50,8 +50,17 @@ All the art is pixel art painted by the app itself (shaded shapes, hue-shifted r
 | 🐛 | **Bookworm** | long sittings, 45 minutes and more | a new segment in a finished book's colour at every stage, and spectacles |
 | 🦁 | **Chimera** | books in your own genres and subgenres | a patch on its coat for every genre of your own, goat horns, then wings |
 | 🐦 | **Magpie** | staying in the genre of the book before | a shiny thing in its nest for every subgenre, and a longer tail |
+| 🐲 | **Hydra** | volumes of a cycle | a new head at every stage, a crown when ancient |
+| 🐈 | **Bayun cat** | reading a book again | a book in its paws, then a golden chain |
+| 🐌 | **Snail** | reading with the phone face down | its shell becomes a little house with a window and a chimney |
+| 🦎 | **Salamander** | reading by the fire | flames rising higher along its back |
+| ⚙️ | **Automaton** | science fiction | gears, then a lamp in its chest |
+| 🧚 | **Pixie** | poems and books under 150 pages | bigger wings, a crown of flowers when ancient |
+| 🐦‍⬛ | **Raven** | books you copy quotes out of | a quill, a scroll, an inkwell |
+| 🦁 | **Sphinx** | the classics | a headcloth, wings, a golden collar |
+| 🦉 | **Post owlet** | reading while a guest is staying | a postman's cap and a satchel of letters |
 
-Three can hatch at the start; the other eleven are found by reading (a 400-page book, five late nights, seven days in a row, a non-fiction or history book, a comeback after a pause, five audiobooks, five mornings, a horror or mystery, three long sittings, books in three genres of your own, two subgenres of one genre).
+Three can hatch at the start; the other twenty are found by reading: a 400-page book, five late nights, seven days in a row, three volumes of one cycle, a book read again, five quotes copied out, a friend's guest and more. One more familiar can live in the den beside yours and picks up a tenth of every feast.
 
 **Forms.** A grown familiar takes one of five forms for good, after the books it was fed on, with its own colours: astral (fantasy, sci-fi), shadow (mystery, horror), bloom (romance, poetry), sage (classic, history, non-fiction) or wild (adventure and the rest). The bestiary shows which way it leans.
 
@@ -94,7 +103,10 @@ Stroke the familiar sideways and it squeezes its eyes shut and purrs. After midn
 | 🌳 | **Tree of stories** | Every finished book grows a glowing fruit in its genre's colour. Tap one to open the book. |
 | 🎯 | **Goal for the year** | How many books this year, with how far ahead of or behind the pace you are. |
 | ⚔️ | **The guild** | Three monthly errands, the same for every reader, none of them a must. |
-| 📖 | **Saga** | Your year told as a legend, with a square for every day of reading, ready to share. |
+| 📖 | **Saga** | Your year told as a legend, with a square for every day of reading, ready to share; and your year in books to leaf through like a story. |
+| ❝ | **Quotes** | Copy lines out of your books by the candle, keep them in an album and share them as cards. |
+| 🏅 | **Achievements** | 197 medals for reading, habits, the shelf, the familiars and the den; each gives your familiar a little mana. |
+| 🌙 | **Sleep timer** | Falling asleep to an audiobook: the record stops by itself and only the minutes until then count. |
 | 📊 | **The ledger** | Pages a day, pace in pages an hour by genre, the time of day you read most, six months in columns, and the day you'll finish the book you're on. |
 | 🔔 | **Reminder and widget** | An evening line from your familiar, quiet on days you've read; a home-screen widget with the familiar and today's pages. |
 

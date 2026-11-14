@@ -20,7 +20,8 @@ OUT = os.path.join(ROOT, "app", "src", "main", "resources", "familiars")
 DEBUG = os.path.join(ROOT, "app", "build", "art", "familiars.png")
 
 SPECIES = ["mimic", "kitsune", "slime", "dragon", "phoenix", "griffin", "owlbear", "moth",
-           "tanuki", "sprout", "ghost", "wyrm", "chimera", "magpie"]
+           "tanuki", "sprout", "ghost", "wyrm", "chimera", "magpie",
+           "hydra", "bayun", "snail", "salamander", "automaton", "pixie", "raven", "sphinx", "owlet"]
 STAGES = ["baby", "young", "adult", "ancient"]
 SIZE = 80
 GROUND = 77          # the bottom row a familiar stands on
@@ -28,6 +29,15 @@ MAX_W, MAX_H = 78, 76
 
 # Eyes the finder gets wrong, by hand: (x0, y0, x1, y1) of each eye in sprite pixels.
 EYES = {
+    "owlet_baby": [(32, 51, 38, 57), (43, 51, 49, 57)],
+    "owlet_young": [(31, 43, 37, 49), (43, 43, 50, 49)],
+    "owlet_adult": [(30, 34, 37, 42), (44, 34, 51, 42)],
+    "owlet_ancient": [(28, 25, 37, 34), (45, 25, 54, 34)],
+    "pixie_ancient": [(29, 22, 37, 29), (42, 22, 50, 29)],
+    "slime_baby": [(30, 58, 37, 65), (43, 58, 50, 65)],
+    "slime_young": [(28, 50, 36, 58), (44, 50, 53, 58)],
+    "slime_adult": [(24, 42, 36, 54), (46, 42, 57, 54)],
+    "slime_ancient": [(20, 35, 34, 48), (46, 35, 60, 48)],
     "kitsune_young": [(31, 48, 38, 55), (41, 48, 48, 55)],
     "moth_young": [(32, 53, 37, 58), (42, 53, 47, 58)],
     "sprout_ancient": [(28, 41, 37, 50), (45, 41, 53, 50)],
@@ -372,8 +382,8 @@ def eye_mask(sprite, box, glasses=False, core=False):
     return m
 
 
-# The eggs, two sheets of seven (art/eggs/eggs_1.png, eggs_2.png), in this order.
-EGGS = [SPECIES[:7], SPECIES[7:]]
+# The eggs: two sheets of seven and one of nine (art/eggs/eggs_1.png, eggs_2.png, eggs_3.png), in this order.
+EGGS = [SPECIES[:7], SPECIES[7:14], SPECIES[14:]]
 EGG_W, EGG_H = 34, 42
 
 
@@ -381,7 +391,12 @@ def eggs():
     """Cuts the egg sheets into egg_<species>.png, all at one scale, standing on the ground line."""
     parts = []
     for n, names in enumerate(EGGS, start=1):
-        im, solid = load(os.path.join(ROOT, "art", "eggs", f"eggs_{n}.png"))
+        path = os.path.join(ROOT, "art", "eggs", f"eggs_{n}.png")
+        if not os.path.exists(path):
+            # Not drawn yet: the app paints these eggs itself meanwhile.
+            print("no egg sheet yet:", os.path.basename(path), file=sys.stderr)
+            continue
+        im, solid = load(path)
         for name, (s, e) in zip(names, figures(solid, count=len(names))):
             m = solid[:, s:e]
             ys = np.nonzero(m.any(axis=1))[0]
@@ -442,6 +457,10 @@ def main():
     faces = []
     sheet = Image.new("RGBA", (SIZE * 4 * 3, SIZE * len(SPECIES) * 3), (40, 34, 56, 255))
     for row, sp in enumerate(SPECIES):
+        if not os.path.exists(os.path.join(SRC, sp + ".png")):
+            # Not drawn yet: the app paints a stand-in for it meanwhile (ui/pix/Strangers.kt).
+            print("no sheet yet:", sp, file=sys.stderr)
+            continue
         im, solid = load(os.path.join(SRC, sp + ".png"))
         runs = figures(solid)
         crops = []
@@ -525,8 +544,7 @@ def main():
                         for X in (a * 3, c * 3 - 1):
                             px[col * SIZE * 3 + X, row * SIZE * 3 + Y] = (0, 255, 120, 255)
         print(sp, "scale", round(k, 4), [(b[2] - b[0], b[3] - b[1]) for b in crops])
-    with open(os.path.join(OUT, "faces.txt"), "w", encoding="utf-8", newline="
-") as f:
+    with open(os.path.join(OUT, "faces.txt"), "w", encoding="utf-8", newline="\n") as f:
         f.write("# sprite  left eye x0 y0 x1 y1  right eye x0 y0 x1 y1 (written by tools/familiars.py)\n")
         f.write("\n".join(faces) + "\n")
     sheet.save(DEBUG)

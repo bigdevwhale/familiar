@@ -77,6 +77,7 @@ fun LogScreen(id: Long, data: FamiliarData, go: Go) {
                     val r = Library.sit(
                         container.db.dao(), book, book.page, input.toPage, now - mins * 60_000L, now, timed = mins > 0,
                         listened = listened, item = input.item, finish = input.finish, guarded = data.settings.guardedDays,
+                        guest = data.guest != null, companionId = data.settings.companion,
                     )
                     // Finished another day: the book is dated then, the sitting stays today's.
                     input.finishedOn?.let { day ->

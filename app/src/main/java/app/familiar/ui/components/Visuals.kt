@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import app.familiar.ui.pix.Look
 import app.familiar.ui.pix.Sprites
+import app.familiar.ui.pix.floats
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import app.familiar.ui.theme.Cormorant
@@ -96,7 +97,7 @@ fun List<ImageBitmap>.at(beats: Float): ImageBitmap = this[(beats * Sprites.STEP
 
 /** How much a familiar's breath stretches it [t] seconds in, as a share of its height; 0 if it doesn't breathe. */
 fun breath(look: Look, t: Float): Float {
-    if (look.stage == Stage.EGG || look.stone >= 0.5f || look.species == Species.MOTH || look.species == Species.GHOST) return 0f
+    if (look.stage == Stage.EGG || look.stone >= 0.5f || look.species.floats) return 0f
     val period = if (look.sleeping) 3.6f else 2.2f
     return (0.5f - 0.5f * cos(t / period * 2 * Math.PI.toFloat())) * 0.016f
 }

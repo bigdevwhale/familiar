@@ -64,6 +64,8 @@ data class Book(
     @ColumnInfo(defaultValue = "") val spine: String = "",
     /** Where it stands when the shelf is in the reader's own order (1, 2, 3…); 0 for one never moved, which comes first. */
     @ColumnInfo(defaultValue = "0") val place: Int = 0,
+    /** How many times it has been taken up again after being finished. */
+    @ColumnInfo(defaultValue = "0") val reread: Int = 0,
 ) {
     val tagList: List<String> get() = tags.split('\n').map { it.trim() }.filter { it.isNotEmpty() }
     /** The last page you can reach: the book's end, or no limit when its length isn't known. */
@@ -112,6 +114,8 @@ data class Reading(
     val finishedBook: Boolean = false,
     /** Listened rather than read, even if the book is on paper too. */
     @ColumnInfo(defaultValue = "0") val listened: Boolean = false,
+    /** The sound it was read by ([Ambience] name); empty when there was none or it wasn't a ritual. */
+    @ColumnInfo(defaultValue = "") val ambience: String = "",
 ) {
     val pages: Int get() = (toPage - fromPage).coerceAtLeast(0)
     /** What this sitting gave: its pages, or its minutes when no page was given (listening, reading by time). */
@@ -151,7 +155,18 @@ data class Find(
     val readingId: Long = 0,
 )
 
-class Snapshot(val books: List<Book>, val readings: List<Reading>, val pets: List<Pet>, val finds: List<Find> = emptyList())
+/** A line copied out of a book, kept in the album of quotes. */
+@Entity(tableName = "quotes")
+data class Quote(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val bookId: Long,
+    val text: String,
+    /** The page it is on (the minute, for an audiobook); 0 when not said. */
+    val page: Int = 0,
+    val at: Long,
+)
+
+class Snapshot(val books: List<Book>, val readings: List<Reading>, val pets: List<Pet>, val finds: List<Find> = emptyList(), val quotes: List<Quote> = emptyList())
 
 @Dao
 abstract class FamiliarDao {
@@ -207,20 +222,36 @@ abstract class FamiliarDao {
 
     @Insert abstract suspend fun insertFind(f: Find): Long
 
-    /** Removes a book with its sittings. */
+    @Query("SELECT * FROM quotes ORDER BY at DESC")
+    abstract fun observeQuotes(): Flow<List<Quote>>
+
+    @Query("SELECT * FROM quotes ORDER BY at DESC")
+    abstract suspend fun quotes(): List<Quote>
+
+    @Insert abstract suspend fun insertQuote(q: Quote): Long
+    @Update abstract suspend fun updateQuote(q: Quote)
+    @Delete abstract suspend fun deleteQuote(q: Quote)
+
+    @Query("DELETE FROM quotes WHERE bookId = :bookId")
+    abstract suspend fun deleteQuotesOf(bookId: Long)
+
+    /** Removes a book with its sittings and the lines copied out of it. */
     @Transaction
     open suspend fun removeBook(b: Book) {
         deleteReadingsOf(b.id)
+        deleteQuotesOf(b.id)
         deleteBook(b)
     }
 
     @Transaction
-    open suspend fun snapshot() = Snapshot(books(), readings(), pets(), finds())
+    open suspend fun snapshot() = Snapshot(books(), readings(), pets(), finds(), quotes())
 
     @Query("DELETE FROM books") protected abstract suspend fun clearBooks()
     @Query("DELETE FROM readings") protected abstract suspend fun clearReadings()
     @Query("DELETE FROM pets") protected abstract suspend fun clearPets()
     @Query("DELETE FROM finds") protected abstract suspend fun clearFinds()
+    @Query("DELETE FROM quotes") protected abstract suspend fun clearQuotes()
+    @Insert protected abstract suspend fun insertQuotes(l: List<Quote>)
     @Insert protected abstract suspend fun insertFinds(l: List<Find>)
     @Insert protected abstract suspend fun insertBooks(l: List<Book>)
     @Insert protected abstract suspend fun insertReadings(l: List<Reading>)
@@ -232,17 +263,17 @@ abstract class FamiliarDao {
 
     @Transaction
     open suspend fun replaceAll(s: Snapshot) {
-        clearBooks(); clearReadings(); clearPets(); clearFinds()
-        insertBooks(s.books); insertReadings(s.readings); insertPets(s.pets); insertFinds(s.finds)
+        clearBooks(); clearReadings(); clearPets(); clearFinds(); clearQuotes()
+        insertBooks(s.books); insertReadings(s.readings); insertPets(s.pets); insertFinds(s.finds); insertQuotes(s.quotes)
     }
 }
 
 // Every schema change gets a new version and a migration that keeps what's there (1.1.0 lost data without one).
 @Database(
-    entities = [Book::class, Reading::class, Pet::class, Find::class],
-    version = 8,
+    entities = [Book::class, Reading::class, Pet::class, Find::class, Quote::class],
+    version = 9,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8)],
+    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8), AutoMigration(from = 8, to = 9)],
 )
 abstract class FamiliarDatabase : RoomDatabase() {
     abstract fun dao(): FamiliarDao

@@ -1,7 +1,9 @@
 package app.familiar.ui.pix
 
 import app.familiar.domain.Item
+import app.familiar.domain.Place
 import app.familiar.domain.Season
+import app.familiar.domain.Sky
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -25,30 +27,47 @@ object Room {
 
     /** The drawn layers, in the order they stack: what hangs on the wall first, then the floor and what stands on it. */
     private val order = listOf(
-        Item.WINDOW_MOON, Item.WINDOW_STAINED, Item.BOOKSHELF, Item.PORTRAIT, Item.BANNER, Item.LANTERN,
-        Item.RUG_RED, Item.RUG_STARS, Item.ARMCHAIR, Item.CAULDRON, Item.TELESCOPE, Item.MANDRAKE,
-        Item.TREASURE, Item.GLOBE, Item.CANDLES, Item.GARLAND,
+        Item.WINDOW_MOON, Item.WINDOW_STAINED, Item.BOOKSHELF, Item.PORTRAIT, Item.CLOCK, Item.MAP, Item.BANNER, Item.DREAMCATCHER, Item.LANTERN,
+        Item.RUG_RED, Item.RUG_STARS, Item.RUG_MOSS, Item.ARMCHAIR, Item.CAULDRON, Item.TELESCOPE, Item.FIREPLACE, Item.MANDRAKE,
+        Item.TREASURE, Item.GLOBE, Item.AQUARIUM, Item.MUSHROOMS, Item.CANDLES, Item.FIREFLIES, Item.YARN, Item.PLUSH, Item.GARLAND,
     )
 
     private fun layer(item: Item, night: Boolean): String {
         val name = item.name.lowercase()
-        return "room/" + if (item.place == app.familiar.domain.Place.WINDOW) name + if (night) "_night" else "_day" else name
+        // A window and the den itself are drawn twice: by day and by night.
+        return "room/" + if (item.place == Place.WINDOW || item.place == Place.ROOM) name + if (night) "_night" else "_day" else name
     }
+
+    /** The piece has been drawn (art/room, tools/scenery.py): only then is it sold. */
+    fun has(item: Item): Boolean = Painted.of(layer(item, night = true)) != null
+
+    /** What the shop sells: every piece that has been drawn. */
+    val shop: List<Item> by lazy { Item.entries.filter { has(it) } }
 
     /**
      * Frame [at] of [FRAMES] of the den. The room and its pieces are drawn pictures (tools/scenery.py);
      * flames, the brew and the bulbs are lit over them frame by frame. [night] shows the moon in the window.
      */
     @Suppress("UNUSED_PARAMETER")
-    fun scene(placed: Set<Item>, books: List<Int>, night: Boolean, at: Int, season: Season = Season.NONE): Px {
+    fun scene(placed: Set<Item>, books: List<Int>, night: Boolean, at: Int, season: Season = Season.NONE, sky: Sky = Sky.CLEAR): Px {
         val px = Px(W, H)
         val f = at / STEP
         val ph = at / FRAMES.toFloat()
-        if (Painted.lay(px, if (night) "room/room_night" else "room/room_day") == null) px.rect(0, 0, W, H, rgb(54, 42, 62))
+        // The den it is: the attic it starts as, or another one bought and moved into.
+        val den = placed.firstOrNull { it.place == Place.ROOM }?.let { Painted.lay(px, layer(it, night)) }
+        if (den == null && Painted.lay(px, if (night) "room/room_night" else "room/room_day") == null) px.rect(0, 0, W, H, rgb(54, 42, 62))
         for (item in order) {
             if (item !in placed) continue
+            if (item.place == Place.TOY) {
+                // A plaything rolls a little from side to side, as if just batted.
+                val l = Painted.of(layer(item, night)) ?: continue
+                px.blit(l.px, (sin(ph * 2 * PI) * 1.6).roundToInt(), 0)
+                continue
+            }
             val l = Painted.lay(px, layer(item, night)) ?: continue
             light(px, item, l, night, f, ph)
+            // Snow in winter is the season's own (dress); the rest of the year's weather goes by the day.
+            if (item == Item.WINDOW_MOON && season != Season.WINTER) weather(px, l, sky, night, ph)
         }
         dress(px, season, placed, night, f, ph)
         // Warm light around where the familiar sits, stronger with candles and lanterns.
@@ -98,7 +117,56 @@ object Room {
                 }
             }
             Item.TREASURE -> px.set((l.cx + if (f % 2 == 0) -4 else 5).toInt(), l.bottom - 3, WHITE)
+            Item.FIREPLACE -> {
+                val fires = l.flames.ifEmpty { listOf(l.cx to l.bottom - l.h * 0.25f) }
+                fires.forEachIndexed { i, (x, y) -> px.glow(x, y, if ((f + i) % 2 == 0) 13f else 11f, R.ember[4], 70, 4) }
+                // A spark flying up the chimney.
+                val rise = ph
+                val (sx, sy) = fires.first()
+                px.set((sx + 2 * sin(rise * 4 * PI)).roundToInt(), (sy - 4 - rise * 12).toInt(), R.gold[5], (255 * (1 - rise)).toInt())
+            }
+            Item.AQUARIUM -> for (i in 0 until 3) {
+                // Bubbles rising through the water, one after another.
+                val rise = (ph + i / 3f) % 1f
+                val bx = (l.left + l.w * (0.3f + 0.2f * i)).toInt()
+                val by = (l.bottom - l.h * 0.25f - rise * l.h * 0.45f).toInt()
+                px.set(bx, by, R.sky[5], 200)
+            }
+            Item.FIREFLIES -> for (i in 0 until 4) {
+                if ((f + i) % 3 == 0) continue
+                val x = l.left + 3 + ((noise(i, f / 2, 61) + 0.5f) * (l.w - 6)).toInt()
+                val y = l.top + 4 + ((noise(i, f / 2, 62) + 0.5f) * (l.h - 9)).toInt()
+                px.glow(x + 0.5f, y + 0.5f, 2.5f, rgb(220, 250, 140), 160, 2)
+            }
+            Item.MUSHROOMS -> if (night) px.glow(l.cx, l.top + l.h * 0.45f, 12f, R.sky[4], 55, 3, onlyDrawn = true)
             else -> {}
+        }
+    }
+
+    /** What falls outside the window: on its glass only, and looping with the room's frames. */
+    private fun weather(px: Px, l: Painted.Layer, sky: Sky, night: Boolean, ph: Float) {
+        if (sky == Sky.CLEAR) return
+        val pane = l.pane
+        fun glass(x: Int, y: Int) = x in 0 until l.px.w && y in 0 until l.px.h && pane[y * l.px.w + x]
+        val n = when (sky) { Sky.RAIN -> 9; Sky.SNOW -> 9; else -> 4 }
+        for (i in 0 until n) {
+            val x0 = l.left + ((noise(i, 3, 71) + 0.5f) * l.w).toInt()
+            // Each falls the window's height a whole number of times a loop, so the last frame meets the first.
+            val speed = if (sky == Sky.RAIN) 2 + i % 2 else 1
+            val y = l.top + Math.floorMod(((noise(i, 4, 71) + 0.5f + ph * speed) * l.h).toInt(), l.h)
+            when (sky) {
+                Sky.RAIN -> for (k in 0..2) if (glass(x0 - k / 2, y + k)) px.set(x0 - k / 2, y + k, R.sky[if (night) 3 else 5], 190)
+                Sky.SNOW -> {
+                    val x = x0 + (sin((ph + i * 0.3f) * 2 * PI) * 1.2).roundToInt()
+                    if (glass(x, y)) px.set(x, y, WHITE, 230)
+                }
+                else -> {
+                    // A leaf or a petal drifting down, swaying as it goes.
+                    val x = x0 + (sin((ph + i * 0.27f) * 2 * PI) * 2.4).roundToInt()
+                    val c = if (sky == Sky.LEAVES) (if (i % 2 == 0) R.flame[4] else R.gold[3]) else R.pink[3]
+                    if (glass(x, y)) { px.set(x, y, c); if (glass(x + 1, y)) px.set(x + 1, y, c, 170) }
+                }
+            }
         }
     }
 
@@ -113,6 +181,8 @@ object Room {
             app.familiar.domain.Place.FLOOR_RIGHT -> listOf(102, 54, 42, 54)
             app.familiar.domain.Place.RUG -> listOf(24, 84, 96, 24)
             app.familiar.domain.Place.LIGHT -> if (item == Item.LANTERN) listOf(28, 0, 34, 40) else listOf(0, 80, 30, 28)
+            Place.TOY -> listOf(16, 82, 36, 26)
+            Place.ROOM -> listOf(0, 0, W, H)
         }
         return full.crop(x0, y0, w, h)
     }

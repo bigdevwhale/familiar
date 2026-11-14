@@ -58,7 +58,7 @@ object Cards {
     /** The book card with every book on the go rather than one. */
     const val ALL = -1L
 
-    enum class Kind { BOOK, MONTH, YEAR, DEN }
+    enum class Kind { BOOK, MONTH, YEAR, DEN, QUOTE }
 
     enum class Format(val w: Int, val h: Int) { STORY(1080, 1920), POST(1080, 1350) }
 
@@ -77,7 +77,7 @@ object Cards {
         ),
     }
 
-    data class Request(val kind: Kind, val format: Format, val style: Style, val bookId: Long = 0, val month: YearMonth? = null)
+    data class Request(val kind: Kind, val format: Format, val style: Style, val bookId: Long = 0, val month: YearMonth? = null, val quoteId: Long = 0)
 
     suspend fun draw(context: Context, data: FamiliarData, r: Request): Bitmap {
         val bmp = Bitmap.createBitmap(r.format.w, r.format.h, Bitmap.Config.ARGB_8888)
@@ -88,6 +88,7 @@ object Cards {
             Kind.MONTH -> p.month(data, r.month ?: YearMonth.from(data.stats.today))
             Kind.YEAR -> p.year(data)
             Kind.DEN -> p.den(data)
+            Kind.QUOTE -> p.quote(data, data.quotes.firstOrNull { it.id == r.quoteId } ?: data.quotes.firstOrNull() ?: error("no quote"))
         }
         p.compose(blocks)
         return bmp
@@ -284,6 +285,21 @@ private class Painter(val context: Context, val cv: Canvas, val f: Cards.Format,
             glow(W / 2f, y + s * 0.55f, s * 0.75f)
             pix(px, (W - s) / 2f, y, k)
         }
+    }
+
+    /** A line copied out of a book, set large, with the book it is from under it. */
+    fun quote(data: FamiliarData, q: app.familiar.data.Quote): List<Block> {
+        val b = data.book(q.bookId)
+        val n = q.text.length
+        val size = when { n < 70 -> 84f; n < 160 -> 68f; n < 300 -> 54f; n < 520 -> 44f; else -> 38f }
+        val l = layout(str(R.string.quote_marks, q.text), paint(size, st.ink, serif), CW, if (story) 18 else 12)
+        return listOfNotNull(
+            eyebrow(str(R.string.quote)),
+            Block(l.height) { y -> drawLayout(l, M.toFloat(), y) },
+            b?.let { line(it.title, 42f, st.gold, bold) },
+            b?.author?.takeIf { it.isNotBlank() }?.let { line(it, 34f, st.muted, spare = 1) },
+            hero(data, if (story) 4 else 3, spare = 2),
+        )
     }
 
     fun bookArgb(b: Book): Int = (OwnGenre.of(b)?.argb ?: Genre.of(b.genre).argb).toInt()

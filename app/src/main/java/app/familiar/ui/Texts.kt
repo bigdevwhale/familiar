@@ -80,6 +80,15 @@ fun speciesRes(sp: Species): Int = (
         Species.WYRM -> R.string.sp_wyrm
         Species.CHIMERA -> R.string.sp_chimera
         Species.MAGPIE -> R.string.sp_magpie
+        Species.HYDRA -> R.string.sp_hydra
+        Species.BAYUN -> R.string.sp_bayun
+        Species.SNAIL -> R.string.sp_snail
+        Species.SALAMANDER -> R.string.sp_salamander
+        Species.AUTOMATON -> R.string.sp_automaton
+        Species.PIXIE -> R.string.sp_pixie
+        Species.RAVEN -> R.string.sp_raven
+        Species.SPHINX -> R.string.sp_sphinx
+        Species.OWLET -> R.string.sp_owlet
     }
 )
 
@@ -100,6 +109,15 @@ fun speciesLore(sp: Species): String = stringResource(
         Species.WYRM -> R.string.lore_wyrm
         Species.CHIMERA -> R.string.lore_chimera
         Species.MAGPIE -> R.string.lore_magpie
+        Species.HYDRA -> R.string.lore_hydra
+        Species.BAYUN -> R.string.lore_bayun
+        Species.SNAIL -> R.string.lore_snail
+        Species.SALAMANDER -> R.string.lore_salamander
+        Species.AUTOMATON -> R.string.lore_automaton
+        Species.PIXIE -> R.string.lore_pixie
+        Species.RAVEN -> R.string.lore_raven
+        Species.SPHINX -> R.string.lore_sphinx
+        Species.OWLET -> R.string.lore_owlet
     }
 )
 
@@ -121,6 +139,15 @@ fun speciesLoves(sp: Species): String = stringResource(
         Species.WYRM -> R.string.loves_wyrm
         Species.CHIMERA -> R.string.loves_chimera
         Species.MAGPIE -> R.string.loves_magpie
+        Species.HYDRA -> R.string.loves_hydra
+        Species.BAYUN -> R.string.loves_bayun
+        Species.SNAIL -> R.string.loves_snail
+        Species.SALAMANDER -> R.string.loves_salamander
+        Species.AUTOMATON -> R.string.loves_automaton
+        Species.PIXIE -> R.string.loves_pixie
+        Species.RAVEN -> R.string.loves_raven
+        Species.SPHINX -> R.string.loves_sphinx
+        Species.OWLET -> R.string.loves_owlet
     }
 )
 
@@ -138,6 +165,15 @@ fun speciesHow(sp: Species): String = when (sp) {
     Species.WYRM -> pluralStringResource(R.plurals.how_wyrm, Unlocks.WYRM_SITS, Unlocks.WYRM_SITS, Unlocks.WYRM_MINUTES)
     Species.CHIMERA -> pluralStringResource(R.plurals.how_chimera, Unlocks.CHIMERA_GENRES, Unlocks.CHIMERA_GENRES)
     Species.MAGPIE -> pluralStringResource(R.plurals.how_magpie, Unlocks.MAGPIE_SUBS, Unlocks.MAGPIE_SUBS)
+    Species.HYDRA -> pluralStringResource(R.plurals.how_hydra, Unlocks.HYDRA_VOLUMES, Unlocks.HYDRA_VOLUMES)
+    Species.BAYUN -> stringResource(R.string.how_bayun)
+    Species.SNAIL -> pluralStringResource(R.plurals.how_snail, Unlocks.SNAIL_SITS, Unlocks.SNAIL_SITS)
+    Species.SALAMANDER -> pluralStringResource(R.plurals.how_salamander, Unlocks.SALAMANDER_FIRES, Unlocks.SALAMANDER_FIRES)
+    Species.AUTOMATON -> pluralStringResource(R.plurals.how_automaton, Unlocks.AUTOMATON_BOOKS, Unlocks.AUTOMATON_BOOKS)
+    Species.PIXIE -> pluralStringResource(R.plurals.how_pixie, Unlocks.PIXIE_BOOKS, Unlocks.PIXIE_BOOKS, Unlocks.PIXIE_PAGES)
+    Species.RAVEN -> pluralStringResource(R.plurals.how_raven, Unlocks.RAVEN_QUOTES, Unlocks.RAVEN_QUOTES)
+    Species.SPHINX -> pluralStringResource(R.plurals.how_sphinx, Unlocks.SPHINX_BOOKS, Unlocks.SPHINX_BOOKS)
+    Species.OWLET -> stringResource(R.string.how_owlet)
     else -> pluralStringResource(R.plurals.how_starter, Unlocks.STARTERS_BOOKS, Unlocks.STARTERS_BOOKS)
 }
 
@@ -160,6 +196,18 @@ fun itemName(i: app.familiar.domain.Item): String = stringResource(
         app.familiar.domain.Item.RUG_STARS -> R.string.it_rug_stars
         app.familiar.domain.Item.CANDLES -> R.string.it_candles
         app.familiar.domain.Item.LANTERN -> R.string.it_lantern
+        app.familiar.domain.Item.FIREPLACE -> R.string.it_fireplace
+        app.familiar.domain.Item.AQUARIUM -> R.string.it_aquarium
+        app.familiar.domain.Item.MUSHROOMS -> R.string.it_mushrooms
+        app.familiar.domain.Item.CLOCK -> R.string.it_clock
+        app.familiar.domain.Item.MAP -> R.string.it_map
+        app.familiar.domain.Item.DREAMCATCHER -> R.string.it_dreamcatcher
+        app.familiar.domain.Item.RUG_MOSS -> R.string.it_rug_moss
+        app.familiar.domain.Item.FIREFLIES -> R.string.it_fireflies
+        app.familiar.domain.Item.YARN -> R.string.it_yarn
+        app.familiar.domain.Item.PLUSH -> R.string.it_plush
+        app.familiar.domain.Item.ROOM_TOWER -> R.string.it_room_tower
+        app.familiar.domain.Item.ROOM_BURROW -> R.string.it_room_burrow
     }
 )
 

@@ -67,7 +67,7 @@ import app.familiar.ui.theme.U
 import app.familiar.ui.theme.UType
 import kotlinx.coroutines.launch
 
-/** All eight familiars: the ones in the den, eggs waiting to be taken, and the ones still to find. */
+/** Every familiar: the ones in the den, eggs waiting to be taken, and the ones still to find. */
 @Composable
 fun BestiaryScreen(data: FamiliarData, go: Go) {
     val container = LocalContext.current.container
@@ -104,7 +104,7 @@ fun BestiaryScreen(data: FamiliarData, go: Go) {
                             Text(if (pet != null) pet.name else speciesName(sp), style = UType.Strong)
                             Text(
                                 when {
-                                    pet != null -> (if (pet.shiny) "✦ " + stringResource(R.string.shiny) + " · " else "") + "${speciesName(sp)} · ${stageName(Stage.of(pet.mana))}" + if (pet.active) " · " + stringResource(R.string.with_you) else ""
+                                    pet != null -> (if (pet.shiny) "✦ " + stringResource(R.string.shiny) + " · " else "") + "${speciesName(sp)} · ${stageName(Stage.of(pet.mana))}" + if (pet.active) " · " + stringResource(R.string.with_you) else if (data.settings.companion == pet.id) " · " + stringResource(R.string.companion_tag) else ""
                                     open -> stringResource(R.string.egg_waiting)
                                     else -> stringResource(R.string.not_found)
                                 },
@@ -141,8 +141,23 @@ fun BestiaryScreen(data: FamiliarData, go: Go) {
                     val name = speciesName(sp)
                     when {
                         pet != null && !pet.active -> {
+                            val beside = data.settings.companion == pet.id
                             Spacer(Modifier.height(10.dp))
-                            SoftButton(stringResource(R.string.make_active), { container.write { dao().activate(pet.id) } }, Modifier.fillMaxWidth())
+                            SoftButton(stringResource(R.string.make_active), {
+                                // The one keeping company steps forward: the one you read with takes its place beside.
+                                val was = data.pet?.id ?: 0L
+                                container.scope.launch {
+                                    if (beside) container.settings.update { it.copy(companion = was) }
+                                    container.db.dao().activate(pet.id)
+                                    container.changed()
+                                }
+                            }, Modifier.fillMaxWidth())
+                            Spacer(Modifier.height(8.dp))
+                            SoftButton(
+                                stringResource(if (beside) R.string.companion_unset else R.string.companion_set),
+                                { container.scope.launch { container.settings.update { it.copy(companion = if (beside) 0L else pet.id) } } },
+                                Modifier.fillMaxWidth(), color = if (beside) U.c.muted else U.c.mana, soft = if (beside) U.c.surface2 else U.c.manaSoft,
+                            )
                         }
                         pet != null -> {
                             Spacer(Modifier.height(10.dp))
@@ -163,7 +178,7 @@ fun BestiaryScreen(data: FamiliarData, go: Go) {
                     Text(stringResource(R.string.form_of, formName(f), formGenres(f)), style = UType.Small.copy(color = formColor(f)), modifier = Modifier.padding(top = 4.dp))
                 }
             }
-            Text(stringResource(R.string.bestiary_note), style = UType.Small.copy(color = U.c.muted))
+            Text(stringResource(R.string.bestiary_note) + " " + stringResource(R.string.companion_note), style = UType.Small.copy(color = U.c.muted))
         }
     }
     renaming?.let { p ->

@@ -14,7 +14,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ART = os.path.join(ROOT, "app", "build", "art")
 CELL = 160
 COLS = ["Egg", "Hatchling", "Young", "Grown", "Ancient", "Astral", "Shadow", "Bloom", "Sage", "Wild", "Asleep", "Stroked", "Shiny"]
-ROWS = ["Mimic", "Kitsune", "Slime", "Dragon", "Phoenix", "Griffin", "Owlbear", "Moth", "Tanuki", "Sprout", "Ghost", "Bookworm", "Chimera", "Magpie"]
+ROWS = ["Mimic", "Kitsune", "Slime", "Dragon", "Phoenix", "Griffin", "Owlbear", "Moth", "Tanuki", "Sprout", "Ghost", "Bookworm", "Chimera", "Magpie",
+        "Hydra", "Bayun", "Snail", "Salamander", "Automaton", "Pixie", "Raven", "Sphinx", "Owlet"]
 LEFT, TOP = 120, 36
 # One idle frame lasts a sixth of a second in the app (12 beats, two frames a beat, about 4 beats a second).
 MS = 125

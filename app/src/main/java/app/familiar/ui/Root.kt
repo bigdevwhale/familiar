@@ -106,8 +106,9 @@ class FamiliarData(
     val settings: Settings,
     val now: Long,
     val finds: List<Find> = emptyList(),
+    val quotes: List<app.familiar.data.Quote> = emptyList(),
 ) {
-    val stats = Stats(books, readings, pets, now, ZoneId.systemDefault(), settings.dailyGoal, settings.guardedDays)
+    val stats = Stats(books, readings, pets, now, ZoneId.systemDefault(), settings.dailyGoal, settings.guardedDays, quotes, settings.visits)
     val pet: Pet? = stats.active
     val species: Species? = stats.activeSpecies
     val trait: Trait? = pet?.let { Trait.of(it.trait, it.joined) }
@@ -131,6 +132,23 @@ class FamiliarData(
         app.familiar.ui.pix.Look(it.species, st, shiny = it.shiny && st != Stage.EGG, form = if (st >= Stage.ADULT) it.form else Form.NONE, season = season, hatch = 0.5f)
     }
     val owned: Set<Trinket> = finds.mapNotNull { Trinket.of(it.kind) }.toSet()
+
+    /** The familiar keeping the active one company in the den, or null. */
+    val companion: Pet? = pets.firstOrNull { it.id == settings.companion && it.id != pet?.id }
+    fun companionLook(sleeping: Boolean = false, happy: Boolean = false) = companion?.let { lookOfPet(it).copy(sleeping = sleeping, happy = happy) }
+
+    /** How far along every achievement's measure the reader is; worked out when first asked for. */
+    val feats: Map<app.familiar.domain.Feat, Int> by lazy {
+        app.familiar.domain.Feats.values(
+            stats,
+            app.familiar.domain.DenState(
+                furniture = settings.owned.size, quests = settings.claimed.size, dreams = settings.dreams.size, finds = finds.map { it.kind },
+                guarded = settings.guarded.size, shelves = shelves.size, genres = genres.size, companion = companion != null, yearGoal = settings.yearGoal,
+            ),
+        )
+    }
+    /** Achievements earned: written down already, or reached just now. */
+    val earned: Set<String> by lazy { settings.earnedDays.keys + app.familiar.domain.Feats.met(feats) }
 }
 
 /** Everything a tab can open. */
@@ -148,6 +166,9 @@ class Go(private val nav: NavHostController) {
     fun casket() = nav.navigate("casket")
     fun lottery() = nav.navigate("lottery")
     fun visit() = nav.navigate("visit")
+    fun feats() = nav.navigate("feats")
+    fun quotes(bookId: Long = 0) = nav.navigate("quotes?book=$bookId")
+    fun wrapped(year: Int) = nav.navigate("wrapped/$year")
     fun share(kind: app.familiar.ui.share.Cards.Kind, bookId: Long = 0) = nav.navigate("share/${kind.name}?book=$bookId")
     fun back() = nav.popBackStack()
 }
@@ -169,11 +190,19 @@ fun FamiliarRoot(settings: Settings, dim: (Boolean) -> Unit) {
     val readings by dao.observeReadings().collectAsStateWithLifecycle(initialValue = null)
     val pets by dao.observePets().collectAsStateWithLifecycle(initialValue = null)
     val finds by dao.observeFinds().collectAsStateWithLifecycle(initialValue = null)
+    val quotes by dao.observeQuotes().collectAsStateWithLifecycle(initialValue = null)
     // Nothing is drawn from the database until all of it has arrived, so an empty den never flashes by.
-    val loaded = books != null && readings != null && pets != null && finds != null
+    val loaded = books != null && readings != null && pets != null && finds != null && quotes != null
     val minute = rememberNow(60_000)
-    val data = remember(books, readings, pets, finds, settings, minute) {
-        FamiliarData(books.orEmpty(), readings.orEmpty(), pets.orEmpty(), settings, System.currentTimeMillis(), finds.orEmpty())
+    val data = remember(books, readings, pets, finds, quotes, settings, minute) {
+        FamiliarData(books.orEmpty(), readings.orEmpty(), pets.orEmpty(), settings, System.currentTimeMillis(), finds.orEmpty(), quotes.orEmpty())
+    }
+    // What was already earned when achievements arrived (a shelf of years, an import) is written down quietly, once.
+    LaunchedEffect(loaded, settings.onboarded, settings.featsInit) {
+        if (!loaded || !settings.onboarded || settings.featsInit) return@LaunchedEffect
+        val day = data.stats.today.toString()
+        val met = app.familiar.domain.Feats.met(data.feats)
+        container.settings.update { s -> if (s.featsInit) s else s.copy(featsInit = true, earned = s.earned + met.filter { it !in s.earnedDays }.map { "$it|$day" }) }
     }
     // Guardian candles burn by themselves for the quiet days since the last reading.
     LaunchedEffect(loaded, data.stats.today, settings.candles, readings?.size) {
@@ -195,6 +224,14 @@ fun FamiliarRoot(settings: Settings, dim: (Boolean) -> Unit) {
         if (ritual == null || ritual.rang || !settings.candleBell) return@LaunchedEffect
         kotlinx.coroutines.delay((app.familiar.notify.CandleBell.due(ritual, settings.candleMin) - System.currentTimeMillis()).coerceAtLeast(0))
         app.familiar.notify.CandleBell.ringIfDue(context)
+    }
+    // The sleep timer of a listening ritual, the same way.
+    LaunchedEffect(ritual?.sleepAt) {
+        app.familiar.notify.SleepTimer.schedule(context, ritual)
+        val at = ritual?.sleepAt ?: 0L
+        if (at <= System.currentTimeMillis()) return@LaunchedEffect
+        kotlinx.coroutines.delay(at - System.currentTimeMillis())
+        app.familiar.notify.SleepTimer.stopIfDue(context)
     }
     // A candle whose book is gone is put out, so it neither rings nor blocks lighting another.
     LaunchedEffect(loaded, books) {
@@ -259,6 +296,13 @@ fun FamiliarRoot(settings: Settings, dim: (Boolean) -> Unit) {
         composable("casket") { app.familiar.ui.den.CasketScreen(data, go) }
         composable("lottery") { app.familiar.ui.books.LotteryScreen(data, go) }
         composable("visit") { app.familiar.ui.den.VisitScreen(data, go) }
+        composable("feats") { app.familiar.ui.den.FeatsScreen(data, go) }
+        composable("quotes?book={book}", arguments = listOf(navArgument("book") { type = NavType.LongType; defaultValue = 0L })) { e ->
+            app.familiar.ui.books.QuotesScreen(e.arguments?.getLong("book") ?: 0L, data, go)
+        }
+        composable("wrapped/{year}", arguments = listOf(navArgument("year") { type = NavType.IntType })) { e ->
+            if (loaded) app.familiar.ui.tree.WrappedScreen(e.arguments?.getInt("year") ?: data.stats.today.year, data, go)
+        }
         composable("share/{kind}?book={book}", arguments = listOf(navArgument("kind") { type = NavType.StringType }, navArgument("book") { type = NavType.LongType; defaultValue = 0L })) { e ->
             val kind = app.familiar.ui.share.Cards.Kind.entries.firstOrNull { it.name == e.arguments?.getString("kind") } ?: app.familiar.ui.share.Cards.Kind.MONTH
             if (loaded) app.familiar.ui.share.ShareScreen(kind, e.arguments?.getLong("book") ?: 0L, data, go)
@@ -309,6 +353,34 @@ private fun Celebrations(data: FamiliarData) {
                 text = stringResource(R.string.cel_found_text),
                 onDismiss = { container.scope.launch { container.settings.update { it.copy(seenUnlocks = it.seenUnlocks + found.map { x -> x.name }) } } },
             ) { FamiliarArt(lookOf(f, 0, data.stats, false), Modifier.fillMaxSize()) }
+        }
+        s.featsInit -> {
+            // Achievements reached since the last look: hailed together, the highest shown, each paid in mana.
+            val fresh = app.familiar.domain.Feats.all.filter { it.id in data.earned && it.id !in s.earnedDays }
+            if (fresh.isNotEmpty()) {
+                val top = fresh.maxWith(compareBy({ it.rank }, { it.target }))
+                val reward = fresh.sumOf { it.reward }
+                val l = locale()
+                val day = data.stats.today.toString()
+                CelebrateDialog(
+                    color = Color(app.familiar.ui.pix.Badges.argb(top.rank)),
+                    eyebrow = if (fresh.size == 1) stringResource(R.string.feat_new) else androidx.compose.ui.res.pluralStringResource(R.plurals.feat_new_n, fresh.size, fresh.size),
+                    title = app.familiar.content.FeatNames.name(l, top),
+                    text = app.familiar.content.FeatNames.what(l, top) + "\n\n" + stringResource(R.string.feat_reward, reward, pet?.name ?: ""),
+                    onDismiss = {
+                        container.scope.launch {
+                            var mine = false
+                            // Written down first, so a second tap can't pay twice.
+                            container.settings.update { st ->
+                                val add = fresh.filter { it.id !in st.earnedDays }
+                                mine = add.size == fresh.size
+                                st.copy(earned = st.earned + add.map { "${it.id}|$day" })
+                            }
+                            if (mine) { Library.reward(container.db.dao(), reward); container.changed() }
+                        }
+                    },
+                ) { app.familiar.ui.components.BadgeArt(top, true, Modifier.fillMaxSize().padding(18.dp)) }
+            }
         }
     }
 }

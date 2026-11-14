@@ -2,6 +2,7 @@ package app.familiar.domain
 
 import app.familiar.data.Book
 import app.familiar.data.Pet
+import app.familiar.data.Quote
 import app.familiar.data.Reading
 import app.familiar.data.Shelf
 import java.time.Instant
@@ -29,6 +30,10 @@ class Stats(
     val dailyGoal: Int,
     /** Quiet days a guardian candle burned for: they keep the chain like days of reading. */
     val guarded: Set<LocalDate> = emptySet(),
+    /** Lines copied out of books: the raven's feathers. */
+    val quotes: List<Quote> = emptyList(),
+    /** Guests welcomed to the den so far: the owlet's stamps. */
+    val visits: Int = 0,
 ) {
     val today: LocalDate = Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
     private fun day(t: Long): LocalDate = Instant.ofEpochMilli(t).atZone(zone).toLocalDate()
@@ -74,6 +79,18 @@ class Stats(
     val ownFinished: List<OwnGenre> = finished.mapNotNull { OwnGenre.of(it) }.distinct()
     /** The most subgenres finished inside one built-in genre: the magpie's nest. */
     val deepest: Int = ownFinished.filter { !it.standalone }.groupBy { it.parent }.maxOfOrNull { it.value.size } ?: 0
+    /** The most volumes finished in one cycle: the hydra's heads. */
+    val volumes: Int = finished.filter { it.series.isNotBlank() }.groupBy { it.series.trim().lowercase() }.maxOfOrNull { it.value.size } ?: 0
+    /** Books read again and finished again: the cat's tales. */
+    val rereads: Int = finished.sumOf { it.reread }
+    /** Sittings with the phone lying face down for ten minutes or more: the snail's quiet. */
+    val quiet: Int = readings.count { it.stillSec >= Unlocks.SNAIL_SECONDS }
+    /** Sittings by the sound of the fire: the salamander's embers. */
+    val fires: Int = readings.count { it.counts && it.ambience == "FIRE" }
+    val scifi: Int = finished.count { it.genre == Genre.SCIFI.name }
+    val classics: Int = finished.count { it.genre == Genre.CLASSIC.name }
+    /** Poems and little books finished: the pixie's petals. */
+    val little: Int = finished.count { Unlocks.little(it.genre, it.pages, it.audio) }
     val totalPages: Int = readings.sumOf { it.pages }
     val totalMinutes: Int = readings.filter { it.timed }.sumOf { it.minutes }
     val items: List<String> = readings.filter { it.item.isNotBlank() }.sortedByDescending { it.end }.map { it.item }
@@ -116,6 +133,18 @@ object Unlocks {
     const val WYRM_MINUTES = 45
     const val CHIMERA_GENRES = 3
     const val MAGPIE_SUBS = 2
+    const val HYDRA_VOLUMES = 3
+    const val SNAIL_SITS = 5
+    const val SNAIL_SECONDS = 600
+    const val SALAMANDER_FIRES = 10
+    const val AUTOMATON_BOOKS = 2
+    const val PIXIE_BOOKS = 3
+    const val PIXIE_PAGES = 150
+    const val RAVEN_QUOTES = 5
+    const val SPHINX_BOOKS = 2
+
+    /** A poem, or a book on paper or screen shorter than [PIXIE_PAGES] pages. */
+    fun little(genre: String, pages: Int, audio: Boolean): Boolean = genre == Genre.POETRY.name || (!audio && pages in 1 until PIXIE_PAGES)
 
     fun unlocked(s: Stats): Set<Species> {
         val out = s.pets.map { Species.of(it.species) }.toMutableSet()
@@ -131,6 +160,15 @@ object Unlocks {
         if (s.longSits >= WYRM_SITS) out += Species.WYRM
         if (s.ownFinished.size >= CHIMERA_GENRES) out += Species.CHIMERA
         if (s.deepest >= MAGPIE_SUBS) out += Species.MAGPIE
+        if (s.volumes >= HYDRA_VOLUMES) out += Species.HYDRA
+        if (s.rereads >= 1) out += Species.BAYUN
+        if (s.quiet >= SNAIL_SITS) out += Species.SNAIL
+        if (s.fires >= SALAMANDER_FIRES) out += Species.SALAMANDER
+        if (s.scifi >= AUTOMATON_BOOKS) out += Species.AUTOMATON
+        if (s.little >= PIXIE_BOOKS) out += Species.PIXIE
+        if (s.quotes.size >= RAVEN_QUOTES) out += Species.RAVEN
+        if (s.classics >= SPHINX_BOOKS) out += Species.SPHINX
+        if (s.visits >= 1) out += Species.OWLET
         return out
     }
 
@@ -147,6 +185,15 @@ object Unlocks {
         Species.WYRM -> s.longSits.coerceAtMost(WYRM_SITS) to WYRM_SITS
         Species.CHIMERA -> s.ownFinished.size.coerceAtMost(CHIMERA_GENRES) to CHIMERA_GENRES
         Species.MAGPIE -> s.deepest.coerceAtMost(MAGPIE_SUBS) to MAGPIE_SUBS
+        Species.HYDRA -> s.volumes.coerceAtMost(HYDRA_VOLUMES) to HYDRA_VOLUMES
+        Species.BAYUN -> s.rereads.coerceAtMost(1) to 1
+        Species.SNAIL -> s.quiet.coerceAtMost(SNAIL_SITS) to SNAIL_SITS
+        Species.SALAMANDER -> s.fires.coerceAtMost(SALAMANDER_FIRES) to SALAMANDER_FIRES
+        Species.AUTOMATON -> s.scifi.coerceAtMost(AUTOMATON_BOOKS) to AUTOMATON_BOOKS
+        Species.PIXIE -> s.little.coerceAtMost(PIXIE_BOOKS) to PIXIE_BOOKS
+        Species.RAVEN -> s.quotes.size.coerceAtMost(RAVEN_QUOTES) to RAVEN_QUOTES
+        Species.SPHINX -> s.classics.coerceAtMost(SPHINX_BOOKS) to SPHINX_BOOKS
+        Species.OWLET -> s.visits.coerceAtMost(1) to 1
         else -> s.finished.size.coerceAtMost(STARTERS_BOOKS) to STARTERS_BOOKS
     }
 }
@@ -197,6 +244,18 @@ object Mana {
         val own: Boolean = false,
         /** Read as an e-book, whose pages are shorter. */
         val ebook: Boolean = false,
+        /** The book is a volume of a cycle. */
+        val series: Boolean = false,
+        /** The book is being read again. */
+        val reread: Boolean = false,
+        /** Read by the sound of the fire. */
+        val fire: Boolean = false,
+        /** A line has been copied out of this book. */
+        val quoted: Boolean = false,
+        /** A friend's familiar is staying in the den. */
+        val guest: Boolean = false,
+        /** An audiobook, whose length is in minutes. */
+        val audio: Boolean = false,
     )
 
     private fun loves(sp: Species, s: Sitting): Boolean = when (sp) {
@@ -212,6 +271,15 @@ object Mana {
         Species.WYRM -> s.timed && s.minutes >= Unlocks.WYRM_MINUTES
         Species.CHIMERA -> s.own
         Species.MAGPIE -> s.previousGenre != null && s.previousGenre == s.genre
+        Species.HYDRA -> s.series
+        Species.BAYUN -> s.reread
+        Species.SNAIL -> s.timed && s.stillFraction >= 0.5f
+        Species.SALAMANDER -> s.fire
+        Species.AUTOMATON -> s.genre == Genre.SCIFI
+        Species.PIXIE -> Unlocks.little(s.genre.name, s.bookPages, s.audio)
+        Species.RAVEN -> s.quoted
+        Species.SPHINX -> s.genre == Genre.CLASSIC
+        Species.OWLET -> s.guest
         Species.MIMIC, Species.SLIME -> false
     }
 

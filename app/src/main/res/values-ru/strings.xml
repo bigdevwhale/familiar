@@ -131,7 +131,7 @@
     <string name="book_edit">Книга</string>
     <string name="from_shelf">Выбрать с полки</string>
     <string name="bestiary">Бестиарий</string>
-    <string name="bestiary_text">На этих страницах живут четырнадцать фамильяров. Читай, и они придут к тебе один за другим, яйцами. Читаешь всегда с одним; остальные отдыхают в логове со всем, что успели съесть.</string>
+    <string name="bestiary_text">На этих страницах живут двадцать три фамильяра. Читай, и они придут к тебе один за другим, яйцами. Читаешь всегда с одним; остальные отдыхают в логове со всем, что успели съесть.</string>
     <string name="bestiary_note">Мана достаётся тому, с кем ты читаешь. Сменить можно когда угодно.</string>
     <string name="with_you">с тобой</string>
     <string name="egg_waiting">Яйцо ждёт тебя</string>
@@ -332,7 +332,7 @@
     <string name="ob_intro2">Читай, и он вылупится, вырастет и научится новому. Забудешь о книгах, и он медленно окаменеет, пока несколько страниц не снимут чары.</string>
     <string name="ob_choose">Выбери яйцо</string>
     <string name="ob_choose_text">Каждый фамильяр любит своё чтение. Ещё девятерых найдёшь по пути.</string>
-    <string name="ob_others">Дракончик, феникс, грифон, совомедведь, лунный мотылёк, тануки, росток, призрак, книжный червь, химера и сорока приходят к тем, кто читает.</string>
+    <string name="ob_others">Дракончик, феникс, грифон, совомедведь, лунный мотылёк, тануки, росток, призрак, книжный червь, химера, сорока и ещё девять других приходят к тем, кто читает.</string>
     <string name="ob_names">Как назовём фамильяра?</string>
     <string name="ob_pet_name">Имя фамильяра</string>
     <string name="ob_your_name">Твоё имя</string>
@@ -1049,4 +1049,247 @@
     <string name="decor_bookend">Подставка</string>
     <string name="shelf_decorate">Украсить</string>
     <string name="shelf_decorate_hint">Нажмите «+», чтобы поставить украшение, или на украшение, чтобы сменить его; удерживайте и тяните, чтобы переставить</string>
+    <!-- Ещё девять фамильяров -->
+    <string name="sp_hydra">Гидра</string>
+    <string name="sp_bayun">Кот-баюн</string>
+    <string name="sp_snail">Улитка</string>
+    <string name="sp_salamander">Саламандра</string>
+    <string name="sp_automaton">Автоматон</string>
+    <string name="sp_pixie">Пикси</string>
+    <string name="sp_raven">Ворон</string>
+    <string name="sp_sphinx">Сфинкс</string>
+    <string name="sp_owlet">Почтовый совёнок</string>
+    <string name="lore_hydra">На каждый том отращивает новую голову, и каждой интересно, что дальше. Читает циклы, чтобы ни одна не скучала.</string>
+    <string name="lore_bayun">Кот из старых сказок: знает все истории наизусть и всё равно просит ещё раз. Громче всего мурлычет над книгой, которую уже слышал.</string>
+    <string name="lore_snail">Носит на спине тихий домик. Положи телефон экраном вниз, и она выглянет из раковины послушать.</string>
+    <string name="lore_salamander">Живёт в очаге и читает при собственном свете. Треск камина — её любимый звук.</string>
+    <string name="lore_automaton">Маленький заводной читатель, который заводится от историй о будущем. Тикает быстрее, когда взлетают ракеты.</string>
+    <string name="lore_pixie">Ростом с закладку. Любит стихи и тонкие книжки, которые можно унести целиком.</string>
+    <string name="lore_raven">Помнит каждую выписанную строчку и повторяет её в самый подходящий момент.</string>
+    <string name="lore_sphinx">Загадывает загадки, вычитанные в классике, и тихо радуется, когда ты знаешь ответ.</string>
+    <string name="lore_owlet">Носит письма из логова в логово. Когда в гости приходит чужой фамильяр, не может усидеть на месте.</string>
+    <string name="loves_hydra" formatted="false">тома циклов (+50%)</string>
+    <string name="loves_bayun" formatted="false">книги, которые ты перечитываешь (+50%)</string>
+    <string name="loves_snail" formatted="false">чтение с телефоном экраном вниз (+50%)</string>
+    <string name="loves_salamander" formatted="false">чтение под треск камина (+50%)</string>
+    <string name="loves_automaton" formatted="false">фантастику (+50%)</string>
+    <string name="loves_pixie" formatted="false">стихи и книги до 150 страниц (+50%)</string>
+    <string name="loves_raven" formatted="false">книги, из которых ты выписываешь цитаты (+50%)</string>
+    <string name="loves_sphinx" formatted="false">классику (+50%)</string>
+    <string name="loves_owlet" formatted="false">чтение, пока в логове гость (+50%)</string>
+    <string name="how_bayun">Перечитай дочитанную книгу до конца.</string>
+    <string name="how_owlet">Прими в гости фамильяра друга по QR-коду.</string>
+    <plurals name="how_hydra">
+        <item quantity="one">Дочитай %d том одного цикла.</item>
+        <item quantity="few">Дочитай %d тома одного цикла.</item>
+        <item quantity="many">Дочитай %d томов одного цикла.</item>
+        <item quantity="other">Дочитай %d тома одного цикла.</item>
+    </plurals>
+    <plurals name="how_snail">
+        <item quantity="one">Почитай %d раз с телефоном экраном вниз хотя бы десять минут.</item>
+        <item quantity="few">Почитай %d раза с телефоном экраном вниз хотя бы десять минут.</item>
+        <item quantity="many">Почитай %d раз с телефоном экраном вниз хотя бы десять минут.</item>
+        <item quantity="other">Почитай %d раза с телефоном экраном вниз хотя бы десять минут.</item>
+    </plurals>
+    <plurals name="how_salamander">
+        <item quantity="one">Почитай под треск камина %d раз.</item>
+        <item quantity="few">Почитай под треск камина %d раза.</item>
+        <item quantity="many">Почитай под треск камина %d раз.</item>
+        <item quantity="other">Почитай под треск камина %d раза.</item>
+    </plurals>
+    <plurals name="how_automaton">
+        <item quantity="one">Дочитай %d фантастическую книгу.</item>
+        <item quantity="few">Дочитай %d фантастические книги.</item>
+        <item quantity="many">Дочитай %d фантастических книг.</item>
+        <item quantity="other">Дочитай %d фантастические книги.</item>
+    </plurals>
+    <plurals name="how_pixie">
+        <item quantity="one">Дочитай %1$d сборник стихов или книгу до %2$d страниц.</item>
+        <item quantity="few">Дочитай %1$d сборника стихов или книги до %2$d страниц.</item>
+        <item quantity="many">Дочитай %1$d сборников стихов или книг до %2$d страниц.</item>
+        <item quantity="other">Дочитай %1$d сборника стихов или книги до %2$d страниц.</item>
+    </plurals>
+    <plurals name="how_raven">
+        <item quantity="one">Выпиши %d цитату.</item>
+        <item quantity="few">Выпиши %d цитаты.</item>
+        <item quantity="many">Выпиши %d цитат.</item>
+        <item quantity="other">Выпиши %d цитаты.</item>
+    </plurals>
+    <plurals name="how_sphinx">
+        <item quantity="one">Дочитай %d книгу классики.</item>
+        <item quantity="few">Дочитай %d книги классики.</item>
+        <item quantity="many">Дочитай %d книг классики.</item>
+        <item quantity="other">Дочитай %d книги классики.</item>
+    </plurals>
+    <!-- Вторая партия мебели -->
+    <string name="it_fireplace">Камин</string>
+    <string name="it_aquarium">Аквариум с крошечным кракеном</string>
+    <string name="it_mushrooms">Светящиеся грибы</string>
+    <string name="it_clock">Часы с кукушкой</string>
+    <string name="it_map">Карта выдуманных земель</string>
+    <string name="it_dreamcatcher">Ловец снов</string>
+    <string name="it_rug_moss">Моховой ковёр</string>
+    <string name="it_fireflies">Банка светлячков</string>
+    <string name="it_yarn">Клубок ниток</string>
+    <string name="it_plush">Плюшевый дракон</string>
+    <string name="it_room_tower">Башня волшебника</string>
+    <string name="it_room_burrow">Нора под холмом</string>
+    <string name="furnish_dens">Другое логово</string>
+    <string name="furnish_dens_text">Переезжаете со всем добром: мебель остаётся на своих местах. Убери, чтобы вернуться на чердак.</string>
+    <!-- Цитаты, перечитывание, спутник, таймер сна, достижения -->
+    <string name="quotes">Цитаты</string>
+    <string name="quote">Цитата</string>
+    <string name="quotes_text">Строчки, которые ты выписываешь из книг. Ворон помнит каждую.</string>
+    <string name="quotes_empty">Пока ничего не выписано. Открой книгу или зажги свечу и сохрани строчку, которая понравилась.</string>
+    <string name="quote_add">Выписать цитату</string>
+    <string name="quote_edit">Изменить цитату</string>
+    <string name="quote_hint">Строчка, слово в слово</string>
+    <string name="quote_page">с. %d</string>
+    <string name="quote_marks">«%s»</string>
+    <string name="quotes_all">Все цитаты: %d</string>
+    <string name="reread">Перечитать</string>
+    <string name="reread_title">Перечитать?</string>
+    <string name="reread_text">Книга вернётся на первую страницу и на полку «Читаю». Прошлые чтения останутся; днём окончания станет тот, когда ты дочитаешь её снова.</string>
+    <string name="reread_n">Прочитано раз: %d</string>
+    <string name="feast_crumbs">%1$s подбирает крошки со стола: +%2$d</string>
+    <string name="companion_set">Поселить рядом</string>
+    <string name="companion_unset">Отправить отдыхать</string>
+    <string name="companion_tag">рядом в логове</string>
+    <string name="companion_note">Ещё одного можно поселить в логове рядом: он подбирает десятую часть каждого пира.</string>
+    <string name="sleep_timer">Таймер сна</string>
+    <string name="sleep_min">%d мин</string>
+    <string name="sleep_text">Засыпаешь под книгу? Пластинка остановится сама, воспроизведение встанет на паузу, а засчитаются только минуты до этого.</string>
+    <string name="sleep_left">Пластинка остановится через %d мин, как и то, что сейчас играет.</string>
+    <string name="sleep_done">Таймер сна сработал в %s. Минуты засчитаны до этого времени.</string>
+    <string name="feats">Достижения</string>
+    <string name="feats_text">Медали за то, что и как ты читаешь. Каждая даёт фамильяру немного маны.</string>
+    <string name="feats_reading">Чтение</string>
+    <string name="feats_habits">Привычки</string>
+    <string name="feats_shelf">Полка</string>
+    <string name="feats_familiars">Фамильяры</string>
+    <string name="feats_den">Логово</string>
+    <string name="feat_new">Достижение</string>
+    <plurals name="feat_new_n">
+        <item quantity="one">%d достижение</item>
+        <item quantity="few">%d достижения</item>
+        <item quantity="many">%d достижений</item>
+        <item quantity="other">%d достижения</item>
+    </plurals>
+    <string name="feat_reward">%2$s получает +%1$d маны.</string>
+    <string name="feat_secret">Секретное</string>
+    <string name="feat_secret_text">Никто не скажет, как его получить. Тут нужна удача.</string>
+    <string name="feat_earned_on">Получено %s</string>
+    <string name="feat_earned">Получено</string>
+    <string name="feat_gives">+%d маны</string>
+    <!-- Итоги года -->
+    <string name="wrap_card">Итоги %d</string>
+    <string name="wrap_card_sub">Год в картинках: листай, как историю</string>
+    <string name="wrap_eyebrow">Твой год в книгах</string>
+    <string name="wrap_intro">%s помнит каждую страницу. Листай.</string>
+    <string name="wrap_empty">В этом году пока ничего не прочитано. %s ждёт.</string>
+    <string name="wrap_read">Прочитано</string>
+    <plurals name="wrap_pages" tools:ignore="ImpliedQuantity">
+        <item quantity="one">страница</item>
+        <item quantity="few">страницы</item>
+        <item quantity="many">страниц</item>
+        <item quantity="other">страницы</item>
+    </plurals>
+    <plurals name="wrap_books" tools:ignore="ImpliedQuantity">
+        <item quantity="one">книга</item>
+        <item quantity="few">книги</item>
+        <item quantity="many">книг</item>
+        <item quantity="other">книги</item>
+    </plurals>
+    <plurals name="wrap_hours" tools:ignore="ImpliedQuantity">
+        <item quantity="one">час</item>
+        <item quantity="few">часа</item>
+        <item quantity="many">часов</item>
+        <item quantity="other">часа</item>
+    </plurals>
+    <string name="wrap_mana">маны</string>
+    <string name="wrap_days_eyebrow">С книгой</string>
+    <plurals name="wrap_days" tools:ignore="ImpliedQuantity">
+        <item quantity="one">день с чтением</item>
+        <item quantity="few">дня с чтением</item>
+        <item quantity="many">дней с чтением</item>
+        <item quantity="other">дня с чтением</item>
+    </plurals>
+    <plurals name="wrap_streak">
+        <item quantity="one">Самая длинная серия: %d день</item>
+        <item quantity="few">Самая длинная серия: %d дня подряд</item>
+        <item quantity="many">Самая длинная серия: %d дней подряд</item>
+        <item quantity="other">Самая длинная серия: %d дня подряд</item>
+    </plurals>
+    <string name="wrap_best_day">Самый большой день: %1$s, страниц: %2$d</string>
+    <string name="wrap_best_month">Самый читающий месяц: %s</string>
+    <string name="wrap_first">Первая книга года</string>
+    <string name="wrap_last">А последняя на сегодня: %s</string>
+    <string name="wrap_genre">Жанр года</string>
+    <string name="wrap_longest">Самая толстая книга</string>
+    <string name="wrap_author">Автор года: %1$s, %2$s</string>
+    <string name="wrap_when">Когда ты читаешь</string>
+    <string name="wrap_part_morning">По утрам</string>
+    <string name="wrap_part_day">Днём</string>
+    <string name="wrap_part_evening">По вечерам</string>
+    <string name="wrap_part_night">По ночам</string>
+    <plurals name="wrap_listens">
+        <item quantity="one">Прослушиваний: %d</item>
+        <item quantity="few">Прослушиваний: %d</item>
+        <item quantity="many">Прослушиваний: %d</item>
+        <item quantity="other">Прослушиваний: %d</item>
+    </plurals>
+    <string name="wrap_stars">Пять звёзд</string>
+    <plurals name="wrap_stars_n">
+        <item quantity="one">%d любимая книга</item>
+        <item quantity="few">%d любимые книги</item>
+        <item quantity="many">%d любимых книг</item>
+        <item quantity="other">%d любимые книги</item>
+    </plurals>
+    <string name="wrap_quote">Строчка года</string>
+    <plurals name="wrap_quotes">
+        <item quantity="one">Выписана %d цитата</item>
+        <item quantity="few">Выписаны %d цитаты</item>
+        <item quantity="many">Выписано %d цитат</item>
+        <item quantity="other">Выписаны %d цитаты</item>
+    </plurals>
+    <string name="wrap_den">В логове</string>
+    <string name="wrap_new_pets">Новенькие в логове: %s</string>
+    <plurals name="wrap_finds">
+        <item quantity="one">Принесена %d находка</item>
+        <item quantity="few">Принесены %d находки</item>
+        <item quantity="many">Принесено %d находок</item>
+        <item quantity="other">Принесены %d находки</item>
+    </plurals>
+    <plurals name="wrap_feats">
+        <item quantity="one">Получено %d достижение</item>
+        <item quantity="few">Получены %d достижения</item>
+        <item quantity="many">Получено %d достижений</item>
+        <item quantity="other">Получены %d достижения</item>
+    </plurals>
+    <string name="wrap_end">%s говорит спасибо за этот год. Переворачиваем страницу.</string>
+    <!-- Открытка визита -->
+    <string name="visit_card_eyebrow">Фамильяр идёт в гости</string>
+    <string name="visit_card_from">от читателя: %s</string>
+    <string name="visit_card_rec">Несёт с собой совет</string>
+    <string name="visit_card_how_title">Впусти в гости</string>
+    <string name="visit_card_how">В «Фамильяре»: Логово → Визиты → сканируй код или выбери эту картинку.</string>
+    <string name="visit_card_gift">Погостит день и оставит подарок.</string>
+    <!-- Логово, переложенное заново -->
+    <string name="den_more">По логову</string>
+    <string name="den_furnish">Обустроить</string>
+    <string name="den_guest_here">В гостях</string>
+    <string name="den_visit_sub">QR-карточка</string>
+    <string name="feat_next">Ближайшая медаль</string>
+    <!-- Ещё украшения для полки -->
+    <string name="decor_teapot">Чайник</string>
+    <string name="decor_potions">Зелья</string>
+    <string name="decor_owl">Сова</string>
+    <string name="decor_dragon">Спящий дракончик</string>
+    <string name="decor_lamp">Лампа для чтения</string>
+    <string name="decor_cactus">Кактус</string>
+    <string name="decor_skull">Череп со свечой</string>
+    <string name="decor_terrarium">Террариум</string>
+    <!-- Украшения полки: каждое по одному -->
+    <string name="decor_remove">Убрать</string>
+    <string name="decor_elsewhere">уже на полке</string>
 </resources>

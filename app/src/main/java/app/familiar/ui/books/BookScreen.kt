@@ -22,6 +22,8 @@ import androidx.compose.material.icons.rounded.ViewWeek
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.FormatQuote
+import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -78,6 +80,8 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
     // The day it was finished (or put down) can be moved: an imported book arrives dated the day of the import.
     var redating by remember { mutableStateOf(false) }
     var restarting by remember { mutableStateOf(false) }
+    var quoting by remember { mutableStateOf(false) }
+    var rereading by remember { mutableStateOf(false) }
     if (book == null) {
         LaunchedEffect(Unit) { go.back() }
         return
@@ -174,8 +178,27 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
                                 )
                             }
                         }
+                        if (book.reread > 0) Text(stringResource(R.string.reread_n, book.reread + 1), style = UType.Small.copy(color = U.c.gold))
                     }
+                    Spacer(Modifier.height(8.dp))
+                    // Back to the first page, for the pleasure of it: the storyteller cat loves that.
+                    SoftButton(stringResource(R.string.reread), { rereading = true }, Modifier.fillMaxWidth(), icon = Icons.Rounded.Replay)
                 }
+            }
+
+            // Lines copied out of it.
+            if (book.shelfOf != Shelf.WANT) {
+                val quotes = data.quotes.filter { it.bookId == id }
+                SectionTitle(stringResource(R.string.quotes))
+                if (quotes.isNotEmpty()) UCard(onClick = { go.quotes(id) }) {
+                    quotes.take(2).forEachIndexed { i, q ->
+                        if (i > 0) HorizontalDivider(Modifier.padding(vertical = 10.dp), color = U.c.line)
+                        Text(stringResource(R.string.quote_marks, q.text), style = UType.Quote.copy(fontSize = 18.sp, lineHeight = 23.sp), maxLines = 4, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        quotePlace(q, book).takeIf { it.isNotBlank() }?.let { Text(it, style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 4.dp)) }
+                    }
+                    if (quotes.size > 2) Text(stringResource(R.string.quotes_all, quotes.size), style = UType.Small.copy(color = U.c.accent), modifier = Modifier.padding(top = 10.dp))
+                }
+                SoftButton(stringResource(R.string.quote_add), { quoting = true }, Modifier.fillMaxWidth().padding(top = if (quotes.isEmpty()) 0.dp else 8.dp), icon = Icons.Rounded.FormatQuote)
             }
 
             // A note for later: what the book was like, why it was put down.
@@ -237,6 +260,16 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
         container.write { dao().updateBook(book.copy(started = start, added = book.added.coerceAtMost(start))) }
         restarting = false
     }
+    if (quoting) QuoteDialog(book, null, { quoting = false }, page = if (book.shelfOf == Shelf.READING && !book.audio) book.page else 0) { text, page ->
+        container.write { dao().insertQuote(app.familiar.data.Quote(bookId = book.id, text = text, page = page, at = System.currentTimeMillis())) }
+    }
+    if (rereading) ConfirmDialog(
+        title = stringResource(R.string.reread_title),
+        text = stringResource(R.string.reread_text),
+        confirm = stringResource(R.string.reread),
+        onConfirm = { container.write { app.familiar.data.Library.reread(dao(), book) } },
+        onDismiss = { rereading = false },
+    )
     if (abandoning) AbandonDialog({ abandoning = false }) { why ->
         container.write { dao().updateBook(book.copy(shelf = Shelf.ABANDONED.name, finished = System.currentTimeMillis(), note = why.ifBlank { book.note })) }
         abandoning = false

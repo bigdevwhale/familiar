@@ -19,7 +19,11 @@ import java.time.ZoneId
 object Library {
     const val SHINY_ODDS = 16
 
-    class Result(val reading: Reading, val feast: Feast, val petId: Long, val manaBefore: Int, val find: Trinket? = null)
+    /** [crumbs]: what fell from the table to the familiar keeping company, [companionId]. */
+    class Result(val reading: Reading, val feast: Feast, val petId: Long, val manaBefore: Int, val find: Trinket? = null, val crumbs: Int = 0, val companionId: Long = 0)
+
+    /** The share of a feast that falls to the companion: a tenth. */
+    const val CRUMBS = 10
 
     /** Records reading [book] up to [toPage] and feeds the active familiar. */
     suspend fun sit(
@@ -37,6 +41,12 @@ object Library {
         zone: ZoneId = ZoneId.systemDefault(),
         /** Quiet days kept by guardian candles, part of the streak. */
         guarded: Set<java.time.LocalDate> = emptySet(),
+        /** The sound it was read by ([Ambience] name), or empty. */
+        ambience: String = "",
+        /** A friend's familiar is staying in the den. */
+        guest: Boolean = false,
+        /** The familiar keeping the active one company (its id), or 0: it gets the crumbs. */
+        companionId: Long = 0,
     ): Result? {
         val pet = dao.activePet() ?: dao.pets().firstOrNull() ?: return null
         val sp = Species.of(pet.species)
@@ -60,12 +70,14 @@ object Library {
                 night = isNight(start, zone), genre = Genre.of(book.genre), previousGenre = previousGenre,
                 bookPages = book.pages, streak = streak, gapDays = gapDays, finishedBook = done && book.shelfOf != Shelf.DONE,
                 item = item, listened = listened, morning = isMorning(start, zone), own = book.sub.isNotBlank(),
-                ebook = book.ebook,
+                ebook = book.ebook, series = book.series.isNotBlank(), reread = book.reread > 0, fire = ambience == Ambience.FIRE.name,
+                quoted = dao.quotes().any { it.bookId == book.id }, guest = guest, audio = book.audio,
             ),
         )
         val reading = Reading(
             bookId = book.id, petId = pet.id, start = start, end = end, fromPage = fromPage, toPage = to, mana = feast.total,
             timed = timed, stillSec = stillSec, item = item.trim(), finishedBook = done && book.shelfOf != Shelf.DONE, listened = listened,
+            ambience = ambience,
         )
         val id = dao.insertReading(reading)
         dao.updateBook(
@@ -77,6 +89,12 @@ object Library {
             )
         )
         dao.feed(pet.id, feast.total)
+        val companion = dao.pets().firstOrNull { it.id == companionId && it.id != pet.id }
+        val crumbs = if (companion != null) feast.total / CRUMBS else 0
+        if (companion != null && crumbs > 0) {
+            dao.feed(companion.id, crumbs)
+            if (companion.mana < Stage.ADULT.from && companion.mana + crumbs >= Stage.ADULT.from) settleForms(dao)
+        }
         if (pet.mana < Stage.ADULT.from && pet.mana + feast.total >= Stage.ADULT.from) settleForms(dao)
         // Now and then the familiar brings something back from the story.
         val day = Instant.ofEpochMilli(end).atZone(zone).toLocalDate()
@@ -85,7 +103,7 @@ object Library {
             trait = Trait.of(pet.trait, pet.joined), season = Season.of(day), owned = dao.finds().mapNotNull { Trinket.of(it.kind) }.toSet(),
         )
         if (find != null) dao.insertFind(Find(kind = find.name, at = end, petId = pet.id, readingId = id))
-        return Result(reading.copy(id = id), feast, pet.id, pet.mana, find)
+        return Result(reading.copy(id = id), feast, pet.id, pet.mana, find, crumbs, companion?.id ?: 0)
     }
 
     /** Gives every grown familiar without a form the one its meals lean to. Forms never change once given. */
@@ -110,6 +128,11 @@ object Library {
         val t = fresh[Math.floorMod(seed, fresh.size.toLong()).toInt()]
         dao.insertFind(Find(kind = t.name, at = now, petId = pet.id))
         return t
+    }
+
+    /** Takes a finished book up again from its first page. Its sittings stay; it is dated anew when finished again. */
+    suspend fun reread(dao: FamiliarDao, book: Book, now: Long = System.currentTimeMillis()) {
+        dao.updateBook(book.copy(shelf = Shelf.READING.name, page = 0, reread = book.reread + 1, started = now, finished = null))
     }
 
     suspend fun reward(dao: FamiliarDao, mana: Int) {

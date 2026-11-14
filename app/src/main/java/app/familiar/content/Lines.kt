@@ -55,6 +55,22 @@ object Lines {
         return list[Math.floorMod(seed, list.size)].replace("{n}", name)
     }
 
+    /** A line about the familiar and the one living beside it, [mate]. */
+    fun duo(locale: Locale, name: String, mate: String, seed: Int): String {
+        val list = if (locale.language == "ru") listOf(
+            "{n} и {m} делят одну подушку и спорят, чья очередь слушать.",
+            "{n} пересказывает главу, {m} слушает и кивает.",
+            "{m} приносит закладку, {n} делает вид, что так и было задумано.",
+            "{n} и {m} греются у свечи, бок о бок.",
+        ) else listOf(
+            "{n} and {m} share one cushion and argue about whose turn it is to listen.",
+            "{n} retells the chapter; {m} listens and nods.",
+            "{m} fetches the bookmark; {n} pretends that was the plan.",
+            "{n} and {m} warm up by the candle, side by side.",
+        )
+        return list[Math.floorMod(seed, list.size)].replace("{n}", name).replace("{m}", mate)
+    }
+
     /** A line for the days of a season. */
     fun season(locale: Locale, s: Season, name: String): String? {
         val ru = locale.language == "ru"
@@ -144,6 +160,42 @@ object Lines {
             State.HUNGRY to listOf("{n} rummages in the nest: nothing new to look at.", "{n} eyes your bookmark. It's very shiny."),
             State.FED to listOf("{n} sorts its treasures by shade, very carefully.", "{n} chatters about the book like it's gossip."),
         ),
+        Species.HYDRA to mapOf(
+            State.HUNGRY to listOf("{n}'s heads argue about which volume comes next.", "One of {n}'s heads is asleep. The others want a chapter."),
+            State.FED to listOf("{n}'s heads retell the chapter to each other, all at once.", "{n} nods off one head at a time."),
+        ),
+        Species.BAYUN to mapOf(
+            State.HUNGRY to listOf("{n} walks round the bookshelf, humming an old tale.", "{n} paws at a book it knows by heart. Again?"),
+            State.FED to listOf("{n} purrs the story back to itself, word for word.", "{n} curls up on a book it has heard before."),
+        ),
+        Species.SNAIL to mapOf(
+            State.HUNGRY to listOf("{n} peeks out of the shell: is it quiet enough to read?", "{n} waits. It's good at waiting."),
+            State.FED to listOf("{n} draws back into its little house, content.", "{n} leaves a slow, shining trail across the page."),
+        ),
+        Species.SALAMANDER to mapOf(
+            State.HUNGRY to listOf("{n} glows a little dimmer. A page by the fire?", "{n} pokes at the cold embers with its tail."),
+            State.FED to listOf("{n} basks in the hearth, crackling softly.", "{n} warms the page for you."),
+        ),
+        Species.AUTOMATON to mapOf(
+            State.HUNGRY to listOf("{n} ticks slowly. It needs winding with a chapter.", "{n} blinks its lamp: story not found."),
+            State.FED to listOf("{n} whirrs happily, gears full of stars.", "{n} files the chapter away under “wonderful”."),
+        ),
+        Species.PIXIE to mapOf(
+            State.HUNGRY to listOf("{n} sits on the bookmark, swinging its legs.", "{n} looks for a book small enough to carry."),
+            State.FED to listOf("{n} hums a verse and scatters a little dust.", "{n} sleeps between two pages, like a pressed flower."),
+        ),
+        Species.RAVEN to mapOf(
+            State.HUNGRY to listOf("{n} taps the inkwell with its beak. A line to keep?", "{n} recites an old quote, hoping for a new one."),
+            State.FED to listOf("{n} repeats the best line under its breath.", "{n} tucks a new line under its wing."),
+        ),
+        Species.SPHINX to mapOf(
+            State.HUNGRY to listOf("{n} asks: what has a spine but no bones? A book, please.", "{n} gazes into the distance, waiting for a classic."),
+            State.FED to listOf("{n} smiles like it knows how the book ends.", "{n} folds its paws, pleased with your answer."),
+        ),
+        Species.OWLET to mapOf(
+            State.HUNGRY to listOf("{n} checks the letterbox. No stories today?", "{n} sorts stamps and waits for a page."),
+            State.FED to listOf("{n} hoots softly and tucks a letter under its wing.", "{n} dozes on the letterbox, one eye open for guests."),
+        ),
     )
 
     private val RU: Map<Species, Map<State, List<String>>> = mapOf(
@@ -203,6 +255,42 @@ object Lines {
         Species.MAGPIE to mapOf(
             State.HUNGRY to listOf("{n} роется в гнезде: ничего нового.", "{n} косится на твою закладку. Она такая блестящая."),
             State.FED to listOf("{n} раскладывает сокровища по оттенкам, очень тщательно.", "{n} стрекочет о книге, как о свежей сплетне."),
+        ),
+        Species.HYDRA to mapOf(
+            State.HUNGRY to listOf("Головы спорят, какой том следующий. {n} ждёт.", "Одна голова спит, остальные просят главу. {n} скучает."),
+            State.FED to listOf("Головы пересказывают друг другу главу, все разом. {n} сияет.", "{n} засыпает по одной голове."),
+        ),
+        Species.BAYUN to mapOf(
+            State.HUNGRY to listOf("{n} ходит вокруг полки и мурлычет старую сказку.", "{n} трогает лапой знакомую книгу. Ещё раз?"),
+            State.FED to listOf("{n} мурлычет историю слово в слово.", "{n} сворачивается на книге, которую знает наизусть."),
+        ),
+        Species.SNAIL to mapOf(
+            State.HUNGRY to listOf("{n} выглядывает из раковины: уже тихо, можно читать?", "{n} ждёт. Ждать {n} умеет."),
+            State.FED to listOf("{n} прячется в домик, всё хорошо.", "{n} оставляет на странице медленный блестящий след."),
+        ),
+        Species.SALAMANDER to mapOf(
+            State.HUNGRY to listOf("{n} светится чуть тусклее. Страничку у камина?", "{n} ворошит хвостом остывшие угольки."),
+            State.FED to listOf("{n} греется в очаге и тихо потрескивает.", "{n} согревает для тебя страницу."),
+        ),
+        Species.AUTOMATON to mapOf(
+            State.HUNGRY to listOf("{n} тикает медленно: пора завести главой.", "{n} мигает лампочкой: история не найдена."),
+            State.FED to listOf("{n} довольно жужжит, шестерёнки полны звёзд.", "{n} раскладывает главу по полочкам: «чудесно»."),
+        ),
+        Species.PIXIE to mapOf(
+            State.HUNGRY to listOf("{n} сидит на закладке и болтает ножками.", "{n} ищет книжку, которую можно унести."),
+            State.FED to listOf("{n} напевает строфу и сыплет пыльцой.", "{n} спит между страниц, как засушенный цветок."),
+        ),
+        Species.RAVEN to mapOf(
+            State.HUNGRY to listOf("{n} стучит клювом по чернильнице. Выпишем строчку?", "{n} повторяет старую цитату и надеется на новую."),
+            State.FED to listOf("{n} вполголоса повторяет лучшую строчку.", "{n} прячет под крыло новую цитату."),
+        ),
+        Species.SPHINX to mapOf(
+            State.HUNGRY to listOf("{n} спрашивает: у кого есть корешок, но нет корней? Книгу, пожалуйста.", "{n} смотрит вдаль и ждёт классику."),
+            State.FED to listOf("{n} улыбается так, будто знает, чем кончится книга.", "{n} складывает лапы: ответ верный."),
+        ),
+        Species.OWLET to mapOf(
+            State.HUNGRY to listOf("{n} заглядывает в почтовый ящик. Историй сегодня нет?", "{n} перебирает марки и ждёт страничку."),
+            State.FED to listOf("{n} тихо ухает и прячет письмо под крыло.", "{n} дремлет на почтовом ящике, одним глазом высматривая гостей."),
         ),
     )
 }

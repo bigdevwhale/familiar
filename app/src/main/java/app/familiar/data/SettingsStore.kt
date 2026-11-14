@@ -22,7 +22,11 @@ enum class Ambience { OFF, FIRE, RAIN }
 
 /** A ritual in progress; kept in settings so it survives the app being closed. */
 /** [rang]: the bell has told that the candle burned out, so it doesn't again. */
-data class Ritual(val bookId: Long, val start: Long, val fromPage: Int, val page: Int, val stillMs: Long, val listen: Boolean = false, val rang: Boolean = false)
+/** [sleepAt]: when the sleep timer stops the listening (and whatever is playing); 0 when it isn't set. */
+data class Ritual(val bookId: Long, val start: Long, val fromPage: Int, val page: Int, val stillMs: Long, val listen: Boolean = false, val rang: Boolean = false, val sleepAt: Long = 0) {
+    /** The moment the sitting ends if it were closed at [now]: no later than the sleep timer. */
+    fun endAt(now: Long): Long = if (sleepAt in (start + 1)..now) sleepAt else now
+}
 
 data class Settings(
     val theme: ThemeMode = ThemeMode.SYSTEM,
@@ -94,7 +98,17 @@ data class Settings(
     /** The picture behind every screen ([app.familiar.ui.Backdrops] key), and when the reader's own was last picked. */
     val backdrop: String = "",
     val backdropStamp: Long = 0,
+    /** The familiar that keeps the active one company in the den (its id), or 0. */
+    val companion: Long = 0,
+    /** Guests welcomed to the den so far. */
+    val visits: Int = 0,
+    /** Achievements earned, "ID|yyyy-mm-dd" each. */
+    val earned: Set<String> = emptySet(),
+    /** What was already earned when achievements arrived has been written down without fanfare. */
+    val featsInit: Boolean = false,
 ) {
+    /** Achievement ids earned, with the day each was. */
+    val earnedDays: Map<String, String> get() = earned.associate { it.substringBefore('|') to it.substringAfter('|', "") }
     val guardedDays: Set<java.time.LocalDate> get() = guarded.mapNotNull { runCatching { java.time.LocalDate.parse(it) }.getOrNull() }.toSet()
 }
 
@@ -117,7 +131,7 @@ class SettingsStore(context: Context) {
         classicArt = this[CLASSIC_ART] ?: false,
         remindAt = this[REMIND_AT] ?: -1,
         ritual = (this[R_BOOK] ?: 0L).takeIf { it > 0 }?.let {
-            Ritual(it, this[R_START] ?: 0L, this[R_FROM] ?: 0, this[R_PAGE] ?: 0, this[R_STILL] ?: 0L, this[R_LISTEN] ?: false, this[R_RANG] ?: false)
+            Ritual(it, this[R_START] ?: 0L, this[R_FROM] ?: 0, this[R_PAGE] ?: 0, this[R_STILL] ?: 0L, this[R_LISTEN] ?: false, this[R_RANG] ?: false, this[R_SLEEP] ?: 0L)
         },
         seenUnlocks = this[SEEN_UNLOCKS] ?: emptySet(),
         seenStages = this[SEEN_STAGES] ?: emptySet(),
@@ -146,6 +160,10 @@ class SettingsStore(context: Context) {
         treeYear = this[TREE_YEAR] ?: false,
         backdrop = this[BACKDROP] ?: "",
         backdropStamp = this[BACKDROP_STAMP] ?: 0L,
+        companion = this[COMPANION] ?: 0L,
+        visits = this[VISITS] ?: 0,
+        earned = this[EARNED] ?: emptySet(),
+        featsInit = this[FEATS_INIT] ?: false,
     )
 
     suspend fun now(): Settings = settings.first()
@@ -173,6 +191,7 @@ class SettingsStore(context: Context) {
             it[R_STILL] = r?.stillMs ?: 0L
             it[R_LISTEN] = r?.listen ?: false
             it[R_RANG] = r?.rang ?: false
+            it[R_SLEEP] = r?.sleepAt ?: 0L
             it[SEEN_UNLOCKS] = s.seenUnlocks
             it[SEEN_STAGES] = s.seenStages
             it[CLAIMED] = s.claimed
@@ -200,6 +219,10 @@ class SettingsStore(context: Context) {
             it[TREE_YEAR] = s.treeYear
             it[BACKDROP] = s.backdrop
             it[BACKDROP_STAMP] = s.backdropStamp
+            it[COMPANION] = s.companion
+            it[VISITS] = s.visits
+            it[EARNED] = s.earned
+            it[FEATS_INIT] = s.featsInit
         }
     }
 
@@ -250,5 +273,10 @@ class SettingsStore(context: Context) {
         val TREE_YEAR = booleanPreferencesKey("tree_year")
         val BACKDROP = stringPreferencesKey("backdrop")
         val BACKDROP_STAMP = longPreferencesKey("backdrop_stamp")
+        val R_SLEEP = longPreferencesKey("ritual_sleep")
+        val COMPANION = longPreferencesKey("companion")
+        val VISITS = intPreferencesKey("visits")
+        val EARNED = stringSetPreferencesKey("earned")
+        val FEATS_INIT = booleanPreferencesKey("feats_init")
     }
 }

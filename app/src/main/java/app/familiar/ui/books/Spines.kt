@@ -255,11 +255,22 @@ fun Plank(
 /** The brass plates, each centred under its cycle, half on the plank's front. */
 @Composable
 private fun Plates(groups: List<Spines.Group>) {
-    // Where each group's middle is along the plank.
-    val centres = mutableListOf<Int>()
+    // Where each group starts and ends along the plank.
+    val starts = mutableListOf<Int>()
     var x = 6
-    groups.forEach { g -> centres += x + g.width / 2; x += g.width + Spines.GROUP_GAP }
+    groups.forEach { g -> starts += x; x += g.width + Spines.GROUP_GAP }
     val shown = groups.indices.filter { groups[it].name.isNotEmpty() }
+    // How wide each plate may be: its own volumes and the gaps beside them, and the place of any unnamed books
+    // next to it, but never over a neighbour's plate (a long cycle name ran across the next cycle's, #52).
+    val room = shown.map { i ->
+        var l = i
+        while (l > 0 && groups[l - 1].name.isEmpty()) l--
+        var r = i
+        while (r < groups.lastIndex && groups[r + 1].name.isEmpty()) r++
+        val from = if (l == i) starts[i] - Spines.GROUP_GAP / 2 else starts[l]
+        val to = if (r == i) starts[i] + groups[i].width + Spines.GROUP_GAP / 2 else starts[r] + groups[r].width
+        maxOf(to - from, 40) to from
+    }
     Layout(
         content = {
             shown.forEach { i ->
@@ -269,7 +280,7 @@ private fun Plates(groups: List<Spines.Group>) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = TextStyle(fontFamily = Cormorant, fontStyle = FontStyle.Italic, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = Color(0xFF3B2A12)),
-                    modifier = Modifier.widthIn(max = maxOf(g.width + 48, 150).dp)
+                    modifier = Modifier.widthIn(max = room[shown.indexOf(i)].first.dp)
                         .shadow(2.dp, RoundedCornerShape(3.dp))
                         .background(Brush.verticalGradient(listOf(Color(0xFFF3DC9C), Color(0xFFC9A253))), RoundedCornerShape(3.dp))
                         .padding(horizontal = 8.dp, vertical = 1.dp),
@@ -283,8 +294,13 @@ private fun Plates(groups: List<Spines.Group>) {
         // The plates overlap the plank above, so they take less room below it than they are tall.
         layout(c.maxWidth, (h - 12.dp.roundToPx()).coerceAtLeast(0)) {
             ps.forEachIndexed { k, p ->
-                val centre = centres[shown[k]].dp.roundToPx()
-                p.place((centre - p.width / 2).coerceIn(0, (c.maxWidth - p.width).coerceAtLeast(0)), 0)
+                val i = shown[k]
+                val centre = (starts[i] + groups[i].width / 2).dp.roundToPx()
+                // Centred under its volumes, kept inside the room it was given.
+                val (w, from) = room[k]
+                val lo = from.dp.roundToPx()
+                val hi = (from + w).dp.roundToPx() - p.width
+                p.place((centre - p.width / 2).coerceIn(lo, maxOf(lo, hi)).coerceIn(0, (c.maxWidth - p.width).coerceAtLeast(0)), 0)
             }
         }
     }

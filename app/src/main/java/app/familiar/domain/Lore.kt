@@ -30,7 +30,9 @@ enum class Species(val starter: Boolean) {
     MIMIC(true), KITSUNE(true), SLIME(true),
     DRAGON(false), PHOENIX(false), GRIFFIN(false), OWLBEAR(false), MOTH(false),
     TANUKI(false), SPROUT(false), GHOST(false), WYRM(false),
-    CHIMERA(false), MAGPIE(false);
+    CHIMERA(false), MAGPIE(false),
+    HYDRA(false), BAYUN(false), SNAIL(false), SALAMANDER(false), AUTOMATON(false),
+    PIXIE(false), RAVEN(false), SPHINX(false), OWLET(false);
 
     companion object {
         fun of(name: String): Species = entries.firstOrNull { it.name == name } ?: MIMIC

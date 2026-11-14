@@ -6,6 +6,48 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.16.0] - 2026-11-14
+
+- Nine new familiars: hydra, Bayun cat, snail, salamander, automaton, pixie, raven, sphinx and post owlet
+- 197 achievements with medals, each gives your familiar mana
+- Quotes: copy lines out of books, keep an album, share a card
+- A second familiar can live in the den beside yours
+- Your year in books, page by page; a sleep timer for audiobooks
+- New furniture, two new dens, weather in the window, new shelf ornaments
+- The slime is redrawn; prettier visiting cards
+
+<details>
+<summary>In detail</summary>
+
+### Added
+- **Nine familiars**, each found by its own habit and fond of its own reading: the hydra (cycles), the Bayun cat (reading a book again), the snail (the phone face down), the salamander (by the fire), the automaton (science fiction), the pixie (poems and short books), the raven (quotes), the sphinx (the classics) and the post owlet (guests). All drawn, with eggs, rare colourings and the five forms.
+- **Achievements:** 197 medals in five chapters (reading, habits, the shelf, familiars, the den), bronze to starlight, each with its own name and a little mana. What was already earned is written down quietly on the first launch. The den shows the nearest medal.
+- **Quotes:** copy a line out by the candle or from the book's page, with its page; an album of them, as text or as a card to share.
+- **A companion:** settle a second familiar beside yours in the den; it hops and sleeps along and picks up a tenth of every feast.
+- **Your year in books:** the year as a story to leaf through, on the Tree tab (the year just ended through January).
+- **Sleep timer** for listening: the record stops, playback is paused, and only the minutes until then are counted.
+- **Reading again:** a finished book can be taken up from its first page.
+- **The den:** a fireplace, an aquarium, glowing mushrooms, a cuckoo clock, a map, a dreamcatcher, a moss rug, a jar of fireflies, a ball of yarn, a plush dragon, a wizard's tower and a burrow to move into; rain, snow, leaves and petals in the window by the season.
+- **Shelf ornaments** drawn anew, and eight more: a teapot, potions, an owl, a sleeping dragon, a reading lamp, a cactus, a skull with a candle and a terrarium.
+
+### Changed
+- The den is laid out anew: the familiar's line is the caption under the room, the nearest little goal sits in the mana card, and six doors of one size lead to the rest.
+- The visiting card is a postcard: the familiar at home, the book it recommends and the code as a postage stamp.
+- The slime is redrawn, crisp instead of blurred.
+
+### Fixed
+- A long cycle name on the shelf of spines no longer runs across the next cycle's plate.
+- An ornament can't stand on the shelf twice any more (one seemed impossible to take away); one put elsewhere moves there.
+
+</details>
+
+<!-- tg
+Девять новых фамильяров: гидра, кот-баюн, улитка, саламандра, автоматон, пикси, ворон, сфинкс и почтовый совёнок.
+197 достижений с медалями, за каждое фамильяр получает ману.
+Цитаты из книг: альбом и карточки для сторис. Второй фамильяр может жить в логове рядом.
+Итоги года, таймер сна для аудиокниг, новая мебель, два новых логова, погода за окном и новые украшения полки.
+-->
+
 ## [1.15.2] - 2026-11-13
 
 ### Fixed

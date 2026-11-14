@@ -53,6 +53,12 @@ enum class EyeState { OPEN, BLINK, CLOSED, SCARED, SQUINT, HAPPY }
 /** [drawn]: a hand-drawn familiar, whose head size comes from its eyes. */
 class Face(val eyes: List<Pair<Int, Int>>, val eyeW: Int, val headX: Int, val headY: Int, val headR: Int, val drawn: Boolean = false)
 
+/** It hovers over the floor rather than standing on it: no breath, a smaller shadow, a slow bob. */
+val Species.floats: Boolean get() = this == Species.MOTH || this == Species.GHOST || this == Species.PIXIE
+
+/** It has a classic look (drawn in code, as before 1.10): the first fourteen. */
+val Species.hasClassic: Boolean get() = ordinal <= Species.MAGPIE.ordinal
+
 object Sprites {
     const val SIZE = 80
 
@@ -97,15 +103,16 @@ object Sprites {
             else -> EyeState.OPEN
         }
         val ctx = Ctx(look, f, ph, eyes)
-        val drawn = if (classic) null else Drawn.of(look.species, look.stage)
+        // The classic look only ever had the first fourteen: the rest are always the drawn ones.
+        val old = classic && look.species.hasClassic
+        val drawn = if (old) null else Drawn.of(look.species, look.stage)
         val face: Face? = if (look.stage == Stage.EGG) {
-            if (classic || !Drawn.egg(body, ctx)) egg(body, ctx)
+            if (old || !Drawn.egg(body, ctx)) egg(body, ctx)
             null
         } else if (drawn != null) {
             Drawn.paint(body, drawn, ctx)
         } else {
-            val floats = look.species == Species.MOTH || look.species == Species.GHOST
-            val pen = Pen(body, stageScale(look.stage), dy = if (floats) sin(ph * 2 * PI.toFloat()) * 1.5f - 2f else 0f)
+            val pen = Pen(body, stageScale(look.stage), dy = if (look.species.floats) sin(ph * 2 * PI.toFloat()) * 1.5f - 2f else 0f)
             when (look.species) {
                 Species.MIMIC -> mimic(pen, ctx)
                 Species.KITSUNE -> kitsune(pen, ctx)
@@ -121,6 +128,7 @@ object Sprites {
                 Species.WYRM -> Newcomers.wyrm(pen, ctx)
                 Species.CHIMERA -> Patchwork.chimera(pen, ctx)
                 Species.MAGPIE -> Patchwork.magpie(pen, ctx)
+                else -> Strangers.draw(pen, ctx)
             }
         }
         // What it wears: the colours and crown of its form, or a hat for the season.
@@ -159,7 +167,7 @@ object Sprites {
 
     private fun shadow(out: Px, look: Look) {
         val k = stageScale(look.stage)
-        val rx = (if (look.species == Species.MOTH || look.species == Species.GHOST) 16f else 24f) * k
+        val rx = (if (look.species.floats) 16f else 24f) * k
         val cy = SIZE - 3.5f
         for (y in (cy - 3).toInt()..(cy + 2).toInt()) for (x in (SIZE / 2 - rx - 1).toInt()..(SIZE / 2 + rx + 1).toInt()) {
             val d = ((x + 0.5f - SIZE / 2f) / rx).let { it * it } + ((y + 0.5f - cy) / 2.2f).let { it * it }
@@ -378,6 +386,15 @@ object Sprites {
             Species.WYRM -> 130f to 1f
             Species.CHIMERA -> 160f to 0.8f
             Species.MAGPIE -> 200f to 1.4f
+            Species.HYDRA -> 110f to 1f
+            Species.BAYUN -> 170f to 1.6f
+            Species.SNAIL -> 100f to 0.9f
+            Species.SALAMANDER -> 180f to 0.9f
+            Species.AUTOMATON -> 150f to 0.6f
+            Species.PIXIE -> 130f to 1f
+            Species.RAVEN -> 100f to 0.9f
+            Species.SPHINX -> 300f to 0.6f
+            Species.OWLET -> 0f to 0.1f
         }
         val hsv = FloatArray(3)
         for (i in px.c.indices) px.map(i) { c ->
@@ -432,6 +449,7 @@ object Sprites {
         Species.WYRM -> R.paper
         Species.CHIMERA -> R.tan
         Species.MAGPIE -> R.snow
+        else -> Strangers.eggRamp(sp)
     }
 
     private fun egg(px: Px, ctx: Ctx) {

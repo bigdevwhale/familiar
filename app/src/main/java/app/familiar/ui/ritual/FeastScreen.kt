@@ -86,6 +86,10 @@ fun FeastScreen(data: FamiliarData, go: Go) {
                     }
                 }
             }
+            data.pets.firstOrNull { it.id == r.companionId }?.takeIf { r.crumbs > 0 }?.let { mate ->
+                Spacer(Modifier.height(10.dp))
+                Text(stringResource(R.string.feast_crumbs, mate.name, r.crumbs), style = UType.Small.copy(color = U.c.mana), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            }
             if (r.feast.sniffed) {
                 Spacer(Modifier.height(10.dp))
                 Text(stringResource(R.string.sniff_text, pet?.name ?: ""), style = UType.Muted)

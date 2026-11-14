@@ -3,8 +3,11 @@ Cuts the drawn den and tree (art/room/*.png, art/tree/*.png, drawn on flat magen
 
     python tools/scenery.py
 
-Also the finds familiars bring back (art/finds, 22 x 22 each, resources/finds/<name>.png) and the
-dreams (art/dreams, 128 x 88 each, resources/dreams/<genre>.png; the app cuts them into a cloud).
+Also the finds familiars bring back (art/finds, 22 x 22 each, resources/finds/<name>.png), the
+dreams (art/dreams, 128 x 88 each, resources/dreams/<genre>.png; the app cuts them into a cloud) and the
+medals of the achievements (art/badges, sheets of seven, resources/badges/<measure>.png).
+
+A picture that isn't drawn yet is skipped: the app does without it (tools/draw.py draws what is missing).
 
 The den is 144 x 108: each piece is shrunk into its spot and written as a whole-room layer, so the app
 only stacks them (app/src/main/resources/room/<name>.png). The tree is 128 x 112, one picture per size
@@ -16,7 +19,7 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage
 
-from familiars import crisp, keyed
+from familiars import crisp, figures, keyed, load
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ART = os.path.join(ROOT, "art")
@@ -46,6 +49,18 @@ SPOTS = {
     "treasure": (102, 70, 42, 32, "bottom"),
     "globe": (108, 58, 30, 44, "bottom"),
     "candles": (0, 84, 24, 22, "bottom"),
+    # The second lot.
+    "fireplace": (0, 46, 42, 56, "bottom"),
+    "aquarium": (106, 60, 34, 42, "bottom"),
+    "mushrooms": (106, 70, 34, 32, "bottom"),
+    "clock": (110, 10, 28, 40, "mid"),
+    "map": (106, 12, 34, 30, "mid"),
+    "dreamcatcher": (60, 0, 24, 32, "top"),
+    "rug_moss": (24, 90, 96, 18, "mid"),
+    "fireflies": (2, 82, 20, 24, "bottom"),
+    # Playthings, on the floor in front of whatever stands to the left.
+    "yarn": (26, 94, 16, 13, "bottom"),
+    "plush": (24, 89, 20, 18, "bottom"),
     # The den dressed for the days of a season.
     "season_cobweb": (0, 0, 32, 32, "top"),
     "season_pumpkins": (104, 86, 38, 18, "bottom"),
@@ -58,6 +73,9 @@ SPOTS = {
 }
 # Drawn facing the other way from where they hang.
 FLIP = {"season_cobweb"}
+
+# Other dens to move into, each drawn by day and by night like the attic (room_<name>_<time>.png).
+ROOMS = ["", "tower", "burrow"]
 
 TREES = ["small", "medium", "large"]
 # How much of the tree box each size fills, so the tree visibly grows.
@@ -119,13 +137,30 @@ def fine_full(im, w, h, path, colors):
 def room():
     out = os.path.join(RES, "room")
     os.makedirs(out, exist_ok=True)
-    for t in ("night", "day"):
-        im = np.array(Image.open(os.path.join(ART, "room", f"room_{t}.png")).convert("RGBA"))
-        im[..., 3] = 255
-        path = os.path.join(out, f"room_{t}.png")
-        Image.fromarray(crisp(im, ROOM_W, ROOM_H, colors=96), "RGBA").save(path)
-        fine_full(im, ROOM_W, ROOM_H, path, 128)
+    for den in ROOMS:
+        for t in ("night", "day"):
+            name = f"room_{den}_{t}.png" if den else f"room_{t}.png"
+            if not os.path.exists(os.path.join(ART, "room", name)):
+                print("not drawn yet:", name)
+                continue
+            im = np.array(Image.open(os.path.join(ART, "room", name)).convert("RGBA"))
+            im[..., 3] = 255
+            # Cropped to the room's shape from the middle, in case it was drawn wider or taller.
+            h, w = im.shape[:2]
+            if w / h > ROOM_W / ROOM_H:
+                cw = int(h * ROOM_W / ROOM_H)
+                im = im[:, (w - cw) // 2:(w - cw) // 2 + cw]
+            else:
+                ch = int(w * ROOM_H / ROOM_W)
+                im = im[(h - ch) // 2:(h - ch) // 2 + ch]
+            path = os.path.join(out, name)
+            Image.fromarray(crisp(im, ROOM_W, ROOM_H, colors=96), "RGBA").save(path)
+            fine_full(im, ROOM_W, ROOM_H, path, 128)
     for name, (x, y, w, h, sit) in SPOTS.items():
+        if not os.path.exists(os.path.join(ART, "room", name + ".png")):
+            # The app sells a piece only once it is drawn (Room.has).
+            print("not drawn yet:", name)
+            continue
         part = cutout(os.path.join(ART, "room", name + ".png"))
         if name in FLIP:
             part = part[:, ::-1].copy()
@@ -234,8 +269,77 @@ def dreams():
         fine_full(im, DREAM_W, DREAM_H, os.path.join(out, f), 96)
 
 
+# The medals of the achievements: one picture per measure (domain/Feats.kt, in its order), drawn seven to a
+# sheet (art/badges/badges_01.png ...), left to right. Each is cut to resources/badges/<measure>.png.
+BADGES = [
+    "books", "pages", "hours", "day_pages", "brick", "little", "month_books",
+    "one_day", "listen", "reread", "streak", "days", "nights", "mornings",
+    "midnight", "rituals", "long_sit", "quiet", "fires", "rain", "weekends",
+    "full_months", "comeback", "candles", "year_goal", "genres", "fantasy", "scifi",
+    "mystery", "horror", "romance", "adventure", "classic", "history", "nonfiction",
+    "poetry", "series", "author", "authors", "rated", "five_stars", "quotes",
+    "notes", "want", "abandoned", "formats", "own", "library", "pets",
+    "grown", "ancient", "forms", "traits", "mana", "starters", "companion",
+    "guests", "shiny", "finds", "seasonal", "treasure", "dreams", "furniture",
+    "quests", "items",
+]
+BADGES_PER_SHEET = 7
+# The canvas of a medal's picture (Badges.ART in the app), and how much of it the picture may fill:
+# it sits on a round field, so its corners stay clear of the rim.
+BADGE, BADGE_FILL = 24, 18
+
+
+def badges():
+    out = os.path.join(RES, "badges")
+    os.makedirs(out, exist_ok=True)
+    sheets = [BADGES[i:i + BADGES_PER_SHEET] for i in range(0, len(BADGES), BADGES_PER_SHEET)]
+    for n, names in enumerate(sheets, start=1):
+        path = os.path.join(ART, "badges", f"badges_{n:02d}.png")
+        if not os.path.exists(path):
+            # The app shows a star on the medal meanwhile.
+            print("not drawn yet:", os.path.basename(path))
+            continue
+        im, solid = load(path)
+        for name, (s, e) in zip(names, figures(solid, count=len(names))):
+            m = solid[:, s:e]
+            ys = np.nonzero(m.any(axis=1))[0]
+            xs = np.nonzero(m.any(axis=0))[0]
+            x0, y0, x1, y1 = s + xs[0], ys[0], s + xs[-1] + 1, ys[-1] + 1
+            part = im[y0:y1, x0:x1].copy()
+            part[..., 3] = np.where(solid[y0:y1, x0:x1], part[..., 3], 0)
+            k = min(BADGE_FILL / part.shape[1], BADGE_FILL / part.shape[0])
+            w, h = max(1, round(part.shape[1] * k)), max(1, round(part.shape[0] * k))
+            x, y = (BADGE - w) // 2, (BADGE - h) // 2
+            for d, suffix in ((1, ""), (DETAIL, f"@{DETAIL}x")):
+                pic = np.zeros((BADGE * d, BADGE * d, 4), np.uint8)
+                pic[y * d:(y + h) * d, x * d:(x + w) * d] = ink(crisp(part, w * d, h * d))
+                Image.fromarray(pic, "RGBA").save(os.path.join(out, f"{name}{suffix}.png"))
+        print(os.path.basename(path), names)
+
+
+# Ornaments for the shelf of spines (art/shelf/<name>.png), each shrunk into this many pixels at most (the app
+# shows a pixel as two dp), standing on the bottom row; resources/shelf/<name>.png and its finer @2x.
+SHELF_W, SHELF_H = 26, 48
+
+
+def shelf():
+    out = os.path.join(RES, "shelf")
+    os.makedirs(out, exist_ok=True)
+    src = os.path.join(ART, "shelf")
+    if not os.path.isdir(src):
+        return
+    for f in sorted(os.listdir(src)):
+        part = cutout(os.path.join(src, f))
+        k = min(SHELF_W / part.shape[1], SHELF_H / part.shape[0])
+        w, h = max(1, round(part.shape[1] * k)), max(1, round(part.shape[0] * k))
+        for d, suffix in ((1, ""), (DETAIL, f"@{DETAIL}x")):
+            Image.fromarray(ink(crisp(part, w * d, h * d)), "RGBA").save(os.path.join(out, f[:-4] + suffix + ".png"))
+
+
 if __name__ == "__main__":
     room()
     tree()
     finds()
     dreams()
+    badges()
+    shelf()

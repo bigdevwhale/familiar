@@ -77,12 +77,13 @@ fun ShareScreen(start: Cards.Kind, bookId: Long, data: FamiliarData, go: Go) {
     val scope = rememberCoroutineScope()
     val s = data.stats
     // The book asked for, then the ones on the go, then the last ones finished.
-    val books = (listOfNotNull(data.book(bookId)) + data.reading + s.finished.takeLast(4).reversed())
+    val books = (listOfNotNull(data.book(bookId).takeIf { start != Cards.Kind.QUOTE }) + data.reading + s.finished.takeLast(4).reversed())
         .filter { it.shelfOf != Shelf.WANT && it.shelfOf != Shelf.ABANDONED }.distinctBy { it.id }
     val kinds = Cards.Kind.entries.filter {
         when (it) {
             Cards.Kind.BOOK -> books.isNotEmpty()
             Cards.Kind.DEN -> data.pet != null
+            Cards.Kind.QUOTE -> data.quotes.isNotEmpty()
             else -> true
         }
     }
@@ -98,8 +99,10 @@ fun ShareScreen(start: Cards.Kind, bookId: Long, data: FamiliarData, go: Go) {
     var month by rememberSaveable {
         mutableStateOf((if (MonthSummary(s, thisMonth).empty && !MonthSummary(s, lastMonth).empty) lastMonth else thisMonth).toString())
     }
-    val request = Cards.Request(kind, format, style, book, YearMonth.parse(month))
-    val image by produceState<Bitmap?>(null, request, data.books, data.readings, data.pets) {
+    // A quote card is asked for by the quote's own id, in the book's place.
+    var quote by rememberSaveable { mutableLongStateOf(if (start == Cards.Kind.QUOTE && data.quotes.any { it.id == bookId }) bookId else data.quotes.firstOrNull()?.id ?: 0L) }
+    val request = Cards.Request(kind, format, style, book, YearMonth.parse(month), quote)
+    val image by produceState<Bitmap?>(null, request, data.books, data.readings, data.pets, data.quotes) {
         value = withContext(Dispatchers.Default) { runCatching { Cards.draw(context, data, request) }.getOrNull() }
     }
 
@@ -152,6 +155,13 @@ fun ShareScreen(start: Cards.Kind, bookId: Long, data: FamiliarData, go: Go) {
                         Chip(m.month.getDisplayName(TextStyle.FULL_STANDALONE, locale()).replaceFirstChar { it.titlecase(locale()) }, month == m.toString(), { month = m.toString() })
                     }
                 }
+                // One quote after another, the newest first.
+                Cards.Kind.QUOTE -> if (data.quotes.size > 1) Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    val i = data.quotes.indexOfFirst { it.id == quote }.coerceAtLeast(0)
+                    Chip("‹", false, { quote = data.quotes[(i - 1 + data.quotes.size) % data.quotes.size].id })
+                    Text("${i + 1} / ${data.quotes.size}", style = UType.Small)
+                    Chip("›", false, { quote = data.quotes[(i + 1) % data.quotes.size].id })
+                }
                 else -> {}
             }
             Spacer(Modifier.height(10.dp))
@@ -197,6 +207,7 @@ private fun kindName(k: Cards.Kind): String = stringResource(
         Cards.Kind.MONTH -> R.string.share_kind_month
         Cards.Kind.YEAR -> R.string.share_kind_year
         Cards.Kind.DEN -> R.string.tab_den
+        Cards.Kind.QUOTE -> R.string.quote
     }
 )
 

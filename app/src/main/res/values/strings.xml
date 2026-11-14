@@ -128,7 +128,7 @@
     <string name="book_edit">Edit book</string>
     <string name="from_shelf">Pick from the shelf</string>
     <string name="bestiary">Bestiary</string>
-    <string name="bestiary_text">Fourteen familiars live in these pages. Read and they come to you one by one, as eggs. You read with one at a time; the others rest in the den with all they\'ve eaten.</string>
+    <string name="bestiary_text">Twenty-three familiars live in these pages. Read and they come to you one by one, as eggs. You read with one at a time; the others rest in the den with all they\'ve eaten.</string>
     <string name="bestiary_note">Mana goes to the familiar you read with. Switch any time.</string>
     <string name="with_you">with you</string>
     <string name="egg_waiting">An egg is waiting</string>
@@ -317,7 +317,7 @@
     <string name="ob_intro2">Read and it hatches, grows and learns. Forget about books and it slowly turns to stone, until a few pages break the spell.</string>
     <string name="ob_choose">Choose an egg</string>
     <string name="ob_choose_text">Each familiar loves its own kind of reading. Nine more are found along the way.</string>
-    <string name="ob_others">The dragon, the phoenix, the griffin, the owlbear, the moon moth, the tanuki, the sprout, the ghost, the bookworm, the chimera and the magpie come to those who read.</string>
+    <string name="ob_others">The dragon, the phoenix, the griffin, the owlbear, the moon moth, the tanuki, the sprout, the ghost, the bookworm, the chimera, the magpie and nine more come to those who read.</string>
     <string name="ob_names">What will you call it?</string>
     <string name="ob_pet_name">Familiar\'s name</string>
     <string name="ob_your_name">Your name</string>
@@ -996,4 +996,211 @@
     <string name="decor_bookend">A bookend</string>
     <string name="shelf_decorate">Decorate</string>
     <string name="shelf_decorate_hint">Tap + to put something on a plank, tap a thing to change it; hold and drag it to move it</string>
+    <!-- Nine more familiars -->
+    <string name="sp_hydra">Hydra</string>
+    <string name="sp_bayun">Bayun cat</string>
+    <string name="sp_snail">Snail</string>
+    <string name="sp_salamander">Salamander</string>
+    <string name="sp_automaton">Automaton</string>
+    <string name="sp_pixie">Pixie</string>
+    <string name="sp_raven">Raven</string>
+    <string name="sp_sphinx">Sphinx</string>
+    <string name="sp_owlet">Post owlet</string>
+    <string name="lore_hydra">Grows a new head for every volume, and every head wants to know what happens next. Reads cycles, so none is left out.</string>
+    <string name="lore_bayun">A cat out of the old tales who knows every story by heart and asks for it again anyway. Purrs loudest at a book it has heard before.</string>
+    <string name="lore_snail">Carries a quiet little house on its back. Put the phone face down and it comes out of the shell to listen.</string>
+    <string name="lore_salamander">Lives in the hearth and reads by its own glow. The crackle of the fire is its favourite sound.</string>
+    <string name="lore_automaton">A small clockwork reader wound up by stories of the future. Ticks faster when the rockets take off.</string>
+    <string name="lore_pixie">No bigger than a bookmark. Loves poems and thin books it can carry away whole.</string>
+    <string name="lore_raven">Remembers every line you copy out and says it back at just the right moment.</string>
+    <string name="lore_sphinx">Asks riddles it found in the classics, and is quietly pleased when you know the answer.</string>
+    <string name="lore_owlet">Carries letters from den to den. When a friend\'s familiar comes to stay, it can\'t sit still.</string>
+    <string name="loves_hydra" formatted="false">volumes of a cycle (+50%)</string>
+    <string name="loves_bayun" formatted="false">books you read again (+50%)</string>
+    <string name="loves_snail" formatted="false">reading with the phone face down (+50%)</string>
+    <string name="loves_salamander" formatted="false">reading by the sound of the fire (+50%)</string>
+    <string name="loves_automaton" formatted="false">science fiction (+50%)</string>
+    <string name="loves_pixie" formatted="false">poems and books under 150 pages (+50%)</string>
+    <string name="loves_raven" formatted="false">books you\'ve copied a line out of (+50%)</string>
+    <string name="loves_sphinx" formatted="false">the classics (+50%)</string>
+    <string name="loves_owlet" formatted="false">reading while a guest is staying (+50%)</string>
+    <string name="how_bayun">Read a finished book again, to the end.</string>
+    <string name="how_owlet">Welcome a friend\'s familiar by its QR card.</string>
+    <plurals name="how_hydra">
+        <item quantity="one">Finish %d volume of one cycle.</item>
+        <item quantity="other">Finish %d volumes of one cycle.</item>
+    </plurals>
+    <plurals name="how_snail">
+        <item quantity="one">Read %d time with the phone face down for ten minutes.</item>
+        <item quantity="other">Read %d times with the phone face down for ten minutes.</item>
+    </plurals>
+    <plurals name="how_salamander">
+        <item quantity="one">Read by the sound of the fire %d time.</item>
+        <item quantity="other">Read by the sound of the fire %d times.</item>
+    </plurals>
+    <plurals name="how_automaton">
+        <item quantity="one">Finish %d science fiction book.</item>
+        <item quantity="other">Finish %d science fiction books.</item>
+    </plurals>
+    <plurals name="how_pixie">
+        <item quantity="one">Finish %1$d poem or book under %2$d pages.</item>
+        <item quantity="other">Finish %1$d poems or books under %2$d pages.</item>
+    </plurals>
+    <plurals name="how_raven">
+        <item quantity="one">Copy out %d quote.</item>
+        <item quantity="other">Copy out %d quotes.</item>
+    </plurals>
+    <plurals name="how_sphinx">
+        <item quantity="one">Finish %d classic.</item>
+        <item quantity="other">Finish %d classics.</item>
+    </plurals>
+    <!-- The second lot of furniture -->
+    <string name="it_fireplace">Fireplace</string>
+    <string name="it_aquarium">Aquarium with a tiny kraken</string>
+    <string name="it_mushrooms">Glowing mushrooms</string>
+    <string name="it_clock">Cuckoo clock</string>
+    <string name="it_map">Map of imaginary lands</string>
+    <string name="it_dreamcatcher">Dreamcatcher</string>
+    <string name="it_rug_moss">Moss rug</string>
+    <string name="it_fireflies">Jar of fireflies</string>
+    <string name="it_yarn">Ball of yarn</string>
+    <string name="it_plush">Plush dragon</string>
+    <string name="it_room_tower">Wizard\'s tower</string>
+    <string name="it_room_burrow">Burrow under the hill</string>
+    <string name="furnish_dens">Another den</string>
+    <string name="furnish_dens_text">Move in with everything you have: the furniture comes along. Take the piece away to go back to the attic.</string>
+    <!-- Quotes, reading again, a companion, the sleep timer, achievements -->
+    <string name="quotes">Quotes</string>
+    <string name="quote">Quote</string>
+    <string name="quotes_text">Lines you copied out of your books. The raven remembers every one.</string>
+    <string name="quotes_empty">Nothing copied out yet. Open a book, or light the candle, and keep a line you like.</string>
+    <string name="quote_add">Copy out a quote</string>
+    <string name="quote_edit">Edit the quote</string>
+    <string name="quote_hint">The line, word for word</string>
+    <string name="quote_page">p. %d</string>
+    <string name="quote_marks">“%s”</string>
+    <string name="quotes_all">All %d quotes</string>
+    <string name="reread">Read again</string>
+    <string name="reread_title">Read it again?</string>
+    <string name="reread_text">The book goes back to its first page and onto the reading shelf. Its past sittings stay; it will be dated the day you finish it again.</string>
+    <string name="reread_n">Read %d times</string>
+    <string name="feast_crumbs">%1$s picks up the crumbs from the table: +%2$d</string>
+    <string name="companion_set">Settle beside</string>
+    <string name="companion_unset">Send back to rest</string>
+    <string name="companion_tag">beside you in the den</string>
+    <string name="companion_note">One more familiar can live in the den beside it: it picks up a tenth of every feast.</string>
+    <string name="sleep_timer">Sleep timer</string>
+    <string name="sleep_min">%d min</string>
+    <string name="sleep_text">Falling asleep to a book? The record stops by itself, what is playing is paused, and only the minutes up to then are counted.</string>
+    <string name="sleep_left">The record stops in %d min, and so does whatever is playing.</string>
+    <string name="sleep_done">The sleep timer went off at %s. The minutes are counted up to then.</string>
+    <string name="feats">Achievements</string>
+    <string name="feats_text">Medals for what you read and how you read it. Each one gives your familiar a little mana.</string>
+    <string name="feats_reading">Reading</string>
+    <string name="feats_habits">Habits</string>
+    <string name="feats_shelf">The shelf</string>
+    <string name="feats_familiars">Familiars</string>
+    <string name="feats_den">The den</string>
+    <string name="feat_new">Achievement</string>
+    <plurals name="feat_new_n">
+        <item quantity="one">%d achievement</item>
+        <item quantity="other">%d achievements</item>
+    </plurals>
+    <string name="feat_reward">+%1$d mana for %2$s.</string>
+    <string name="feat_secret">A secret one</string>
+    <string name="feat_secret_text">Nobody can tell you how to earn it. It takes luck.</string>
+    <string name="feat_earned_on">Earned on %s</string>
+    <string name="feat_earned">Earned</string>
+    <string name="feat_gives">+%d mana</string>
+    <!-- The year looked back on -->
+    <string name="wrap_card">Your %d, page by page</string>
+    <string name="wrap_card_sub">The year as a story to leaf through</string>
+    <string name="wrap_eyebrow">Your year in books</string>
+    <string name="wrap_intro">%s remembers every page of it. Tap to turn them.</string>
+    <string name="wrap_empty">Nothing has been read this year yet. %s is waiting.</string>
+    <string name="wrap_read">Read</string>
+    <plurals name="wrap_pages">
+        <item quantity="one">page</item>
+        <item quantity="other">pages</item>
+    </plurals>
+    <plurals name="wrap_books">
+        <item quantity="one">book</item>
+        <item quantity="other">books</item>
+    </plurals>
+    <plurals name="wrap_hours">
+        <item quantity="one">hour</item>
+        <item quantity="other">hours</item>
+    </plurals>
+    <string name="wrap_mana">mana</string>
+    <string name="wrap_days_eyebrow">With a book</string>
+    <plurals name="wrap_days">
+        <item quantity="one">day of reading</item>
+        <item quantity="other">days of reading</item>
+    </plurals>
+    <plurals name="wrap_streak">
+        <item quantity="one">The longest run: %d day</item>
+        <item quantity="other">The longest run: %d days in a row</item>
+    </plurals>
+    <string name="wrap_best_day">The biggest day: %1$s, %2$d pages</string>
+    <string name="wrap_best_month">The month you read most: %s</string>
+    <string name="wrap_first">The first book of the year</string>
+    <string name="wrap_last">And the latest: %s</string>
+    <string name="wrap_genre">The genre of the year</string>
+    <string name="wrap_longest">The thickest book</string>
+    <string name="wrap_author">The author of the year: %1$s, %2$s</string>
+    <string name="wrap_when">When you read</string>
+    <string name="wrap_part_morning">In the morning</string>
+    <string name="wrap_part_day">By day</string>
+    <string name="wrap_part_evening">In the evening</string>
+    <string name="wrap_part_night">At night</string>
+    <plurals name="wrap_listens">
+        <item quantity="one">Listened %d time</item>
+        <item quantity="other">Listened %d times</item>
+    </plurals>
+    <string name="wrap_stars">Five stars</string>
+    <plurals name="wrap_stars_n">
+        <item quantity="one">%d book you loved</item>
+        <item quantity="other">%d books you loved</item>
+    </plurals>
+    <string name="wrap_quote">A line of the year</string>
+    <plurals name="wrap_quotes">
+        <item quantity="one">%d quote copied out</item>
+        <item quantity="other">%d quotes copied out</item>
+    </plurals>
+    <string name="wrap_den">In the den</string>
+    <string name="wrap_new_pets">New in the den: %s</string>
+    <plurals name="wrap_finds">
+        <item quantity="one">%d find brought back</item>
+        <item quantity="other">%d finds brought back</item>
+    </plurals>
+    <plurals name="wrap_feats">
+        <item quantity="one">%d achievement earned</item>
+        <item quantity="other">%d achievements earned</item>
+    </plurals>
+    <string name="wrap_end">%s says thank you for the year. On to the next page.</string>
+    <!-- The visiting card as a postcard -->
+    <string name="visit_card_eyebrow">A familiar comes to visit</string>
+    <string name="visit_card_from">from %s</string>
+    <string name="visit_card_rec">Brings a book to recommend</string>
+    <string name="visit_card_how_title">Let it in</string>
+    <string name="visit_card_how">In Familiar: Den → Visits → scan the code, or pick this picture.</string>
+    <string name="visit_card_gift">It stays a day and leaves a gift.</string>
+    <!-- The den, laid out anew -->
+    <string name="den_more">Around the den</string>
+    <string name="den_furnish">Furnish</string>
+    <string name="den_guest_here">A guest is here</string>
+    <string name="den_visit_sub">QR card</string>
+    <string name="feat_next">Nearest medal</string>
+    <!-- More things for the shelf -->
+    <string name="decor_teapot">Teapot</string>
+    <string name="decor_potions">Potions</string>
+    <string name="decor_owl">Owl</string>
+    <string name="decor_dragon">Sleeping dragon</string>
+    <string name="decor_lamp">Reading lamp</string>
+    <string name="decor_cactus">Cactus</string>
+    <string name="decor_skull">Skull with a candle</string>
+    <string name="decor_terrarium">Terrarium</string>
+    <!-- Shelf ornaments: each one once -->
+    <string name="decor_remove">Take away</string>
+    <string name="decor_elsewhere">on the shelf</string>
 </resources>
