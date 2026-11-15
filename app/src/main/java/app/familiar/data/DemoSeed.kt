@@ -123,6 +123,11 @@ object DemoSeed {
             Triple(Species.TANUKI, "Листик" to "Leaf", 380), Triple(Species.SPROUT, "Корешок" to "Rootlet", 90),
             Triple(Species.WYRM, "Закладка" to "Bookmark", 1250), Triple(Species.CHIMERA, "Лоскут" to "Patch", 700),
             Triple(Species.MAGPIE, "Блёстка" to "Glint", 4100),
+            Triple(Species.HYDRA, "Трёшка" to "Trio", 1400), Triple(Species.BAYUN, "Баюн" to "Lullaby", 4300),
+            Triple(Species.SNAIL, "Улиточка" to "Shelly", 700), Triple(Species.SALAMANDER, "Угли" to "Embers", 1300),
+            Triple(Species.AUTOMATON, "Винтик" to "Cog", 4500), Triple(Species.PIXIE, "Фиалка" to "Violet", 1200),
+            Triple(Species.RAVEN, "Чернила" to "Inky", 650), Triple(Species.SPHINX, "Загадка" to "Riddle", 4400),
+            Triple(Species.OWLET, "Почтальон" to "Postie", 300),
         ).also { extra -> met = extra.sumOf { it.third } }.forEachIndexed { i, (sp, names, mana) ->
             dao.insertPet(Pet(species = sp.name, name = if (ru) names.first else names.second, joined = at(start.plusDays(i * 6L), 20, 0), mana = mana, trait = traits[i % traits.size].name))
         }
@@ -131,10 +136,22 @@ object DemoSeed {
         // The whole casket found, so every trinket can be looked at.
         val finds = app.familiar.domain.Trinket.entries.map { it.name }
         finds.forEachIndexed { i, k -> dao.insertFind(Find(kind = k, at = at(start.plusDays(i * 74L / finds.size), 21, 0), petId = fox)) }
+        // Lines copied out of the books, for the album of quotes.
+        val byTitle = dao.books().associateBy { it.title }
+        listOf(
+            Triple("The Hobbit" to "Хоббит", "Not all those who wander are lost." to "Не все, кто странствует, потерялись.", 0),
+            Triple("The Master and Margarita" to "Мастер и Маргарита", "Manuscripts don't burn." to "Рукописи не горят.", 287),
+            Triple("Dune" to "Дюна", "Fear is the mind-killer." to "Страх убивает разум.", 8),
+            Triple("The Name of the Wind" to "Имя ветра", "It's the questions we can't answer that teach us the most." to "Больше всего нас учат вопросы, на которые мы не можем ответить.", 412),
+            Triple("Pride and Prejudice" to "Гордость и предубеждение", "I declare after all there is no enjoyment like reading!" to "Право же, нет на свете удовольствия выше чтения!", 52),
+        ).forEachIndexed { i, (t, q, page) ->
+            val book = byTitle[if (ru) t.second else t.first] ?: return@forEachIndexed
+            dao.insertQuote(Quote(bookId = book.id, text = if (ru) q.second else q.first, page = page, at = at(today.minusDays(30L - i * 6), 21, 10)))
+        }
         // Ratings on the finished ones.
         dao.books().filter { it.shelfOf == Shelf.DONE }.forEachIndexed { i, b -> dao.updateBook(b.copy(rating = listOf(5, 4, 5, 5, 4, 5, 4)[i % 7])) }
         // Every piece bought, so each can be put in the den; these seven stand in it.
-        val den = listOf(app.familiar.domain.Item.WINDOW_MOON, app.familiar.domain.Item.BOOKSHELF, app.familiar.domain.Item.RUG_RED, app.familiar.domain.Item.CAULDRON, app.familiar.domain.Item.LANTERN, app.familiar.domain.Item.CANDLES, app.familiar.domain.Item.MANDRAKE)
+        val den = listOf(app.familiar.domain.Item.WINDOW_MOON, app.familiar.domain.Item.BOOKSHELF, app.familiar.domain.Item.RUG_RED, app.familiar.domain.Item.FIREPLACE, app.familiar.domain.Item.FIREFLIES, app.familiar.domain.Item.MUSHROOMS, app.familiar.domain.Item.YARN, app.familiar.domain.Item.DREAMCATCHER)
         val pets = dao.pets()
         settings.update {
             it.copy(
@@ -143,6 +160,8 @@ object DemoSeed {
                 seenUnlocks = Species.entries.map { s -> s.name }.toSet(),
                 seenStages = pets.flatMap { p -> app.familiar.domain.Stage.entries.map { st -> "${p.id}:${st.name}" } }.toSet(),
                 candles = 1,
+                // The moth keeps the fox company in the den.
+                companion = moth,
                 // Every dream already dreamt, so the whole album can be looked at.
                 dreams = Genre.entries.map { g -> g.name }.toSet(),
                 // A friend's tanuki staying the day, with a book to recommend.
