@@ -103,6 +103,20 @@ class FamiliarTest {
     }
 
     @Test
+    fun aFastReaderIsBelievedOnceKnown() {
+        // 176 e-reader screens in 20 minutes: too quick for a stranger...
+        fun at(pace: Float) = Mana.feast(Species.MIMIC, Mana.Sitting(176, true, 20, 0f, false, Genre.FANTASY, null, 900, 1, 0, false, "", ebook = true, pace = pace))
+        assertTrue(at(0f).sniffed)
+        // ...but not for someone who always reads about this fast.
+        assertFalse(at(Mana.ownPace(listOf(150 to 18, 170 to 20, 160 to 21))).sniffed)
+        // Two sittings aren't enough to tell, and too short ones don't count.
+        assertEquals(0f, Mana.ownPace(listOf(150 to 18, 170 to 20)))
+        assertEquals(0f, Mana.ownPace(listOf(150 to 18, 170 to 20, 40 to 2)))
+        // Even a known pace has a ceiling: 2000 in 20 minutes is doubted.
+        assertTrue(Mana.feast(Species.MIMIC, Mana.Sitting(2000, true, 20, 0f, false, Genre.FANTASY, null, 900, 1, 0, false, "", ebook = true, pace = 100f)).sniffed)
+    }
+
+    @Test
     fun favourites() {
         fun fav(sp: Species, s: Mana.Sitting) = Mana.feast(sp, s).parts.any { it.first == Part.FAVOURITE }
         assertTrue(fav(Species.KITSUNE, sitting(genre = Genre.HORROR, prev = Genre.FANTASY)))

@@ -215,8 +215,27 @@ object Mana {
     /** Faster than this many pages a minute is more than a person reads; the rest counts half. */
     const val MAX_PACE = 2.5f
 
-    /** An e-reader's page is a screen, often half a printed one or less. */
-    const val MAX_PACE_EBOOK = 5f
+    /** An e-reader's page is a screen, often a third of a printed one. */
+    const val MAX_PACE_EBOOK = 8f
+
+    /** A reader's own usual pace is believed with this much to spare. */
+    const val OWN_PACE_SPARE = 1.5f
+
+    /** ...but never past this many times the plain limit. */
+    const val OWN_PACE_CAP = 3f
+
+    /** Sittings of the same kind it takes to learn a reader's pace. */
+    const val OWN_PACE_SITTINGS = 3
+
+    /**
+     * The reader's usual pace in pages a minute, from their past timed sittings with pages
+     * (pages and minutes of each), or 0 while there are too few to tell. The median, so one odd sitting doesn't sway it.
+     */
+    fun ownPace(sittings: List<Pair<Int, Int>>): Float {
+        val paces = sittings.filter { (p, m) -> p > 0 && m >= 5 }.map { (p, m) -> p.toFloat() / m }.sorted()
+        if (paces.size < OWN_PACE_SITTINGS) return 0f
+        return paces[paces.size / 2]
+    }
 
     /** Minutes counted for a ritual without a page, at most. */
     const val MAX_MINUTES = 180
@@ -256,6 +275,8 @@ object Mana {
         val guest: Boolean = false,
         /** An audiobook, whose length is in minutes. */
         val audio: Boolean = false,
+        /** The reader's usual pace with books of this kind, pages a minute ([ownPace]), or 0. */
+        val pace: Float = 0f,
     )
 
     private fun loves(sp: Species, s: Sitting): Boolean = when (sp) {
@@ -297,7 +318,10 @@ object Mana {
         var pages = s.pages
         parts += Part.PAGES to s.pages
         if (s.timed) {
-            val allowed = (s.minutes * (if (s.ebook) MAX_PACE_EBOOK else MAX_PACE) + 5).toInt()
+            // A fast reader is believed once the familiar knows their pace: someone always this quick isn't cheating.
+            val base = if (s.ebook) MAX_PACE_EBOOK else MAX_PACE
+            val rate = maxOf(base, (s.pace * OWN_PACE_SPARE).coerceAtMost(base * OWN_PACE_CAP))
+            val allowed = (s.minutes * rate + 5).toInt()
             if (s.pages > allowed) {
                 val cut = (s.pages - allowed) / 2
                 parts += Part.SNIFF to -cut

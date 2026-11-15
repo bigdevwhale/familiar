@@ -6,6 +6,16 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.16.1] - 2026-11-15
+
+### Fixed
+- **A fast reader isn't doubted any more:** the familiar learns your own pace from your last timed sittings with books of the same kind (paper or e-book) and believes it with room to spare, so someone who always reads quickly stops seeing it sniff. An e-reader's screen is often a third of a printed page, so for e-books it now believes up to 8 pages a minute even before it knows you.
+
+<!-- tg
+Фамильяр больше не принюхивается с подозрением, если вы просто быстро читаете: он запоминает ваш обычный темп за последние чтения со свечой.
+Для электронных книг он сразу верит большей скорости: экран читалки часто втрое меньше книжной страницы.
+-->
+
 ## [1.16.0] - 2026-11-14
 
 - Nine new familiars: hydra, Bayun cat, snail, salamander, automaton, pixie, raven, sphinx and post owlet

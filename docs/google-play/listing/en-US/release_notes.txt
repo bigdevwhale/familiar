@@ -1,7 +1,1 @@
-• Nine new familiars: hydra, Bayun cat, snail, salamander, automaton, pixie, raven, sphinx and post owlet
-• 197 achievements with medals, each gives your familiar mana
-• Quotes: copy lines out of books, keep an album, share a card
-• A second familiar can live in the den beside yours
-• Your year in books, page by page; a sleep timer for audiobooks
-• New furniture, two new dens, weather in the window, new shelf ornaments
-• The slime is redrawn; prettier visiting cards
+• A fast reader isn't doubted any more: the familiar learns your own pace from your last timed sittings with books of the same kind (paper or e-book) and believes it with room to spare, so someone who always reads quickly stops seeing it sniff. An e-reader's screen is often a third of a printed page, so for e-books it now believes up to 8 pages a minute even before it knows you.
