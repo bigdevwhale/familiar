@@ -22,6 +22,9 @@ object Room {
     /** Frames painted for it, so bats, leaves and bubbles move in small steps between the beats. */
     const val FRAMES = BEATS * 4
     const val STEP = FRAMES / BEATS
+    /** Where a guest and a companion sit, from the middle of the room: close by, so the floor pieces stay in sight. */
+    const val GUEST_X = -36
+    const val MATE_X = 34
 
     private val brew = Ramp(rgb(16, 52, 30), rgb(30, 104, 46), rgb(64, 168, 70), rgb(140, 224, 110), rgb(214, 252, 170))
 
@@ -49,7 +52,7 @@ object Room {
      * flames, the brew and the bulbs are lit over them frame by frame. [night] shows the moon in the window.
      */
     @Suppress("UNUSED_PARAMETER")
-    fun scene(placed: Set<Item>, books: List<Int>, night: Boolean, at: Int, season: Season = Season.NONE, sky: Sky = Sky.CLEAR): Px {
+    fun scene(placed: Set<Item>, books: List<Int>, night: Boolean, at: Int, season: Season = Season.NONE, sky: Sky = Sky.CLEAR, toys: Boolean = true): Px {
         val px = Px(W, H)
         val f = at / STEP
         val ph = at / FRAMES.toFloat()
@@ -59,9 +62,7 @@ object Room {
         for (item in order) {
             if (item !in placed) continue
             if (item.place == Place.TOY) {
-                // A plaything rolls a little from side to side, as if just batted.
-                val l = Painted.of(layer(item, night)) ?: continue
-                px.blit(l.px, (sin(ph * 2 * PI) * 1.6).roundToInt(), 0)
+                if (toys) toy(px, item, night, ph)
                 continue
             }
             val l = Painted.lay(px, layer(item, night)) ?: continue
@@ -73,6 +74,24 @@ object Room {
         // Warm light around where the familiar sits, stronger with candles and lanterns.
         val warmth = 34 + (if (Item.CANDLES in placed) 18 else 0) + (if (Item.LANTERN in placed) 18 else 0)
         px.glow(72f, 74f, 70f, rgb(255, 190, 110), warmth, 5, onlyDrawn = true)
+        return px
+    }
+
+    /** A plaything rolls a little from side to side, as if just batted. */
+    private fun toy(px: Px, item: Item, night: Boolean, ph: Float) {
+        val l = Painted.of(layer(item, night)) ?: return
+        px.blit(l.px, (sin(ph * 2 * PI) * 1.6).roundToInt(), 0)
+    }
+
+    /**
+     * Frame [at] of the playthings alone, to lay in front of the familiars: on the floor at their feet,
+     * a ball of yarn would otherwise hide under a tail. Null when there are none.
+     */
+    fun toys(placed: Set<Item>, night: Boolean, at: Int): Px? {
+        val items = order.filter { it in placed && it.place == Place.TOY }
+        if (items.isEmpty()) return null
+        val px = Px(W, H)
+        items.forEach { toy(px, it, night, at / FRAMES.toFloat()) }
         return px
     }
 

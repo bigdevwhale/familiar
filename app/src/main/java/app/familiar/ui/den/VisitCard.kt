@@ -220,11 +220,11 @@ object VisitCard {
     private fun home(data: FamiliarData): Px {
         val s = data.stats
         val hour = LocalTime.now().hour
-        val room = Room.scene(
-            data.settings.placed.mapNotNull { Item.of(it) }.toSet(), s.finished.map { Genre.of(it.genre).argb.toInt() }.takeLast(24),
-            hour < 6 || hour >= 20, Room.STEP, data.season, Sky.of(s.today),
-        )
+        val placed = data.settings.placed.mapNotNull { Item.of(it) }.toSet()
+        val night = hour < 6 || hour >= 20
+        val room = Room.scene(placed, s.finished.map { Genre.of(it.genre).argb.toInt() }.takeLast(24), night, Room.STEP, data.season, Sky.of(s.today), toys = false)
         data.look()?.let { look -> Sprites.frame(look.copy(sleeping = false, stone = 0f), 0).let { room.blit(it, (Room.W - it.w) / 2, Room.FLOOR_Y - it.h + 3) } }
+        Room.toys(placed, night, Room.STEP)?.let { room.blit(it, 0, 0) }
         return room
     }
 

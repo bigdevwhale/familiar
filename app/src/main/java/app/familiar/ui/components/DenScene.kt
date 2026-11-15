@@ -63,8 +63,12 @@ fun DenScene(
     val key = RoomKey(placed, books, night, season, sky)
     val room by produceState(RoomCache.get(key), key) {
         value = RoomCache.get(key) ?: withContext(Dispatchers.Default) {
-            List(Room.FRAMES) { Room.scene(placed, books, night, it, season, sky).bitmap() }
+            List(Room.FRAMES) { Room.scene(placed, books, night, it, season, sky, toys = false).bitmap() }
         }.also { RoomCache.put(key, it) }
+    }
+    // The playthings, laid in front of the familiars so no tail hides them.
+    val toys by produceState(null as List<ImageBitmap>?, placed, night) {
+        value = withContext(Dispatchers.Default) { List(Room.FRAMES) { Room.toys(placed, night, it)?.bitmap() ?: return@withContext null } }
     }
     // Drawn again when the art style is switched in the settings, not only when the familiar changes.
     val classic = app.familiar.ui.pix.Sprites.classic
@@ -123,19 +127,20 @@ fun DenScene(
         visitor?.let { v ->
             // The guest sits to the left, a little out of step with the host.
             val img = v.at(t * 5 + 3)
-            familiar(img, ox + (Room.W / 2 - 44 - img.width / d / 2) * k, oy + (Room.FLOOR_Y - img.height / d + 1) * k, guest?.let { breath(it, t + 0.8f) } ?: 0f)
+            familiar(img, ox + (Room.W / 2 + Room.GUEST_X - img.width / d / 2) * k, oy + (Room.FLOOR_Y - img.height / d + 1) * k, guest?.let { breath(it, t + 0.8f) } ?: 0f)
         }
         // With a companion (and no guest on the other side) the two share the middle of the room.
         val shift = if (companion != null && guest == null) -16 else 0
         mate?.let { m ->
             // The companion sits to the right, a little behind and out of step.
             val img = m.at(t * 5 + 7)
-            familiar(img, ox + (Room.W / 2 + (if (guest == null) 34 else 44) - img.width / d / 2) * k, oy + (Room.FLOOR_Y - img.height / d + 1) * k - (mateHop.value * 5 * k).toInt(), companion?.let { breath(it, t + 1.3f) } ?: 0f)
+            familiar(img, ox + (Room.W / 2 + Room.MATE_X - img.width / d / 2) * k, oy + (Room.FLOOR_Y - img.height / d + 1) * k - (mateHop.value * 5 * k).toInt(), companion?.let { breath(it, t + 1.3f) } ?: 0f)
         }
         pet?.let { p ->
             val img = p.at(t * 6)
             familiar(img, ox + ((Room.W - img.width / d) / 2 + shift) * k, oy + (Room.FLOOR_Y - img.height / d + 3) * k - (hop.value * 6 * k).toInt(), breath(look, t))
         }
+        toys?.let { drawImage(it[(t * 3 * Room.STEP).toInt() % it.size], dstOffset = IntOffset(ox, oy), dstSize = IntSize(Room.W * k, Room.H * k), filterQuality = FilterQuality.None) }
     }
 }
 

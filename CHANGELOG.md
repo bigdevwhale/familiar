@@ -6,6 +6,17 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.16.2] - 2026-11-15
+
+### Fixed
+- **The ball of yarn is in sight again:** toys lie in front of the familiars, so a tail no longer hides them.
+- **A guest sits closer to your familiar,** no longer on top of the cauldron and the candles; a companion keeps one place, guest or not.
+
+<!-- tg
+Клубок и плюшевая игрушка теперь лежат перед фамильярами — хвост их больше не прячет.
+Гость садится ближе к вашему фамильяру и не загораживает котёл и свечи.
+-->
+
 ## [1.16.1] - 2026-11-15
 
 ### Fixed

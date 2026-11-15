@@ -612,12 +612,15 @@ private class Painter(val context: Context, val cv: Canvas, val f: Cards.Format,
         val s = data.stats
         val k = if (story) 7 else 6
         val hour = LocalTime.now().hour
-        val room = Room.scene(data.settings.placed.mapNotNull { Item.of(it) }.toSet(), s.finished.map { Genre.of(it.genre).argb.toInt() }.takeLast(24), hour < 6 || hour >= 20, Room.STEP, data.season)
+        val placed = data.settings.placed.mapNotNull { Item.of(it) }.toSet()
+        val night = hour < 6 || hour >= 20
+        val room = Room.scene(placed, s.finished.map { Genre.of(it.genre).argb.toInt() }.takeLast(24), night, Room.STEP, data.season, toys = false)
         data.guestLook?.let { g ->
             val img = Sprites.frame(g, 3 * Sprites.STEP)
-            room.blit(img, Room.W / 2 - 44 - img.w / 2, Room.FLOOR_Y - img.h + 1)
+            room.blit(img, Room.W / 2 + Room.GUEST_X - img.w / 2, Room.FLOOR_Y - img.h + 1)
         }
         familiar(data)?.let { room.blit(it, (Room.W - it.w) / 2, Room.FLOOR_Y - it.h + 3) }
+        Room.toys(placed, night, Room.STEP)?.let { room.blit(it, 0, 0) }
         val form = Form.of(pet.form)
         val kind = listOfNotNull(
             str(speciesRes(sp)), str(stageRes(s.stage)),
