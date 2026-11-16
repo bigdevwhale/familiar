@@ -93,6 +93,10 @@ data class Settings(
     val shelfWood: String = "",
     val shelfTrim: String = "",
     val shelfDecor: String = "",
+    /** How big the books on the planks are, in percent of their usual size (#58); a book sized by hand keeps its own. */
+    val shelfScale: Int = 100,
+    /** Every book on the planks of one height, rather than each its own; one sized by hand keeps its own. */
+    val shelfEven: Boolean = false,
     /** The tree bears only this year's books rather than every book ever finished. */
     val treeYear: Boolean = false,
     /** The picture behind every screen ([app.familiar.ui.Backdrops] key), and when the reader's own was last picked. */
@@ -157,6 +161,8 @@ class SettingsStore(context: Context) {
         shelfWood = this[SHELF_WOOD] ?: "",
         shelfTrim = this[SHELF_TRIM] ?: "",
         shelfDecor = this[SHELF_DECOR] ?: "",
+        shelfScale = this[SHELF_SCALE] ?: 100,
+        shelfEven = this[SHELF_EVEN] ?: false,
         treeYear = this[TREE_YEAR] ?: false,
         backdrop = this[BACKDROP] ?: "",
         backdropStamp = this[BACKDROP_STAMP] ?: 0L,
@@ -216,6 +222,8 @@ class SettingsStore(context: Context) {
             it[SHELF_WOOD] = s.shelfWood
             it[SHELF_TRIM] = s.shelfTrim
             it[SHELF_DECOR] = s.shelfDecor
+            it[SHELF_SCALE] = s.shelfScale
+            it[SHELF_EVEN] = s.shelfEven
             it[TREE_YEAR] = s.treeYear
             it[BACKDROP] = s.backdrop
             it[BACKDROP_STAMP] = s.backdropStamp
@@ -270,6 +278,8 @@ class SettingsStore(context: Context) {
         val SHELF_WOOD = stringPreferencesKey("shelf_wood")
         val SHELF_TRIM = stringPreferencesKey("shelf_trim")
         val SHELF_DECOR = stringPreferencesKey("shelf_decor")
+        val SHELF_SCALE = intPreferencesKey("shelf_scale")
+        val SHELF_EVEN = booleanPreferencesKey("shelf_even")
         val TREE_YEAR = booleanPreferencesKey("tree_year")
         val BACKDROP = stringPreferencesKey("backdrop")
         val BACKDROP_STAMP = longPreferencesKey("backdrop_stamp")

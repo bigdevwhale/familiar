@@ -66,14 +66,40 @@ import app.familiar.ui.theme.U
 
 /** How the shelf is laid out on the planks: which books stand together on each one. */
 object Spines {
-    /** Thin books are thin: about a dp for every 28 pages, an audiobook's minutes counted at half. */
-    fun width(b: Book): Int {
+    /**
+     * How big every book is, in percent of its usual size ([app.familiar.data.Settings.shelfScale]). Kept as observed
+     * state, so the planks are packed again the moment it changes.
+     */
+    private val scaleState = androidx.compose.runtime.mutableIntStateOf(100)
+    var scale: Int
+        get() = scaleState.intValue
+        set(v) { scaleState.intValue = v.coerceIn(SCALE.first, SCALE.last) }
+    /** Every book of one height ([app.familiar.data.Settings.shelfEven]), unless one was sized by hand. */
+    private val evenState = androidx.compose.runtime.mutableStateOf(false)
+    var even: Boolean
+        get() = evenState.value
+        set(v) { evenState.value = v }
+
+    /** How far the size of every book, and of one by hand, can go. */
+    val SCALE = 60..150
+    val TALL = 80..220
+    val THICK = 10..70
+
+    /** Thin books are thin: about a dp for every 28 pages, an audiobook's minutes counted at half; or as thick as it was set. */
+    fun width(b: Book): Int = if (b.thick > 0) b.thick else autoWidth(b) * scale / 100
+
+    fun autoWidth(b: Book): Int {
         val pages = if (b.audio) b.pages / 2 else b.pages
         return if (pages <= 0) 22 else (14 + pages / 28).coerceIn(16, 44)
     }
 
-    /** Books aren't all one height; each keeps its own, the same every time it's shown. */
-    fun height(b: Book): Int = 132 + Math.floorMod((b.title.hashCode() * 31 + b.id.toInt()), 33)
+    /** Books aren't all one height; each keeps its own, the same every time it's shown, unless it was set by hand. */
+    fun height(b: Book): Int = if (b.tall > 0) b.tall else (if (even) EVEN else autoHeight(b)) * scale / 100
+
+    /** The one height every book has when they're all made even: the middle of the usual ones. */
+    private const val EVEN = 148
+
+    fun autoHeight(b: Book): Int = 132 + Math.floorMod((b.title.hashCode() * 31 + b.id.toInt()), 33)
 
     /** Lying down, a book reaches this far along the plank. */
     fun length(b: Book): Int = height(b) * 3 / 4

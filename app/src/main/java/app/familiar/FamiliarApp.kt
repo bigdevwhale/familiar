@@ -67,6 +67,13 @@ class FamiliarApp : Application() {
                 if (changed) app.familiar.widget.DenWidget.refresh(this@FamiliarApp)
             }
         }
+        // The books' size on the planks follows the setting too.
+        container.scope.launch {
+            container.settings.settings.map { it.shelfScale to it.shelfEven }.distinctUntilChanged().collect { (scale, even) ->
+                app.familiar.ui.books.Spines.scale = scale
+                app.familiar.ui.books.Spines.even = even
+            }
+        }
         // Covers still being looked up for imported books when the app was last closed.
         container.scope.launch { runCatching { Import.covers(filesDir, container.db.dao()) { container.changed() } } }
     }

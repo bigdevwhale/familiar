@@ -391,6 +391,16 @@ fun ShelfLookSheet(wood: String, trim: String, decor: String, target: Decor.Plac
                     Chip(stringResource(trimName(t)), look.trim == t, { container.scope.launch { container.settings.update { it.copy(shelfTrim = t.name) } } }, U.c.gold)
                 }
             }
+            // Every book on the planks at once, bigger or smaller (#58); one sized by hand keeps its own.
+            SectionTitle(stringResource(R.string.shelf_book_size))
+            SizeSlider(stringResource(R.string.shelf_book_size_all), Spines.scale, Spines.SCALE, "%") { v ->
+                container.scope.launch { container.settings.update { it.copy(shelfScale = v) } }
+            }
+            FlowRow(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(false to R.string.shelf_height_own, true to R.string.shelf_height_even).forEach { (e, res) ->
+                    Chip(stringResource(res), Spines.even == e, { container.scope.launch { container.settings.update { it.copy(shelfEven = e) } } }, U.c.gold)
+                }
+            }
             SectionTitle(stringResource(R.string.shelf_decor_here))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 // For a thing that stands here, taking it away; for a new place, leaving it empty.

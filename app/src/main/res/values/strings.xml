@@ -965,6 +965,10 @@
     <string name="spine_own">Your own</string>
     <string name="spine_upload">Upload your own spine</string>
     <string name="spine_upload_hint">A photo of the real spine, upright: it is stretched to fill the book</string>
+    <string name="book_size">Size</string>
+    <string name="book_height">Height</string>
+    <string name="book_thickness">Thickness</string>
+    <string name="book_size_auto">The usual size</string>
     <string name="spine_own_remove">Remove your spine</string>
     <string name="book_look">On the shelf of spines</string>
     <string name="sort_manual">My order</string>
@@ -975,6 +979,10 @@
     <string name="shelf_look">The planks</string>
     <string name="shelf_wood">Wood</string>
     <string name="shelf_trim">Trim</string>
+    <string name="shelf_book_size">Books</string>
+    <string name="shelf_book_size_all">Size of every book</string>
+    <string name="shelf_height_own">Each its own height</string>
+    <string name="shelf_height_even">All one height</string>
     <string name="shelf_decor_here">Here</string>
     <string name="shelf_decor_finds">Your familiar\'s finds</string>
     <string name="wood_oak">Oak</string>

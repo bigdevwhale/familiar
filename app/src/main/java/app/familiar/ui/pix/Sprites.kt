@@ -99,7 +99,8 @@ object Sprites {
             look.happy -> EyeState.HAPPY
             f == BEATS - 2 -> EyeState.BLINK
             look.mood == Mood.SCARED -> EyeState.SCARED
-            look.mood == Mood.SUSPICIOUS -> EyeState.SQUINT
+            // A squint now and then, for a few beats: held the whole loop it read as sleepy, drunk eyes (#62).
+            look.mood == Mood.SUSPICIOUS && f in 3..6 -> EyeState.SQUINT
             else -> EyeState.OPEN
         }
         val ctx = Ctx(look, f, ph, eyes)

@@ -1018,6 +1018,10 @@
     <string name="spine_own">Свой</string>
     <string name="spine_upload">Загрузить свой корешок</string>
     <string name="spine_upload_hint">Фото настоящего корешка, вертикально: оно растянется по книге</string>
+    <string name="book_size">Размер</string>
+    <string name="book_height">Высота</string>
+    <string name="book_thickness">Толщина</string>
+    <string name="book_size_auto">Обычный размер</string>
     <string name="spine_own_remove">Убрать свой корешок</string>
     <string name="book_look">Вид на полке корешков</string>
     <string name="sort_manual">Своя расстановка</string>
@@ -1028,6 +1032,10 @@
     <string name="shelf_look">Полки</string>
     <string name="shelf_wood">Дерево</string>
     <string name="shelf_trim">Отделка</string>
+    <string name="shelf_book_size">Книги</string>
+    <string name="shelf_book_size_all">Размер всех книг</string>
+    <string name="shelf_height_own">Разной высоты</string>
+    <string name="shelf_height_even">Одной высоты</string>
     <string name="shelf_decor_here">Здесь</string>
     <string name="shelf_decor_finds">Находки фамильяра</string>
     <string name="wood_oak">Дуб</string>

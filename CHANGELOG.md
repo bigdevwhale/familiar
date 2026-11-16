@@ -6,6 +6,21 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.16.3] - 2026-11-16
+
+### Added
+- **Books of any size on the planks:** hold a book to set its own height and thickness, or make every book bigger or smaller, and all of one height, in the planks' settings (#58).
+
+### Fixed
+- **The ancient kitsune's tails stay whole:** a fan of tails no longer runs off the picture and gets cut off in the postcard (#57).
+- **No more sleepy eyes after a mystery:** the familiar squints now and then instead of all day, which looked like a stripe across its eyes (#62).
+
+<!-- tg
+Книги на полке теперь любого размера: удерживайте книгу, чтобы задать ей высоту и толщину, а в настройках полок можно сделать все книги больше, меньше или одной высоты.
+Хвосты древней кицунэ больше не обрезаются в открытке.
+После детектива фамильяр щурится иногда, а не весь день: «полоска на глазах» пропала.
+-->
+
 ## [1.16.2] - 2026-11-15
 
 ### Fixed

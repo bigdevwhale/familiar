@@ -150,7 +150,7 @@ fun ShelfTab(data: FamiliarData, go: Go) {
     // What stands at the end of each plank takes its room there.
     val decor = remember(data.settings.shelfDecor) { Decor.parse(data.settings.shelfDecor) }
     val look = PlankLook.of(data.settings.shelfWood, data.settings.shelfTrim)
-    val planks = remember(list, room, spineMode, cycle, decor, decorMode) {
+    val planks = remember(list, room, spineMode, cycle, decor, decorMode, data.settings.shelfScale, data.settings.shelfEven) {
         if (spineMode) Spines.planks(Spines.groups(list, cycles = cycle.isBlank(), decor = decor), room) { if (decorMode) Decor.room(Decor.SLOT) else 0 } else emptyList()
     }
     // The book held down on the shelf of spines, to change how it stands and looks; the plank held, to decorate it.

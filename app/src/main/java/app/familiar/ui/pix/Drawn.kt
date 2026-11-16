@@ -520,8 +520,27 @@ internal object Drawn {
             val sway = sin(ctx.ph * 2 * PI.toFloat() + i * 0.8f) * 4f
             // The ones behind the back grow longer, so they rise over it instead of hiding.
             val long = 1f + 0.4f * (1f - abs(ang) / 90f)
-            part(px, tail, bx, by, (ang + sway) * PI.toFloat() / 180f, k * long, colours.getOrNull(i), ORANGE)
+            val a = (ang + sway) * PI.toFloat() / 180f
+            part(px, tail, bx, by, a, k * long * fit(tail, bx, by, a, k * long, px), colours.getOrNull(i), ORANGE)
         }
+    }
+
+    /**
+     * How much shorter a tail scaled by [k] and turned by [a] must be so its tip stays on the picture (#57):
+     * the grown kitsune fills its frame, and a tail fanned out past it was cut off in the postcard.
+     */
+    private fun fit(l: Painted.Layer, bx: Float, by: Float, a: Float, k: Float, px: Px): Float {
+        val len = l.h * k
+        val half = l.w * k / 2f
+        val sa = abs(sin(a)); val ca = cos(a)
+        // How far the tip and its edge reach sideways and up from the base.
+        val side = len * sa + half * abs(ca)
+        val up = len * ca + half * sa
+        val room = if (sin(a) < 0) bx - 1f else px.w - 2f - bx
+        var f = 1f
+        if (side > room) f = minOf(f, room / side)
+        if (up > by - 1f) f = minOf(f, (by - 1f) / up)
+        return f.coerceAtLeast(0.3f)
     }
 
     /**

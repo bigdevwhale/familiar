@@ -66,6 +66,9 @@ data class Book(
     @ColumnInfo(defaultValue = "0") val place: Int = 0,
     /** How many times it has been taken up again after being finished. */
     @ColumnInfo(defaultValue = "0") val reread: Int = 0,
+    /** Its spine's height and thickness on the plank, in dp, set by hand (#58); 0 for the usual, from its title and pages. */
+    @ColumnInfo(defaultValue = "0") val tall: Int = 0,
+    @ColumnInfo(defaultValue = "0") val thick: Int = 0,
 ) {
     val tagList: List<String> get() = tags.split('\n').map { it.trim() }.filter { it.isNotEmpty() }
     /** The last page you can reach: the book's end, or no limit when its length isn't known. */
@@ -271,9 +274,9 @@ abstract class FamiliarDao {
 // Every schema change gets a new version and a migration that keeps what's there (1.1.0 lost data without one).
 @Database(
     entities = [Book::class, Reading::class, Pet::class, Find::class, Quote::class],
-    version = 9,
+    version = 10,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8), AutoMigration(from = 8, to = 9)],
+    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8), AutoMigration(from = 8, to = 9), AutoMigration(from = 9, to = 10)],
 )
 abstract class FamiliarDatabase : RoomDatabase() {
     abstract fun dao(): FamiliarDao
