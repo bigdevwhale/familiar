@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Only to find books in open catalogues and download their covers. -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -78,6 +79,13 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/shared_files" />
         </provider>
+
+        <!-- Lingvale, the village of all the -ling pets, reads the pets and the days from here; it checks who asks. -->
+        <provider
+            android:name=".bridge.VillageProvider"
+            android:authorities="${applicationId}.village"
+            android:exported="true"
+            tools:ignore="ExportedContentProvider" />
 
         <!-- Persists the in-app language choice on Android 12 and older. -->
         <service
