@@ -72,6 +72,11 @@ import kotlinx.coroutines.launch
 fun BestiaryScreen(data: FamiliarData, go: Go) {
     val container = LocalContext.current.container
     var renaming by remember { mutableStateOf<Pet?>(null) }
+    // Every egg on show now counts as seen, which puts out the dot on the den's bestiary door.
+    val eggs = data.stats.unlocked.map { it.name }.filter { n -> data.pets.none { it.species == n } }.toSet()
+    androidx.compose.runtime.LaunchedEffect(eggs) {
+        if (!data.settings.seenEggs.containsAll(eggs)) container.settings.update { it.copy(seenEggs = it.seenEggs + eggs) }
+    }
     Column(Modifier.fillMaxSize().background(U.screen).statusBarsPadding()) {
         TopBar(stringResource(R.string.bestiary), { go.back() })
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).navigationBarsPadding().padding(bottom = 24.dp)) {

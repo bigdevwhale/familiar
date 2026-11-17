@@ -489,6 +489,8 @@ private fun Rooms(data: FamiliarData, go: Go) {
     val s = data.stats
     val sparks = Den.sparks(data.pets, data.settings.spent)
     val eggs = s.unlocked.count { u -> data.pets.none { it.species == u.name } }
+    // The dot is for news only: eggs not yet looked at in the bestiary.
+    val newEggs = s.unlocked.any { u -> u.name !in data.settings.seenEggs && data.pets.none { it.species == u.name } }
     val feats = app.familiar.domain.Feats.all
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -496,7 +498,7 @@ private fun Rooms(data: FamiliarData, go: Go) {
             RoomTile(
                 Icons.Rounded.Pets, stringResource(R.string.bestiary),
                 if (eggs > 0) stringResource(R.string.eggs_short, eggs) else "${data.pets.size}/${Species.entries.size}",
-                U.c.leaf, U.c.leafSoft, Modifier.weight(1f), badge = eggs > 0,
+                U.c.leaf, U.c.leafSoft, Modifier.weight(1f), badge = newEggs,
             ) { go.bestiary() }
             RoomTile(Icons.Rounded.EmojiEvents, stringResource(R.string.feats), "${feats.count { it.id in data.earned }}/${feats.size}", U.c.ember, U.c.emberSoft, Modifier.weight(1f)) { go.feats() }
         }

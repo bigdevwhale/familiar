@@ -53,6 +53,8 @@ data class Settings(
     val seenUnlocks: Set<String> = emptySet(),
     /** "petId:stage" already celebrated. */
     val seenStages: Set<String> = emptySet(),
+    /** Eggs already looked at in the bestiary, so the den's dot only lights for new ones. */
+    val seenEggs: Set<String> = emptySet(),
     /** "yyyy-mm:questId" whose reward was taken. */
     val claimed: Set<String> = emptySet(),
     /** Sparks spent on the den; sparks earned equal all mana ever eaten. */
@@ -139,6 +141,7 @@ class SettingsStore(context: Context) {
         },
         seenUnlocks = this[SEEN_UNLOCKS] ?: emptySet(),
         seenStages = this[SEEN_STAGES] ?: emptySet(),
+        seenEggs = this[SEEN_EGGS] ?: emptySet(),
         claimed = this[CLAIMED] ?: emptySet(),
         spent = this[SPENT] ?: 0,
         owned = this[OWNED] ?: emptySet(),
@@ -200,6 +203,7 @@ class SettingsStore(context: Context) {
             it[R_SLEEP] = r?.sleepAt ?: 0L
             it[SEEN_UNLOCKS] = s.seenUnlocks
             it[SEEN_STAGES] = s.seenStages
+            it[SEEN_EGGS] = s.seenEggs
             it[CLAIMED] = s.claimed
             it[SPENT] = s.spent
             it[OWNED] = s.owned
@@ -256,6 +260,7 @@ class SettingsStore(context: Context) {
         val R_RANG = booleanPreferencesKey("ritual_rang")
         val SEEN_UNLOCKS = stringSetPreferencesKey("seen_unlocks")
         val SEEN_STAGES = stringSetPreferencesKey("seen_stages")
+        val SEEN_EGGS = stringSetPreferencesKey("seen_eggs")
         val CLAIMED = stringSetPreferencesKey("claimed")
         val SPENT = intPreferencesKey("spent")
         val OWNED = stringSetPreferencesKey("owned")
