@@ -6,6 +6,15 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.17.1] - 2026-11-17
+
+### Fixed
+- **The bestiary's red dot means news again:** it lights when a new egg appears and goes out once you have looked into the bestiary, instead of glowing for as long as any egg waits to be taken in (#64).
+
+<!-- tg
+Красная точка на двери бестиария больше не горит постоянно: она появляется, когда приходит новое яйцо, и гаснет, как только вы заглянули в бестиарий.
+-->
+
 ## [1.17.0] - 2026-11-16
 
 ### Added
