@@ -47,4 +47,34 @@ class BackupTest {
         // A backup from before quotes has none.
         assertEquals(0, Backup.decode(Backup.encode(Snapshot(books, readings, emptyList())).replace("quotes", "old")).quotes.size)
     }
+    /** What lives in the settings (the den's things, candles, goals) and the reader's own backdrop go into the file and come back. */
+    @Test fun theDenAndTheSettingsTravelWithTheBackup() = kotlinx.coroutines.runBlocking {
+        val ctx = org.robolectric.RuntimeEnvironment.getApplication()
+        val db = androidx.room.Room.inMemoryDatabaseBuilder(ctx, app.familiar.data.FamiliarDatabase::class.java).allowMainThreadQueries().build()
+        val store = app.familiar.data.SettingsStore(ctx)
+        val ritual = app.familiar.data.Ritual(bookId = 1, start = 5, fromPage = 0, page = 3, stillMs = 0)
+        store.update { it.copy(name = "Mara", spent = 40, owned = setOf("lamp", "rug"), candles = 3, yearGoal = 12, shelves = listOf("Summer"), backdrop = "own", ritual = ritual) }
+        db.dao().replaceAll(Snapshot(listOf(Book(id = 1, title = "A", pages = 100, genre = "FANTASY", added = 0)), emptyList(), emptyList()))
+        app.familiar.ui.Backdrops.ownFile(ctx).writeBytes(byteArrayOf(9, 8, 7))
+        val text = Backup.save(ctx, db.dao(), store)
+
+        store.update { app.familiar.data.Settings() }
+        app.familiar.ui.Backdrops.ownFile(ctx).delete()
+        db.dao().replaceAll(Snapshot(emptyList(), emptyList(), emptyList()))
+        Backup.load(ctx, db.dao(), store, text)
+
+        val s = store.now()
+        assertEquals("Mara", s.name); assertEquals(40, s.spent); assertEquals(setOf("lamp", "rug"), s.owned); assertEquals(3, s.candles)
+        assertEquals(12, s.yearGoal); assertEquals(listOf("Summer"), s.shelves); assertEquals("own", s.backdrop)
+        assertEquals(true, s.onboarded)
+        assertEquals(null, s.ritual)   // a sitting in progress stays on the phone it was started on
+        assertArrayEquals(byteArrayOf(9, 8, 7), app.familiar.ui.Backdrops.ownFile(ctx).readBytes())
+        assertEquals(listOf("A"), db.dao().books().map { it.title })
+
+        // a backup from before the settings travelled leaves them alone
+        store.update { it.copy(candles = 7) }
+        Backup.load(ctx, db.dao(), store, Backup.encode(Snapshot(emptyList(), emptyList(), emptyList())))
+        assertEquals(7, store.now().candles)
+        db.close()
+    }
 }

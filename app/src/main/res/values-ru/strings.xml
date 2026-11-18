@@ -383,7 +383,7 @@
     <string name="backup_export">Сохранить</string>
     <string name="backup_import">Восстановить</string>
     <string name="backup_import_title">Восстановить из файла?</string>
-    <string name="backup_import_text">Книги, чтения и фамильяры на этом телефоне заменятся данными из файла.</string>
+    <string name="backup_import_text">Книги, чтения, фамильяры, логово и настройки на этом телефоне заменятся данными из файла.</string>
     <string name="backup_done">Копия сохранена</string>
     <string name="backup_restored">Восстановлено</string>
     <string name="backup_failed">Не удалось прочитать или записать файл</string>

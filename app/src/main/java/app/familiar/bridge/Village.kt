@@ -9,10 +9,12 @@ import android.database.Cursor
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
+import android.os.ParcelFileDescriptor
 import androidx.appcompat.app.AppCompatDelegate
 import app.familiar.BuildConfig
 import app.familiar.FamiliarApp
 import app.familiar.AppContainer
+import app.familiar.data.Backup
 import app.familiar.domain.Genre
 import app.familiar.domain.Item
 import app.familiar.domain.Species
@@ -35,11 +37,15 @@ import java.util.Locale
  * The bridge to Lingvale, the village where the pets of all the -ling apps live together.
  *
  * Lingvale asks through ContentResolver.call() and nobody else gets an answer: the caller must be Lingvale signed
- * with its release key (a debug or demo build also answers a Lingvale built with the same debug key). It only reads;
- * nothing here changes the app's data. Protocol v1, the same in every -ling app:
+ * with its release key (a debug or demo build also answers a Lingvale built with the same debug key).
+ * Protocol v2, the same in every -ling app:
  *  - "hello"    → {v}
  *  - "snapshot" → {json}: pets, species, days of activity, the last week's events
  *  - "art"      → {bytes}: one picture, painted here the way the app paints its familiars (pet_*, egg_*, den_bg)
+ *  - "backup"   (extras {fd}: a file open for writing) → {ok, name}: writes the same backup file the settings save
+ *  - "restore"  (extras {fd}: a file open for reading) → {ok, error}: loads such a file, as the settings' «Restore» does,
+ *    replacing what is on the phone; error is "newer" (a file from a newer version), "busy" or "bad"
+ * Only "restore" changes anything here, and Lingvale asks the player before it calls it.
  */
 class VillageProvider : ContentProvider() {
     override fun onCreate() = true
@@ -51,6 +57,8 @@ class VillageProvider : ContentProvider() {
             "hello" -> Bundle().apply { putInt("v", VERSION) }
             "snapshot" -> Bundle().apply { putString("json", runBlocking { snapshot(ctx, container(ctx)) }.toString()) }
             "art" -> art(ctx, arg)
+            "backup" -> backup(ctx, extras)
+            "restore" -> restore(ctx, extras)
             else -> null
         }
     }
@@ -69,6 +77,29 @@ class VillageProvider : ContentProvider() {
         return Bundle().apply { putByteArray("bytes", bytes) }
     }
 
+    @Suppress("DEPRECATION")
+    private fun fd(extras: Bundle?): ParcelFileDescriptor? = extras?.getParcelable("fd")
+
+    /** Writes the settings' backup file into the file Lingvale opened. */
+    private fun backup(ctx: Context, extras: Bundle?): Bundle {
+        val fd = fd(extras) ?: return Bundle().apply { putBoolean("ok", false) }
+        val ok = runCatching {
+            val c = container(ctx)
+            ParcelFileDescriptor.AutoCloseOutputStream(fd).use { out -> runBlocking { Backup.write(ctx, c.db.dao(), c.settings, out) } }
+        }.onFailure { runCatching { fd.close() } }.isSuccess
+        return Bundle().apply { putBoolean("ok", ok); putString("name", "familiar.json") }
+    }
+
+    /** Loads a backup file from Lingvale, the way the settings do. */
+    private fun restore(ctx: Context, extras: Bundle?): Bundle {
+        val fd = fd(extras) ?: return Bundle().apply { putBoolean("ok", false); putString("error", "bad") }
+        val ok = runCatching {
+            val c = container(ctx)
+            ParcelFileDescriptor.AutoCloseInputStream(fd).use { input -> runBlocking { Backup.read(ctx, c.db.dao(), c.settings, input); c.changed() } }
+        }.onFailure { runCatching { fd.close() } }.isSuccess
+        return Bundle().apply { putBoolean("ok", ok); if (!ok) putString("error", "bad") }
+    }
+
     /** The provider can be asked before the application has finished starting; wait for it a little. */
     private fun container(ctx: Context): AppContainer {
         repeat(100) {
@@ -85,7 +116,7 @@ class VillageProvider : ContentProvider() {
     override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?) = 0
 
     companion object {
-        const val VERSION = 1
+        const val VERSION = 2
         const val HUB = "app.lingvale"
         /** SHA-256 of Lingvale's release certificate. */
         private val HUB_CERTS = listOf(hex("CEF40A1786896D829CFA53115693AC9A53FC0349EAB84BAF64EFA648592D1ABF"))

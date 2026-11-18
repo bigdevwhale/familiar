@@ -117,8 +117,7 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
         if (uri == null) return@rememberLauncherForActivityResult
         container.scope.launch {
             val ok = runCatching {
-                val json = Backup.encode(container.db.dao().snapshot()) { Covers.bytes(context, it) }
-                context.contentResolver.openOutputStream(uri, "wt")!!.use { it.write(json.toByteArray()) }
+                context.contentResolver.openOutputStream(uri, "wt")!!.use { Backup.write(context, container.db.dao(), container.settings, it) }
             }.isSuccess
             withContext(Dispatchers.Main) { Toast.makeText(context, if (ok) exported else failed, Toast.LENGTH_SHORT).show() }
         }
@@ -305,8 +304,7 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
             onConfirm = {
                 container.scope.launch {
                     val ok = runCatching {
-                        val text = context.contentResolver.openInputStream(uri)!!.use { it.readBytes().decodeToString() }
-                        container.db.dao().replaceAll(Backup.decode(text) { url, bytes -> Covers.restore(context, url, bytes) })
+                        context.contentResolver.openInputStream(uri)!!.use { Backup.read(context, container.db.dao(), container.settings, it) }
                         container.changed()
                     }.isSuccess
                     withContext(Dispatchers.Main) { Toast.makeText(context, if (ok) restored else failed, Toast.LENGTH_SHORT).show() }

@@ -177,6 +177,44 @@ class SettingsStore(context: Context) {
 
     suspend fun now(): Settings = settings.first()
 
+    /**
+     * Every stored setting for the backup, each as {t: its type, v: its value}: the den's things, candles, shelves,
+     * genres and the rest. A sitting in progress stays out: it belongs to this phone and this moment.
+     */
+    suspend fun export(): org.json.JSONObject = org.json.JSONObject().apply {
+        store.data.first().asMap().forEach { (k, v) ->
+            if (k.name.startsWith("ritual_")) return@forEach
+            when (v) {
+                is Boolean -> put(k.name, org.json.JSONObject().put("t", "b").put("v", v))
+                is Int -> put(k.name, org.json.JSONObject().put("t", "i").put("v", v))
+                is Long -> put(k.name, org.json.JSONObject().put("t", "l").put("v", v))
+                is String -> put(k.name, org.json.JSONObject().put("t", "s").put("v", v))
+                is Set<*> -> put(k.name, org.json.JSONObject().put("t", "ss").put("v", org.json.JSONArray(v.map { it.toString() })))
+            }
+        }
+    }
+
+    /** Replaces the settings with a backup's ([export]); what can't be read is skipped, and any sitting in progress ends. */
+    suspend fun import(o: org.json.JSONObject) {
+        store.edit {
+            it.clear()
+            for (name in o.keys()) {
+                if (name.startsWith("ritual_")) continue
+                val e = o.optJSONObject(name) ?: continue
+                runCatching {
+                    when (e.optString("t")) {
+                        "b" -> it[booleanPreferencesKey(name)] = e.getBoolean("v")
+                        "i" -> it[intPreferencesKey(name)] = e.getInt("v")
+                        "l" -> it[longPreferencesKey(name)] = e.getLong("v")
+                        "s" -> it[stringPreferencesKey(name)] = e.getString("v")
+                        "ss" -> it[stringSetPreferencesKey(name)] = e.getJSONArray("v").let { a -> (0 until a.length()).map { i -> a.getString(i) }.toSet() }
+                    }
+                }
+            }
+            it[ONBOARDED] = true
+        }
+    }
+
     suspend fun update(change: (Settings) -> Settings) {
         store.edit {
             val s = change(it.read())

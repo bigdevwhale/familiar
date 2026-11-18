@@ -369,7 +369,7 @@
     <string name="backup_export">Save</string>
     <string name="backup_import">Restore</string>
     <string name="backup_import_title">Restore from a file?</string>
-    <string name="backup_import_text">Books, sittings and familiars on this phone will be replaced by the file\'s.</string>
+    <string name="backup_import_text">Books, sittings, familiars, the den and the settings on this phone will be replaced by the file\'s.</string>
     <string name="backup_done">Backup saved</string>
     <string name="backup_restored">Restored</string>
     <string name="backup_failed">Couldn\'t read or write the file</string>

@@ -6,6 +6,21 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.18.0] - 2026-11-18
+
+### Added
+- **Lingvale can move Familiar to a new phone:** the village saves the backups of all the -ling apps into one file and loads them back on another phone. It is the same backup the settings make, and Familiar loads it only when you confirm it in Lingvale.
+
+### Fixed
+- **The backup carries the den and the settings:** a backup held the books, sittings, familiars, finds and quotes, but not what lives in the settings: the things bought and placed in the den, mana spent, spare candles, your own shelves and genres, the year's goal, earned feats, the look of the shelf. After a restore those started from nothing. Now they travel in the file, with your own backdrop picture. Older backups still load and leave the settings as they are.
+- **A big library saves its backup:** with many covers on the phone the backup ran out of memory and nothing was saved. The pictures now go into the file one at a time, and come back the same way.
+
+<!-- tg
+Lingvale теперь умеет переносить Familiar на новый телефон: одна копия на все приложения семейства.
+В копию теперь попадают логово, свечи, свои полки и жанры, настройки и собственный фон – раньше они не переносились.
+Копия большой библиотеки с обложками больше не обрывается из-за нехватки памяти.
+-->
+
 ## [1.17.1] - 2026-11-17
 
 ### Fixed
