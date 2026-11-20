@@ -6,6 +6,31 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.19.0] - 2026-11-20
+
+### Added
+- **Pause the candle:** a round button by the timer stops it while you're away or writing (#70).
+- **Notes while reading,** next to quotes, from the candle and the book's page (#67).
+- **Half stars:** tap a star twice for half (#60).
+- **A «Reading now» widget:** the book on the go with its cover and the familiar (#61, #68).
+- **Log a past day** in the quick log (#71); **add a whole cycle** at once (#37).
+- **Weekly guild errands** besides the month's (#42).
+- **Shelves by hand:** start a new plank from any book (#65); pick several books and put them on your shelves together (#74).
+- **A loud candle bell,** like an alarm: heard face down or on silent (#24).
+
+### Changed
+- The candle fits one screen; its settings moved into a sheet. The book page has tabs instead of a long scroll.
+
+### Fixed
+- The year in review names the true last book: a date picked without a time no longer lands at noon (#59).
+
+<!-- tg
+Свечу можно поставить на паузу, а по ходу чтения – делать заметки рядом с цитатами.
+Оценки с половинками звёзд, запись чтения за прошлые дни и весь цикл книг сразу.
+Новый виджет «Читаю сейчас», поручения гильдии каждую неделю, свои полки вручную и раскладка нескольких книг разом.
+Экран свечи и страница книги стали проще, а сигнал свечи можно сделать громким, как будильник.
+-->
+
 ## [1.18.0] - 2026-11-18
 
 ### Added
