@@ -57,6 +57,19 @@
                 android:resource="@xml/widget_den" />
         </receiver>
 
+        <!-- «Reading now»: the book on the go (#61, #68). -->
+        <receiver
+            android:name=".widget.ReadingWidget"
+            android:exported="false"
+            android:label="@string/wr_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_reading" />
+        </receiver>
+
         <receiver
             android:name=".widget.MiniWidget"
             android:exported="false"

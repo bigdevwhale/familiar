@@ -373,6 +373,14 @@
     <string name="picked_to_shelf">На полку…</string>
     <string name="picked_shelves_title">Свои полки для книг: %1$d</string>
     <string name="picked_shelves_text">Отмеченная полка достанется всем выбранным книгам, снятая отметка уберёт с неё все.</string>
+    <string name="wr_name">Читаю сейчас</string>
+    <string name="wr_desc">Книга, которую вы читаете, и сколько осталось</string>
+    <string name="wr_label">ЧИТАЮ СЕЙЧАС</string>
+    <string name="wr_none">Пока ничего не читаете</string>
+    <string name="wr_none_sub">Начните книгу – и она появится здесь</string>
+    <string name="wr_pages">стр. %1$d из %2$d · %3$d%%</string>
+    <string name="wr_page">стр. %1$d</string>
+    <string name="wr_minutes">прослушано %1$d%%</string>
     <string name="ritual_pause">Пауза</string>
     <string name="ritual_resume">Продолжить</string>
     <string name="set_candle_loud">Громко, как будильник</string>

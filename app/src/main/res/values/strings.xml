@@ -359,6 +359,14 @@
     <string name="picked_to_shelf">To a shelf…</string>
     <string name="picked_shelves_title">Own shelves for %1$d books</string>
     <string name="picked_shelves_text">A ticked shelf gets every picked book; untick it to take them all off.</string>
+    <string name="wr_name">Reading now</string>
+    <string name="wr_desc">The book you are reading and how far along</string>
+    <string name="wr_label">READING NOW</string>
+    <string name="wr_none">Nothing on the go yet</string>
+    <string name="wr_none_sub">Start a book and it shows up here</string>
+    <string name="wr_pages">p. %1$d of %2$d · %3$d%%</string>
+    <string name="wr_page">p. %1$d</string>
+    <string name="wr_minutes">%1$d%% listened</string>
     <string name="ritual_pause">Pause</string>
     <string name="ritual_resume">Go on</string>
     <string name="set_candle_loud">Loud, like an alarm</string>

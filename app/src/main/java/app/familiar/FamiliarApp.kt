@@ -34,6 +34,7 @@ class AppContainer(private val context: Context) {
     suspend fun changed() {
         Alarms.reschedule(context)
         DenWidget.refresh(context)
+        app.familiar.widget.ReadingWidget.refresh(context)
     }
 }
 
@@ -64,7 +65,7 @@ class FamiliarApp : Application() {
                 val changed = app.familiar.ui.pix.Sprites.classic != classic
                 app.familiar.ui.pix.Sprites.classic = classic
                 // The widget is drawn once, not watched: draw it again in the new look.
-                if (changed) app.familiar.widget.DenWidget.refresh(this@FamiliarApp)
+                if (changed) { app.familiar.widget.DenWidget.refresh(this@FamiliarApp); app.familiar.widget.ReadingWidget.refresh(this@FamiliarApp) }
             }
         }
         // The books' size on the planks follows the setting too.
