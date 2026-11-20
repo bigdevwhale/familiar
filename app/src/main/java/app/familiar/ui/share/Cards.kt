@@ -418,7 +418,7 @@ private class Painter(val context: Context, val cv: Canvas, val f: Cards.Format,
                     var yy = y
                     if (stars > 0) {
                         val p = paint(64f, st.gold, sans)
-                        cv.drawText("★".repeat(stars) + "☆".repeat(5 - stars), W / 2f, yy + 58, p)
+                        cv.drawText(app.familiar.ui.components.starsText(stars, empty = true), W / 2f, yy + 58, p)
                         yy += 76
                     }
                     days?.let { cv.drawText(plural(R.plurals.card_read_in, it, it), W / 2f, yy + 40, paint(34f, st.muted)) }

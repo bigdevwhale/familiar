@@ -378,7 +378,7 @@ fun ShelfTab(data: FamiliarData, go: Go) {
                         }
                         if (paused) Text(shelfName(Shelf.PAUSED), style = UType.Small.copy(color = U.c.muted))
                     }
-                    if (b.shelfOf == Shelf.DONE && b.rating != null) Text("★".repeat(b.rating), style = UType.Small.copy(color = U.c.gold))
+                    if (b.shelfOf == Shelf.DONE && b.rating != null) Text(app.familiar.ui.components.starsText(b.rating), style = UType.Small.copy(color = U.c.gold))
                 }
             }
         }
@@ -539,7 +539,7 @@ private fun BookRow(b: Book, withShelf: Boolean, onClick: () -> Unit) {
                 Text(bookGenre(b) + if (withShelf) " · " + shelfName(b.shelfOf) else "", style = UType.Small.copy(color = bookColor(b)), maxLines = 1)
             }
             when {
-                b.shelfOf == Shelf.DONE -> if (b.rating != null) Text("★".repeat(b.rating), style = UType.Small.copy(color = U.c.gold))
+                b.shelfOf == Shelf.DONE -> if (b.rating != null) Text(app.familiar.ui.components.starsText(b.rating), style = UType.Small.copy(color = U.c.gold))
                 b.shelfOf == Shelf.ABANDONED -> if (b.note.isNotBlank()) Text("«" + b.note + "»", style = UType.Small.copy(fontStyle = FontStyle.Italic), maxLines = 2, modifier = Modifier.padding(top = 2.dp))
                 b.shelfOf == Shelf.READING || b.shelfOf == Shelf.PAUSED -> {
                     if (b.pages > 0) Bar(b.fraction, Modifier.padding(top = 4.dp).height(4.dp), color = if (b.shelfOf == Shelf.PAUSED) U.c.faint else U.c.accent, track = U.c.accentSoft)

@@ -110,7 +110,7 @@ class FeatsTest {
     @Test
     fun achievementsAreMeasuredFromTheShelf() {
         val books = listOf(
-            book(1, Genre.FANTASY, pages = 620, done = 3).copy(author = "Le Guin", rating = 5),
+            book(1, Genre.FANTASY, pages = 620, done = 3).copy(author = "Le Guin", rating = 10),
             book(2, Genre.SCIFI, done = 2).copy(author = "Le Guin"),
             book(3, Genre.HORROR, done = 1).copy(author = "le guin "),
             book(4).copy(shelf = Shelf.WANT.name),
@@ -151,7 +151,7 @@ class FeatsTest {
     @Test
     fun theYearLooksBackOnItsOwnBooks() {
         val books = listOf(
-            book(1, Genre.FANTASY, pages = 620, done = 30).copy(author = "Le Guin", rating = 5, title = "First"),
+            book(1, Genre.FANTASY, pages = 620, done = 30).copy(author = "Le Guin", rating = 10, title = "First"),
             book(2, Genre.FANTASY, done = 2).copy(author = "Le Guin", title = "Last"),
             book(3, Genre.HORROR, done = 400).copy(title = "Last year's"),
         )

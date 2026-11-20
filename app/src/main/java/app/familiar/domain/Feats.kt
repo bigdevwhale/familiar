@@ -181,7 +181,7 @@ object Feats {
                 Feat.AUTHOR -> authors.maxOfOrNull { it.value.size } ?: 0
                 Feat.AUTHORS -> authors.size
                 Feat.RATED -> s.books.count { it.rating != null }
-                Feat.FIVE_STARS -> s.books.count { it.rating == 5 }
+                Feat.FIVE_STARS -> s.books.count { it.rating == 10 }
                 Feat.QUOTES -> s.quotes.size
                 Feat.NOTES -> s.books.count { it.note.isNotBlank() }
                 Feat.WANT -> s.books.count { it.shelfOf == Shelf.WANT }

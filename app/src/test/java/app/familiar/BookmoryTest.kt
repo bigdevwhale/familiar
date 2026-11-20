@@ -76,7 +76,7 @@ class BookmoryTest {
         assertEquals(Shelf.DONE.name, m.shelf)
         assertEquals(541, m.pages)
         assertEquals(541, m.page)
-        assertEquals(4, m.rating)
+        assertEquals(8, m.rating)
         assertEquals(1793505579159, m.finished)
         assertEquals(1793505563089, m.added)
         assertEquals(Genre.FANTASY.name, m.genre)

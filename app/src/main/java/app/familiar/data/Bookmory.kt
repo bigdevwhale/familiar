@@ -87,7 +87,7 @@ object Bookmory {
                 added = b.time("created_at") ?: start ?: finished ?: now,
                 started = if (shelf == Shelf.WANT) null else start,
                 finished = finished,
-                rating = star.roundToInt().takeIf { shelf == Shelf.DONE && it in 1..5 },
+                rating = (star * 2).roundToInt().takeIf { shelf == Shelf.DONE && it in 1..10 },
                 cover = b.optString("image").takeIf { it.startsWith("https://") }.orEmpty(),
                 audio = (b.strings("book_types") + b.optString("book_type")).any { it.contains("audio", ignoreCase = true) },
                 ebook = (b.strings("book_types") + b.optString("book_type")).let { t -> t.none { it.contains("audio", ignoreCase = true) } && t.any { it.contains("ebook", ignoreCase = true) || it.contains("e_book", ignoreCase = true) || it.contains("electronic", ignoreCase = true) } },

@@ -149,7 +149,7 @@ object DemoSeed {
             dao.insertQuote(Quote(bookId = book.id, text = if (ru) q.second else q.first, page = page, at = at(today.minusDays(30L - i * 6), 21, 10)))
         }
         // Ratings on the finished ones.
-        dao.books().filter { it.shelfOf == Shelf.DONE }.forEachIndexed { i, b -> dao.updateBook(b.copy(rating = listOf(5, 4, 5, 5, 4, 5, 4)[i % 7])) }
+        dao.books().filter { it.shelfOf == Shelf.DONE }.forEachIndexed { i, b -> dao.updateBook(b.copy(rating = listOf(10, 7, 10, 10, 8, 10, 8)[i % 7])) }
         // Every piece bought, so each can be put in the den; these seven stand in it.
         val den = listOf(app.familiar.domain.Item.WINDOW_MOON, app.familiar.domain.Item.BOOKSHELF, app.familiar.domain.Item.RUG_RED, app.familiar.domain.Item.FIREPLACE, app.familiar.domain.Item.FIREFLIES, app.familiar.domain.Item.MUSHROOMS, app.familiar.domain.Item.YARN, app.familiar.domain.Item.DREAMCATCHER)
         val pets = dao.pets()

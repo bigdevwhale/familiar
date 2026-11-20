@@ -176,14 +176,7 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
                         TextButton(onClick = { pickingStart = true }) { Text(stringResource(R.string.edit), color = U.c.accent, style = UType.Button) }
                     }
                     Text(stringResource(R.string.your_rating), style = UType.Muted)
-                    Row {
-                        (1..5).forEach { r ->
-                            Text(
-                                if (rating >= r) "★" else "☆", fontSize = 30.sp, color = U.c.gold,
-                                modifier = Modifier.clickable { rating = if (rating == r) 0 else r }.padding(4.dp),
-                            )
-                        }
-                    }
+                    app.familiar.ui.components.StarPicker(rating) { rating = it }
                 }
             }
             Spacer(Modifier.height(20.dp))
@@ -199,7 +192,7 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
                     shelf = if (old == null) shelf.name else old.shelf,
                     started = old?.started ?: if (shelf == Shelf.READING) now else if (read) begun?.coerceAtMost(finished) else null,
                     finished = if (read) finished else old?.finished,
-                    rating = if (read) rating.takeIf { it in 1..5 } else old?.rating,
+                    rating = if (read) rating.takeIf { it in 1..10 } else old?.rating,
                 )
                 container.write { if (old == null) dao().insertBook(b) else dao().updateBook(b) }
                 go.back()

@@ -41,7 +41,7 @@ data class Book(
     val added: Long,
     val started: Long? = null,
     val finished: Long? = null,
-    /** 1..5 once finished, or null. */
+    /** Stars in halves once finished: 1 is half a star, 10 is five (#60); null when not rated. */
     val rating: Int? = null,
     /** Cover picture address from a book catalogue, or empty for a drawn cover. */
     val cover: String = "",
@@ -278,7 +278,7 @@ abstract class FamiliarDao {
     entities = [Book::class, Reading::class, Pet::class, Find::class, Quote::class],
     version = 11,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8), AutoMigration(from = 8, to = 9), AutoMigration(from = 9, to = 10), AutoMigration(from = 10, to = 11)],
+    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8), AutoMigration(from = 8, to = 9), AutoMigration(from = 9, to = 10)],
 )
 abstract class FamiliarDatabase : RoomDatabase() {
     abstract fun dao(): FamiliarDao
@@ -287,7 +287,16 @@ abstract class FamiliarDatabase : RoomDatabase() {
         fun create(context: Context, name: String = "familiar.db"): FamiliarDatabase =
             Room.databaseBuilder(context.applicationContext, FamiliarDatabase::class.java, name)
                 // Only a database older than the migrations (1.0.0) starts fresh (and onboarding again, see FamiliarApp).
+                .addMigrations(M10_11)
                 .fallbackToDestructiveMigration(dropAllTables = true)
                 .build()
+    }
+}
+
+/** Quotes can be the reader's own notes (#67); stars come in halves, so the old whole stars double (#60). */
+internal val M10_11 = object : androidx.room.migration.Migration(10, 11) {
+    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `quotes` ADD COLUMN `note` INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("UPDATE `books` SET `rating` = `rating` * 2 WHERE `rating` IS NOT NULL")
     }
 }

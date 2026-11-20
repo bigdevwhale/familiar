@@ -369,8 +369,8 @@ class FamiliarTest {
     @Test
     fun theShelfSearchesFiltersAndSorts() {
         val b = listOf(
-            book(1).copy(title = "Dune", author = "Frank Herbert", rating = 5),
-            book(2, Genre.HORROR).copy(title = "Dracula", author = "Bram Stoker", audio = true, rating = 3),
+            book(1).copy(title = "Dune", author = "Frank Herbert", rating = 10),
+            book(2, Genre.HORROR).copy(title = "Dracula", author = "Bram Stoker", audio = true, rating = 6),
             book(3).copy(title = "Hobbit", author = "J. R. R. Tolkien", sub = "Fairy-tale"),
         )
         fun titles(br: app.familiar.ui.books.Browse) = br.apply(b, emptyList(), locale = Locale.ENGLISH).map { it.title }
@@ -463,9 +463,9 @@ class FamiliarTest {
     @Test
     fun finishedBooksAddUp() {
         val books = listOf(
-            book(1, pages = 150, done = 10).copy(author = "Le Guin", rating = 5, started = at(14)),
-            book(2, Genre.HORROR, pages = 450, done = 3).copy(author = "le guin ", rating = 4),
-            book(3, pages = 800, done = 400).copy(author = "King", rating = 3),
+            book(1, pages = 150, done = 10).copy(author = "Le Guin", rating = 10, started = at(14)),
+            book(2, Genre.HORROR, pages = 450, done = 3).copy(author = "le guin ", rating = 8),
+            book(3, pages = 800, done = 400).copy(author = "King", rating = 6),
             book(4, pages = 600).copy(audio = true, shelf = Shelf.DONE.name, finished = at(1)),
             book(5),
         )

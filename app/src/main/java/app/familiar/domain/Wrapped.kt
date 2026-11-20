@@ -50,7 +50,7 @@ class Wrapped(s: Stats, val year: Int, allFinds: List<Find> = emptyList(), earne
     val mornings: Int = counted.count { isMorning(it.start, zone) }
     val listens: Int = counted.count { it.listened }
 
-    val fiveStars: List<Book> = books.filter { it.rating == 5 }
+    val fiveStars: List<Book> = books.filter { it.rating == 10 }
     val avgRating: Float? = finished.avgRating
 
     val quotes: List<Quote> = s.quotes.filter { inYear(it.at) }

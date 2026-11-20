@@ -379,7 +379,7 @@ class RenderArt {
     fun visitCard() {
         val now = System.currentTimeMillis()
         val pet = app.familiar.data.Pet(id = 1, species = Species.KITSUNE.name, name = "Юзу", joined = now - 90 * 86_400_000L, mana = 1500, active = true, form = app.familiar.domain.Form.ASTRAL.name)
-        val book = app.familiar.data.Book(id = 1, title = "Волшебник Земноморья", author = "Урсула Ле Гуин", pages = 320, genre = Genre.FANTASY.name, shelf = app.familiar.data.Shelf.DONE.name, added = now, finished = now, rating = 5)
+        val book = app.familiar.data.Book(id = 1, title = "Волшебник Земноморья", author = "Урсула Ле Гуин", pages = 320, genre = Genre.FANTASY.name, shelf = app.familiar.data.Shelf.DONE.name, added = now, finished = now, rating = 10)
         val placed = listOf("WINDOW_MOON", "BOOKSHELF", "BANNER", "LANTERN", "RUG_RED", "CAULDRON", "MANDRAKE", "CANDLES").toSet()
         for (lang in listOf("ru", "en")) {
             org.robolectric.RuntimeEnvironment.setQualifiers(lang)

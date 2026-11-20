@@ -172,15 +172,7 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
                         }
                         Spacer(Modifier.height(4.dp))
                         Text(stringResource(R.string.your_rating), style = UType.Muted)
-                        Row {
-                            (1..5).forEach { r ->
-                                Text(
-                                    if ((book.rating ?: 0) >= r) "★" else "☆",
-                                    fontSize = 30.sp, color = U.c.gold,
-                                    modifier = Modifier.clickable { container.write { dao().updateBook(book.copy(rating = r)) } }.padding(4.dp),
-                                )
-                            }
-                        }
+                        app.familiar.ui.components.StarPicker(book.rating ?: 0) { r -> container.write { dao().updateBook(book.copy(rating = r.takeIf { it > 0 })) } }
                         if (book.reread > 0) Text(stringResource(R.string.reread_n, book.reread + 1), style = UType.Small.copy(color = U.c.gold))
                     }
                     Spacer(Modifier.height(8.dp))

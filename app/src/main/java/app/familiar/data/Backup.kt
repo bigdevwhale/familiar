@@ -15,7 +15,8 @@ import java.util.Base64
 
 /** Plain JSON backup: everything stays on the device unless the user exports it. */
 object Backup {
-    private const val VERSION = 1
+    /** 2: ratings in halves of a star (#60). */
+    private const val VERSION = 2
 
     /**
      * Writes the whole backup file, the same for the settings' «Save» and for Lingvale: the library, the pictures, the
@@ -165,12 +166,14 @@ object Backup {
 
     /** [moved]: where each picture of the file lives on this phone now. */
     private fun snapshot(root: JSONObject, moved: Map<String, String>): Snapshot {
+        // Before version 2 a rating was whole stars; now it is halves (#60).
+        val oldStars = root.optInt("version", 1) < 2
         return Snapshot(
             books = root.list("books") {
                 Book(
                     id = getLong("id"), title = getString("title"), author = optString("author"), pages = getInt("pages"), genre = getString("genre"),
                     shelf = optString("shelf", Shelf.READING.name), page = optInt("page"), added = getLong("added"),
-                    started = optL("started"), finished = optL("finished"), rating = optI("rating"), cover = optString("cover").let { moved[it] ?: it }, audio = optBoolean("audio"), series = optString("series"), volume = optI("volume"), tags = optString("tags"), sub = optString("sub"), note = optString("note"), ebook = optBoolean("ebook"),
+                    started = optL("started"), finished = optL("finished"), rating = optI("rating")?.let { r -> if (oldStars) r * 2 else r }, cover = optString("cover").let { moved[it] ?: it }, audio = optBoolean("audio"), series = optString("series"), volume = optI("volume"), tags = optString("tags"), sub = optString("sub"), note = optString("note"), ebook = optBoolean("ebook"),
                     pose = optString("pose"), place = optInt("place"), spine = optString("spine").let { moved[it] ?: it }, reread = optInt("reread"), tall = optInt("tall"), thick = optInt("thick"),
                 )
             },

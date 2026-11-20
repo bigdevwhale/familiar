@@ -1,5 +1,9 @@
 package app.familiar.ui.components
 
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -437,6 +441,40 @@ fun ScalePicker(value: Int, onChange: (Int) -> Unit, labels: (Int) -> String, mo
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(labels(v), fontSize = 22.sp)
+            }
+        }
+    }
+}
+
+/** «★★★½» for a rating in halves (#60); with [empty], the rest of the five as «☆». */
+fun starsText(halves: Int, empty: Boolean = false): String {
+    val h = halves.coerceIn(0, 10)
+    return "★".repeat(h / 2) + (if (h % 2 == 1) "½" else "") + if (empty) "☆".repeat(5 - (h + 1) / 2) else ""
+}
+
+/**
+ * Five stars to rate with, in halves (#60): the left half of a star gives half of it, the right half the whole;
+ * tapping the rating already given takes it away.
+ */
+@Composable
+fun StarPicker(halves: Int, onPick: (Int) -> Unit) {
+    Row {
+        (1..5).forEach { r ->
+            Box(
+                Modifier.size(42.dp).pointerInput(halves) {
+                    detectTapGestures { o ->
+                        val v = if (o.x < size.width / 2f) r * 2 - 1 else r * 2
+                        onPick(if (v == halves) 0 else v)
+                    }
+                },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("☆", fontSize = 30.sp, color = U.c.gold)
+                val fill = (halves - (r - 1) * 2).coerceIn(0, 2)
+                if (fill > 0) Text(
+                    "★", fontSize = 30.sp, color = U.c.gold,
+                    modifier = Modifier.drawWithContent { clipRect(right = size.width * fill / 2f) { this@drawWithContent.drawContent() } },
+                )
             }
         }
     }

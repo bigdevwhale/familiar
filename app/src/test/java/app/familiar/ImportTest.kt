@@ -35,7 +35,7 @@ class ImportTest {
         assertEquals("https://i.livelib.ru/a.jpg", solaris.cover)
         assertEquals(0, solaris.pages)
         assertEquals("Автостопом по Галактике. Ресторан \"У конца Вселенной\"", adams.title)
-        assertEquals(4, adams.rating)
+        assertEquals(8, adams.rating)
     }
 
     @Test fun goodreadsExport() {
@@ -65,8 +65,8 @@ class ImportTest {
         assertEquals("Not Till We Are Lost", bob.title)
         assertEquals("Bobiverse", bob.series)
         assertEquals(5, bob.volume)
-        assertEquals(5, bob.rating)
-        assertEquals(4, sapiens.rating)
+        assertEquals(10, bob.rating)
+        assertEquals(8, sapiens.rating)
         assertEquals(Shelf.DONE.name, sapiens.shelf)
         assertEquals(Genre.NONFICTION.name, sapiens.genre)
         assertEquals("popular-science", sapiens.tags)
@@ -117,7 +117,7 @@ class ImportTest {
         assertEquals("Ресторан \"У конца Вселенной\"", adams.title)
         assertEquals(Shelf.DONE.name, adams.shelf)
         assertEquals(LocalDate.of(2025, 12, 1), day(adams.finished))
-        assertEquals(5, adams.rating)
+        assertEquals(9, adams.rating) // 4.5 stays four and a half (#60)
         assertEquals("9785171183654", r.isbn.values.single())
         assertEquals(Genre.SCIFI.name, adams.genre)
         assertEquals("", adams.series)
@@ -157,7 +157,7 @@ class ImportTest {
         val read = Import.parse(json, emptyList(), now = 0, zone = utc).books.single()
         assertEquals(Shelf.DONE.name, read.shelf)
         assertEquals(LocalDate.of(2023, 3, 1), day(read.finished))
-        assertEquals(4, read.rating)
+        assertEquals(8, read.rating)
     }
 
     @Test fun yandexBooks() {

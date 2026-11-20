@@ -92,7 +92,7 @@ object Import {
                 started = if (shelf == Shelf.READING) added ?: now else null,
                 finished = finished,
                 // Goodreads writes "4.0", LiveLib "4.5".
-                rating = of("My Rating").replace(',', '.').toDoubleOrNull()?.roundToInt()?.takeIf { shelf == Shelf.DONE && it in 1..5 },
+                rating = of("My Rating").replace(',', '.').toDoubleOrNull()?.let { it * 2 }?.roundToInt()?.takeIf { shelf == Shelf.DONE && it in 1..10 },
                 cover = of("Cover").takeIf { it.startsWith("https://") }.orEmpty(),
                 audio = of("Audio").isNotEmpty(),
                 ebook = of("Ebook").isNotEmpty() && of("Audio").isEmpty(),

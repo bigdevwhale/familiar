@@ -38,7 +38,7 @@ data class Browse(
         if (genres.isNotEmpty() && genreKey(Genre.of(b.genre)) !in genres && OwnGenre.of(b)?.let { genreKey(it) } !in genres) return false
         val f = when { b.audio -> Format.AUDIO; b.ebook -> Format.EBOOK; else -> Format.PAPER }
         if (format != Format.ANY && format != f) return false
-        if (stars > 0 && (b.rating ?: 0) < stars) return false
+        if (stars > 0 && (b.rating ?: 0) < stars * 2) return false
         if (series.isNotBlank() && !b.series.trim().equals(series.trim(), ignoreCase = true)) return false
         return true
     }

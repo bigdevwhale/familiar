@@ -117,7 +117,7 @@ class Finished(s: Stats, val year: Int?) {
     private val paper = books.filter { !it.audio && it.pages > 0 }
     val pages: Int = paper.sumOf { it.pages }
     val avgLength: Int? = if (paper.isEmpty()) null else pages / paper.size
-    val avgRating: Float? = books.mapNotNull { it.rating }.takeIf { it.isNotEmpty() }?.average()?.toFloat()
+    val avgRating: Float? = books.mapNotNull { it.rating }.takeIf { it.isNotEmpty() }?.average()?.toFloat()?.div(2f)
     /** Days from the first page to the last, both counted, over the books where both are known. */
     val avgDays: Int? = books.mapNotNull { b ->
         val from = b.started ?: return@mapNotNull null
@@ -127,8 +127,8 @@ class Finished(s: Stats, val year: Int?) {
 
     /** Books in each genre, the most read first. */
     val genres: List<Pair<Genre, Int>> = books.groupBy { Genre.of(it.genre) }.map { it.key to it.value.size }.sortedByDescending { it.second }
-    /** Books given each number of stars, five first. */
-    val ratings: List<Pair<Int, Int>> = (5 downTo 1).map { r -> r to books.count { it.rating == r } }
+    /** Books given each number of stars, five first; a half star counts with the whole one below it (4½ with 4). */
+    val ratings: List<Pair<Int, Int>> = (5 downTo 1).map { r -> r to books.count { val h = it.rating ?: 0; h / 2 == r || (r == 1 && h == 1) } }
     /** Books on paper by length: up to [LENGTHS] pages, each bucket starting where the last one ended. */
     val lengths: List<Int> = (LENGTHS.indices).map { i ->
         val from = if (i == 0) 0 else LENGTHS[i - 1]
