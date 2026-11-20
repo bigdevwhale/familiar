@@ -337,6 +337,10 @@
     <string name="set_candle">How long the candle burns</string>
     <string name="set_page_sound">Page rustle</string>
     <string name="set_candle_bell">A bell when the candle burns out</string>
+    <string name="log_when">When</string>
+    <string name="log_today">Today</string>
+    <string name="log_yesterday">Yesterday</string>
+    <string name="log_other_day">Another day…</string>
     <string name="ritual_pause">Pause</string>
     <string name="ritual_resume">Go on</string>
     <string name="set_candle_loud">Loud, like an alarm</string>

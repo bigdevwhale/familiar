@@ -69,10 +69,29 @@ fun LogScreen(id: Long, data: FamiliarData, go: Go) {
                 app.familiar.ui.components.SectionTitle(stringResource(if (listened) R.string.log_minutes else R.string.log_minutes_read))
                 app.familiar.ui.components.UTextField(minutes, { minutes = it.filter(Char::isDigit).take(3) }, number = true, placeholder = "30")
             }
+            // Read on another day and logged afterwards (#71): the sitting goes to that day.
+            var day by remember { mutableStateOf<Long?>(null) }
+            var pickingDay by remember { mutableStateOf(false) }
+            val zone = java.time.ZoneId.systemDefault()
+            val today = java.time.LocalDate.now(zone)
+            val dayDate = day?.let { java.time.Instant.ofEpochMilli(it).atZone(zone).toLocalDate() }
+            app.familiar.ui.components.SectionTitle(stringResource(R.string.log_when))
+            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                app.familiar.ui.components.Chip(stringResource(R.string.log_today), dayDate == null, { day = null })
+                app.familiar.ui.components.Chip(stringResource(R.string.log_yesterday), dayDate == today.minusDays(1), {
+                    day = today.minusDays(1).atTime(java.time.LocalTime.now(zone)).atZone(zone).toInstant().toEpochMilli()
+                })
+                val other = dayDate != null && dayDate != today.minusDays(1)
+                app.familiar.ui.components.Chip(if (other) app.familiar.ui.dateShort(day!!) else stringResource(R.string.log_other_day), other, { pickingDay = true })
+            }
+            if (pickingDay) app.familiar.ui.components.DateTimeDialog(day ?: System.currentTimeMillis(), { pickingDay = false }, time = false) { d ->
+                day = d.takeIf { java.time.Instant.ofEpochMilli(it).atZone(zone).toLocalDate() != today }
+                pickingDay = false
+            }
             androidx.compose.runtime.key(mode) {
             SittingForm(book, book.page, book.page, data.species == Species.SLIME, stringResource(R.string.feed), timed = byTime, listen = byTime && listened, skipPage = byTime, pickDay = true) { input ->
                 container.scope.launch {
-                    val now = System.currentTimeMillis()
+                    val now = day ?: System.currentTimeMillis()
                     val mins = if (byTime) (minutes.toIntOrNull() ?: 0).coerceIn(0, 600) else 0
                     val r = Library.sit(
                         container.db.dao(), book, book.page, input.toPage, now - mins * 60_000L, now, timed = mins > 0,
@@ -80,7 +99,7 @@ fun LogScreen(id: Long, data: FamiliarData, go: Go) {
                         guest = data.guest != null, companionId = data.settings.companion,
                     )
                     // Finished another day: the book is dated then, the sitting stays today's.
-                    input.finishedOn?.let { day ->
+                    (input.finishedOn ?: day?.takeIf { input.finish })?.let { day ->
                         val dao = container.db.dao()
                         dao.book(book.id)?.takeIf { it.shelfOf == app.familiar.data.Shelf.DONE }?.let { b ->
                             dao.updateBook(b.copy(finished = day, started = b.started?.coerceAtMost(day), added = b.added.coerceAtMost(day)))
