@@ -313,8 +313,22 @@ class FamiliarTest {
         val morning = today.atTime(8, 0).toInstant(zone).toEpochMilli()
         val rs = listOf(read(1, pages = 40, book = 1), read(1, pages = 10, book = 2))
         assertEquals(Genre.HORROR, Dreams.of(rs, books, morning, zone))
-        assertNull(Dreams.of(rs, books, today.atTime(14, 0).toInstant(zone).toEpochMilli(), zone))
+        // A late riser still finds it after noon; it is gone by the evening.
+        assertEquals(Genre.HORROR, Dreams.of(rs, books, today.atTime(14, 0).toInstant(zone).toEpochMilli(), zone))
+        assertNull(Dreams.of(rs, books, today.atTime(19, 0).toInstant(zone).toEpochMilli(), zone))
         assertNull(Dreams.of(listOf(read(3, book = 1)), books, morning, zone))
+    }
+
+    @Test
+    fun readingPastMidnightIsDreamtOf() {
+        val books = listOf(book(1, Genre.FANTASY), book(2, Genre.POETRY))
+        // Fantasy from one to half past one at night, a little poetry the evening before.
+        val rs = listOf(read(0, pages = 40, hour = 1, book = 1), read(1, pages = 10, book = 2))
+        assertEquals(Genre.FANTASY, Dreams.of(rs, books, today.atTime(13, 0).toInstant(zone).toEpochMilli(), zone))
+        // Still reading at five: it counts for this morning's dream.
+        assertEquals(Genre.FANTASY, Dreams.of(listOf(read(0, hour = 5, minutes = 20, book = 1)), books, today.atTime(9, 0).toInstant(zone).toEpochMilli(), zone))
+        // The night before yesterday belongs to yesterday's dream.
+        assertNull(Dreams.of(listOf(read(1, hour = 1, book = 1)), books, today.atTime(9, 0).toInstant(zone).toEpochMilli(), zone))
     }
 
     @Test

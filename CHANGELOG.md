@@ -6,6 +6,17 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.19.1] - 2026-11-20
+
+### Fixed
+- **Dreams after reading past midnight:** reading until 6 am counts, and the dream cloud stays until 6 pm instead of vanishing at noon.
+- **The dream album fills on its own:** a dream is kept as soon as its cloud shows, even if you never tap it.
+
+<!-- tg
+Сны после чтения за полночь: всё, что прочитано до шести утра, снится фамильяру, а облачко со сном висит до шести вечера, а не пропадает в полдень.
+Альбом снов теперь пополняется сам, как только облачко появилось, даже если на него не нажимать.
+-->
+
 ## [1.19.0] - 2026-11-20
 
 ### Added

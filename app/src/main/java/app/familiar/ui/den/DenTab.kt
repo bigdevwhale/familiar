@@ -43,6 +43,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -154,6 +155,12 @@ fun DenTab(data: FamiliarData, go: Go, onTab: (Tab) -> Unit) {
         val books = s.finished.map { Genre.of(it.genre).argb.toInt() }.takeLast(24)
         val dream = remember(data.readings, data.now / 600_000) { Dreams.of(data.readings, data.books, data.now, ZoneId.systemDefault()) }
             ?.takeIf { data.settings.dreamDay != s.today.toString() && pet != null && s.stage != Stage.EGG }
+        // A dream goes into the album as soon as the cloud shows, not only once it is tapped:
+        // otherwise a reader who never noticed the cloud kept an empty album.
+        LaunchedEffect(dream) {
+            val g = dream ?: return@LaunchedEffect
+            if (g.name !in data.settings.dreams) container.settings.update { it.copy(dreams = it.dreams + g.name) }
+        }
         // The room and what the familiar says are one card: its line is the caption under the picture.
         Column(Modifier.fillMaxWidth().clip(U.RXl).background(U.c.surface).border(1.dp, U.c.line, U.RXl)) {
         Box(Modifier.fillMaxWidth().aspectRatio(Room.W / Room.H.toFloat())) {

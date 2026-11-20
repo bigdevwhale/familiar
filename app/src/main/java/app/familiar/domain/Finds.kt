@@ -66,13 +66,19 @@ object Finds {
 
 /** Dreams after an evening of reading: the familiar dreams of the book read most the day before. */
 object Dreams {
-    /** The genre dreamt of this morning (5 to 12 o'clock), or null when there is nothing to dream. */
+    /** The familiar wakes at six (it sleeps before that in the den): a night runs from waking to waking. */
+    const val WAKE = 6
+    /** The dream waits until evening, so a night owl who reads past midnight and sleeps late still sees it. */
+    const val UNTIL = 18
+
+    /** The genre dreamt of today (6 to 18 o'clock), or null when there is nothing to dream. */
     fun of(readings: List<Reading>, books: List<Book>, now: Long, zone: ZoneId): Genre? {
         val t = Instant.ofEpochMilli(now).atZone(zone)
-        if (t.hour !in 5..11) return null
+        if (t.hour !in WAKE until UNTIL) return null
         val today = t.toLocalDate()
-        val from = today.minusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
-        val to = today.atTime(5, 0).atZone(zone).toInstant().toEpochMilli()
+        // Yesterday's day and the night after it, past midnight up to waking.
+        val from = today.minusDays(1).atTime(WAKE, 0).atZone(zone).toInstant().toEpochMilli()
+        val to = today.atTime(WAKE, 0).atZone(zone).toInstant().toEpochMilli()
         val byId = books.associateBy { it.id }
         return readings.filter { it.counts && it.end in from until to }
             .groupBy { Genre.of(byId[it.bookId]?.genre ?: "") }

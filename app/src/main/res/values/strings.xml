@@ -703,7 +703,7 @@
     <string name="dream">A dream</string>
     <string name="dream_title">What %s dreamt of</string>
     <string name="dreams">Dream album</string>
-    <string name="dreams_text">Read in the evening, and in the morning your familiar tells what it dreamt: a dream for every genre.</string>
+    <string name="dreams_text">Read in the evening or at night, and the next day a dream cloud floats over your familiar (until 6 pm). Tap it to hear what it dreamt: a dream for every genre.</string>
     <string name="dream_unknown">Not dreamt yet</string>
     <string name="dream_fantasy">%s dreamt of a castle on a hill, with a flag on the tallest tower and someone waving from the window.</string>
     <string name="dream_scifi">%s flew a little rocket around a ringed planet and waved at the stars.</string>

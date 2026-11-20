@@ -724,7 +724,7 @@
     <string name="dream">Сон</string>
     <string name="dream_title">Что снилось: %s</string>
     <string name="dreams">Альбом снов</string>
-    <string name="dreams_text">Почитай вечером, и утром фамильяр расскажет, что ему снилось: у каждого жанра свой сон.</string>
+    <string name="dreams_text">Почитай вечером или ночью, и наутро над фамильяром появится облачко со сном (до шести вечера). Нажми на него, и фамильяр расскажет, что ему снилось: у каждого жанра свой сон.</string>
     <string name="dream_unknown">Ещё не снилось</string>
     <string name="dream_fantasy">%s снится замок на холме: флаг на самой высокой башне, и кто-то машет из окна.</string>
     <string name="dream_scifi">%s летит на маленькой ракете вокруг планеты с кольцами и машет звёздам.</string>
