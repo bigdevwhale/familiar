@@ -399,7 +399,15 @@ fun DateTimeDialog(initial: Long, onDismiss: () -> Unit, future: Boolean = false
             confirmButton = {
                 TextButton(onClick = {
                     val day = state.selectedDateMillis?.let { java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneOffset.UTC).toLocalDate() } ?: start.toLocalDate()
-                    if (time) date = day else onPicked(day.atTime(12, 0).atZone(zone).toInstant().toEpochMilli())
+                    if (time) date = day else onPicked(
+                        // Today is now and the same day keeps its hour, so the order of the day stays true (#59): a book
+                        // marked read today no longer lands at noon, before one finished by candlelight in the afternoon.
+                        when (day) {
+                            today -> System.currentTimeMillis()
+                            start.toLocalDate() -> initial
+                            else -> day.atTime(12, 0).atZone(zone).toInstant().toEpochMilli()
+                        }
+                    )
                 }) { Text(stringResource(if (time) R.string.next else R.string.done), color = U.c.accent) }
             },
             dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = U.c.muted) } },
