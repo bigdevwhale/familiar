@@ -352,8 +352,12 @@ enum class Quest(val target: Int, val week: Int = 0) {
     companion object {
         fun of(month: YearMonth): List<Quest> = entries.shuffled(Random(month.year * 12 + month.monthValue)).take(3)
 
-        /** The week's two errands, from the Monday [monday] (an epoch day). */
-        fun ofWeek(monday: Long): List<Quest> = entries.filter { it.week > 0 }.shuffled(Random(monday * 31 + 7)).take(2)
+        /** The week's two errands, from the Monday [monday] (an epoch day): others than the month's, while there are. */
+        fun ofWeek(monday: Long): List<Quest> {
+            val month = of(YearMonth.from(java.time.LocalDate.ofEpochDay(monday)))
+            val pool = entries.filter { it.week > 0 }.shuffled(Random(monday * 31 + 7))
+            return (pool.filter { it !in month } + pool.filter { it in month }).take(2)
+        }
     }
 }
 
