@@ -337,6 +337,8 @@
     <string name="set_candle">How long the candle burns</string>
     <string name="set_page_sound">Page rustle</string>
     <string name="set_candle_bell">A bell when the candle burns out</string>
+    <string name="set_candle_loud">Loud, like an alarm</string>
+    <string name="set_candle_loud_sub">Heard even with the phone face down, on silent or in do-not-disturb</string>
     <string name="set_candle_bell_sub">A chime and a buzz, so you read on only if you mean to</string>
     <string name="set_haptics">Vibration on a page turn</string>
     <string name="set_dim">Dim the screen face down</string>

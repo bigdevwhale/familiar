@@ -39,6 +39,8 @@ data class Settings(
     val ambience: Ambience = Ambience.FIRE,
     /** A chime and a buzz when the candle burns out, so reading doesn't run on unnoticed. */
     val candleBell: Boolean = true,
+    /** The bell rings as an alarm does: heard with the phone face down, on silent or in do-not-disturb (#24). */
+    val candleLoud: Boolean = false,
     /** A rustle when a page is turned. */
     val pageSound: Boolean = true,
     val haptics: Boolean = true,
@@ -131,6 +133,7 @@ class SettingsStore(context: Context) {
         candleMin = this[CANDLE_MIN] ?: 30,
         ambience = this[AMBIENCE]?.let { a -> runCatching { Ambience.valueOf(a) }.getOrNull() } ?: Ambience.FIRE,
         candleBell = this[CANDLE_BELL] ?: true,
+        candleLoud = this[CANDLE_LOUD] ?: false,
         pageSound = this[PAGE_SOUND] ?: true,
         haptics = this[HAPTICS] ?: true,
         stillDim = this[STILL_DIM] ?: true,
@@ -225,6 +228,7 @@ class SettingsStore(context: Context) {
             it[CANDLE_MIN] = s.candleMin
             it[AMBIENCE] = s.ambience.name
             it[CANDLE_BELL] = s.candleBell
+            it[CANDLE_LOUD] = s.candleLoud
             it[PAGE_SOUND] = s.pageSound
             it[HAPTICS] = s.haptics
             it[STILL_DIM] = s.stillDim
@@ -285,6 +289,7 @@ class SettingsStore(context: Context) {
         val AMBIENCE = stringPreferencesKey("ambience")
         val PAGE_SOUND = booleanPreferencesKey("page_sound")
         val CANDLE_BELL = booleanPreferencesKey("candle_bell")
+        val CANDLE_LOUD = booleanPreferencesKey("candle_loud")
         val HAPTICS = booleanPreferencesKey("haptics")
         val STILL_DIM = booleanPreferencesKey("still_dim")
         val CLASSIC_ART = booleanPreferencesKey("classic_art")

@@ -124,7 +124,7 @@ object Sound {
     private var bell: ShortArray? = null
 
     /** Two soft strokes of a small bell: a few inharmonic partials dying away, the way metal rings. */
-    fun chime() {
+    fun chime(alarm: Boolean = false, times: Int = 1) {
         val pcm = bell ?: run {
             val stroke = (1.4 * RATE).toInt()
             val gap = (0.55 * RATE).toInt()
@@ -140,15 +140,18 @@ object Sound {
         Thread {
             val track = runCatching {
                 AudioTrack.Builder()
-                    .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build())
+                    .setAudioAttributes(AudioAttributes.Builder().setUsage(if (alarm) AudioAttributes.USAGE_ALARM else AudioAttributes.USAGE_NOTIFICATION_EVENT).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build())
                     .setAudioFormat(AudioFormat.Builder().setSampleRate(RATE).setEncoding(AudioFormat.ENCODING_PCM_16BIT).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build())
                     .setBufferSizeInBytes(pcm.size * 2)
                     .setTransferMode(AudioTrack.MODE_STATIC)
                     .build()
             }.getOrNull() ?: return@Thread
             track.write(pcm, 0, pcm.size)
-            track.play()
-            Thread.sleep(pcm.size * 1000L / RATE + 200)
+            repeat(times.coerceAtLeast(1)) { k ->
+                if (k > 0) { track.stop(); track.reloadStaticData() }
+                track.play()
+                Thread.sleep(pcm.size * 1000L / RATE + 200)
+            }
             track.release()
         }.start()
     }

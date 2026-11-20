@@ -89,7 +89,12 @@ object CandleBell {
             if (now != null && now.start == r.start && !now.rang) { mine = true; st.copy(ritual = now.copy(rang = true)) } else st
         }
         if (!mine) return false
-        if (front) {
+        if (s.candleLoud) {
+            // Loud as an alarm, whether the app is in front or not: face down, on silent, in do-not-disturb (#24).
+            Sound.chime(alarm = true, times = 3)
+            buzz(context)
+            if (!front) notify(context, s.candleMin)
+        } else if (front) {
             Sound.chime()
             buzz(context)
         } else notify(context, s.candleMin)

@@ -195,6 +195,7 @@ fun SettingsScreen(data: FamiliarData, onBack: () -> Unit) {
                         )
                         Spacer(Modifier.height(6.dp))
                         SwitchRow(stringResource(R.string.set_candle_bell), stringResource(R.string.set_candle_bell_sub), settings.candleBell, { v -> update { it.copy(candleBell = v) } })
+                        if (settings.candleBell) SwitchRow(stringResource(R.string.set_candle_loud), stringResource(R.string.set_candle_loud_sub), settings.candleLoud, { v -> update { it.copy(candleLoud = v) } })
                         SwitchRow(stringResource(R.string.set_page_sound), null, settings.pageSound, { v -> update { it.copy(pageSound = v) } })
                         SwitchRow(stringResource(R.string.set_haptics), null, settings.haptics, { v -> update { it.copy(haptics = v) } })
                         SwitchRow(stringResource(R.string.set_dim), stringResource(R.string.set_dim_sub), settings.stillDim, { v -> update { it.copy(stillDim = v) } })
