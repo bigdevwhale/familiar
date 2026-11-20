@@ -1,70 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- «Reading now» (#61, #68): the cover, the title and author, how far along. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+  «Reading now» (#61, #68): a card in the book's own colour. The cover fills the height on the left; beside it the
+  label, title, author, how far along and today's pages; the familiar reads along in the corner.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/widget_bg"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:padding="12dp">
+    android:layout_height="match_parent">
 
+    <!-- The card itself, painted at the widget's size: a dusk gradient in the genre's colour with rounded corners. -->
     <ImageView
-        android:id="@+id/cover"
-        android:layout_width="64dp"
-        android:layout_height="94dp"
+        android:id="@+id/card"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:contentDescription="@null"
-        android:scaleType="fitCenter" />
+        android:scaleType="fitXY" />
 
     <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:layout_weight="1"
-        android:orientation="vertical">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:padding="12dp">
 
-        <TextView
+        <ImageView
+            android:id="@+id/cover"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/wr_label"
-            android:textColor="@color/accent"
-            android:textSize="11sp"
-            android:textStyle="bold" />
+            android:layout_height="match_parent"
+            android:adjustViewBounds="true"
+            android:contentDescription="@null"
+            android:scaleType="fitStart" />
 
-        <TextView
-            android:id="@+id/title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="2"
-            android:textColor="@color/widget_ink"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/author"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="@color/widget_muted"
-            android:textSize="13sp" />
+            <TextView
+                android:id="@+id/label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.12"
+                android:text="@string/wr_label"
+                android:textColor="#F2D58A"
+                android:textSize="10sp"
+                android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/progress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:textColor="@color/widget_muted"
-            android:textSize="12sp" />
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:fontFamily="serif"
+                android:maxLines="2"
+                android:textColor="#FFF6E4"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
-        <ProgressBar
-            android:id="@+id/bar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="6dp"
-            android:layout_marginTop="4dp"
-            android:max="1000"
-            android:progressDrawable="@drawable/widget_progress" />
+            <TextView
+                android:id="@+id/author"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="#D9CCBE"
+                android:textSize="13sp" />
+
+            <ProgressBar
+                android:id="@+id/bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="6dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="44dp"
+                android:max="1000"
+                android:progressDrawable="@drawable/widget_progress" />
+
+            <TextView
+                android:id="@+id/progress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="#FFF6E4"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/today"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#F2D58A"
+                android:textSize="12sp" />
+        </LinearLayout>
     </LinearLayout>
-</LinearLayout>
+
+    <!-- The familiar, reading along in the corner. -->
+    <ImageView
+        android:id="@+id/pet"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="6dp"
+        android:contentDescription="@null"
+        android:scaleType="fitCenter" />
+</FrameLayout>

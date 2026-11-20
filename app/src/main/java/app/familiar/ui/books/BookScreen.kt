@@ -1,5 +1,13 @@
 package app.familiar.ui.books
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -119,32 +127,26 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
                     app.familiar.domain.Insights.forecast(book, data.stats)?.let {
                         Text(stringResource(R.string.forecast, app.familiar.ui.dateOf(it)), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 2.dp))
                     }
-                }
-            }
-            Spacer(Modifier.height(10.dp))
-            // When it was begun, which paints its days on the calendar up to the day it's finished (#30).
-            if (book.shelfOf == Shelf.READING || book.shelfOf == Shelf.PAUSED || book.shelfOf == Shelf.DONE) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        book.started?.let { stringResource(R.string.started_on, dateShort(it)) } ?: stringResource(R.string.started_unknown),
-                        style = UType.Sub, modifier = Modifier.weight(1f),
+                    // When it was begun (it paints the calendar, #30): one tappable line in the header.
+                    if (book.shelfOf == Shelf.READING || book.shelfOf == Shelf.PAUSED || book.shelfOf == Shelf.DONE) Text(
+                        (book.started?.let { stringResource(R.string.started_on, dateShort(it)) } ?: stringResource(R.string.started_unknown)) + "  ✎",
+                        style = UType.Small.copy(color = U.c.accent), modifier = Modifier.padding(top = 4.dp).clickable { restarting = true },
                     )
-                    TextButton(onClick = { restarting = true }) { Text(stringResource(R.string.edit), color = U.c.accent, style = UType.Button) }
                 }
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(14.dp))
             when (book.shelfOf) {
                 Shelf.READING, Shelf.PAUSED -> {
                     PrimaryButton(stringResource(R.string.ritual_start), { go.ritual(id) }, Modifier.fillMaxWidth(), icon = Icons.Rounded.LocalFireDepartment)
                     Spacer(Modifier.height(8.dp))
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SoftButton(stringResource(R.string.log_pages), { go.log(id) }, Modifier.fillMaxWidth(), icon = Icons.Rounded.Edit)
-                        SoftButton(
-                            stringResource(if (book.shelfOf == Shelf.PAUSED) R.string.resume else R.string.pause),
-                            { container.write { dao().updateBook(book.copy(shelf = if (book.shelfOf == Shelf.PAUSED) Shelf.READING.name else Shelf.PAUSED.name)) } },
-                            Modifier.fillMaxWidth(), color = U.c.muted, soft = U.c.surface2,
-                        )
-                        SoftButton(stringResource(R.string.abandon), { abandoning = true }, Modifier.fillMaxWidth(), color = U.c.muted, soft = U.c.surface2)
+                    // The rest in one row of small tiles: write it down, set aside, put down for good.
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ActionTile(Icons.Rounded.Edit, stringResource(R.string.log_tile), Modifier.weight(1f)) { go.log(id) }
+                        ActionTile(
+                            if (book.shelfOf == Shelf.PAUSED) Icons.Rounded.PlayArrow else Icons.Rounded.Pause,
+                            stringResource(if (book.shelfOf == Shelf.PAUSED) R.string.resume else R.string.pause), Modifier.weight(1f),
+                        ) { container.write { dao().updateBook(book.copy(shelf = if (book.shelfOf == Shelf.PAUSED) Shelf.READING.name else Shelf.PAUSED.name)) } }
+                        ActionTile(Icons.Rounded.Close, stringResource(R.string.abandon_short), Modifier.weight(1f)) { abandoning = true }
                     }
                 }
                 Shelf.WANT -> PrimaryButton(stringResource(R.string.start_reading), {
@@ -181,6 +183,20 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
                 }
             }
 
+            // Below the actions, one thing at a time instead of a long scroll: what you wrote, the sittings, its place.
+            var tab by rememberSaveable { mutableStateOf(0) }
+            Spacer(Modifier.height(16.dp))
+            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(U.c.surface2).padding(4.dp)) {
+                listOf(R.string.book_tab_notes, R.string.book_tab_sittings, R.string.book_tab_place).forEachIndexed { n, res ->
+                    val on = tab == n
+                    Text(
+                        stringResource(res), style = UType.Button.copy(color = if (on) U.c.ink else U.c.muted, textAlign = androidx.compose.ui.text.style.TextAlign.Center),
+                        modifier = Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(if (on) U.c.bg else Color.Transparent).clickable { tab = n }.padding(vertical = 10.dp),
+                    )
+                }
+            }
+            when (tab) {
+                0 -> {
             // Thoughts of the reader's own, made along the way (#67).
             if (book.shelfOf != Shelf.WANT) {
                 val notes = data.notes.filter { it.bookId == id }.sortedBy { it.at }
@@ -216,14 +232,9 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
                 SectionTitle(stringResource(R.string.note_title))
                 NoteField(book.note) { n -> container.write { dao().updateBook(book.copy(note = n)) } }
             }
-
-            SectionTitle(stringResource(R.string.f_shelves))
-            ShelfChips(data.shelves, book.tagList.toSet()) { t -> container.write { dao().updateBook(book.copy(tags = t.joinToString(NL))) } }
-
-            // How it stands on the shelf of spines, and what its spine looks like.
-            SoftButton(stringResource(R.string.book_look), { looking = true }, Modifier.fillMaxWidth().padding(top = 12.dp), color = U.c.gold, soft = U.c.goldSoft, icon = Icons.Rounded.ViewWeek)
-            if (looking) BookLookSheet(book, data.books) { looking = false }
-
+                    if (book.shelfOf == Shelf.WANT) Text(stringResource(R.string.book_notes_later), style = UType.Muted, modifier = Modifier.padding(top = 16.dp))
+                }
+                1 -> {
             SectionTitle(stringResource(R.string.chronicle))
             if (sittings.isEmpty()) Text(stringResource(R.string.no_sittings), style = UType.Muted)
             else UCard {
@@ -248,6 +259,15 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
                 }
             }
 
+                }
+                else -> {
+            SectionTitle(stringResource(R.string.f_shelves))
+            ShelfChips(data.shelves, book.tagList.toSet()) { t -> container.write { dao().updateBook(book.copy(tags = t.joinToString(NL))) } }
+
+            // How it stands on the shelf of spines, and what its spine looks like.
+            SoftButton(stringResource(R.string.book_look), { looking = true }, Modifier.fillMaxWidth().padding(top = 12.dp), color = U.c.gold, soft = U.c.goldSoft, icon = Icons.Rounded.ViewWeek)
+            if (looking) BookLookSheet(book, data.books) { looking = false }
+
             if (book.shelfOf != Shelf.DONE) {
                 SectionTitle(stringResource(R.string.move_to))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -257,6 +277,8 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
                     }
                     if (book.shelfOf != Shelf.ABANDONED) Chip(shelfName(Shelf.ABANDONED), false, { abandoning = true })
                     Chip(stringResource(R.string.mark_done), false, { go.log(id) })
+                }
+            }
                 }
             }
         }
@@ -336,3 +358,15 @@ private fun NoteField(note: String, onSave: (String) -> Unit) {
 }
 
 private const val NOTE_MAX = 500
+
+/** A small tile with an icon over a word, for the actions after the main one. */
+@Composable
+private fun ActionTile(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, modifier: Modifier, onClick: () -> Unit) {
+    Column(
+        modifier.clip(RoundedCornerShape(14.dp)).background(U.c.surface2).clickable(onClick = onClick).padding(vertical = 10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(icon, null, tint = U.c.ink, modifier = Modifier.size(22.dp))
+        Text(label, style = UType.Small.copy(color = U.c.ink), maxLines = 1, modifier = Modifier.padding(top = 4.dp))
+    }
+}

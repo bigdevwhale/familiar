@@ -46,6 +46,11 @@ class ReadingWidget : AppWidgetProvider() {
         }
     }
 
+    /** Resized: the card is painted again at the new size. */
+    override fun onAppWidgetOptionsChanged(context: Context, manager: AppWidgetManager, id: Int, options: android.os.Bundle) {
+        onUpdate(context, manager, intArrayOf(id))
+    }
+
     companion object {
         suspend fun refresh(context: Context) {
             val manager = AppWidgetManager.getInstance(context)
@@ -60,11 +65,22 @@ class ReadingWidget : AppWidgetProvider() {
             val last = readings.maxByOrNull { it.end }?.bookId
             val book = going.firstOrNull { it.id == last } ?: going.maxByOrNull { it.started ?: it.added }
             val views = RemoteViews(context.packageName, R.layout.widget_reading)
+            val settings = context.container.settings.now()
+            val st = app.familiar.domain.Stats(books, readings, dao.pets(), System.currentTimeMillis(), java.time.ZoneId.systemDefault(), settings.dailyGoal, settings.guardedDays)
+            // The card in the book's colour, at the widget's own size so its corners stay round.
+            val opts = manager.getAppWidgetOptions(ids.first())
+            val dp = context.resources.displayMetrics.density
+            val cw = ((opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 250).takeIf { it > 0 } ?: 250) * dp).toInt()
+            val ch = ((opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 110).takeIf { it > 0 } ?: 110) * dp).toInt()
+            val tint = book?.let { (OwnGenre.of(it)?.argb ?: Genre.of(it.genre).argb).toInt() } ?: 0xFF6B5CA5.toInt()
+            views.setImageViewBitmap(R.id.card, card(cw.coerceIn(200, 1400), ch.coerceIn(150, 900), tint, 22 * dp))
+            DenWidget.art(st)?.let { views.setImageViewBitmap(R.id.pet, DenWidget.fitted(it)) }
             if (book == null) {
                 views.setImageViewBitmap(R.id.cover, null)
                 views.setTextViewText(R.id.title, l.getString(R.string.wr_none))
                 views.setTextViewText(R.id.author, l.getString(R.string.wr_none_sub))
                 views.setTextViewText(R.id.progress, "")
+                views.setTextViewText(R.id.today, "")
                 views.setProgressBar(R.id.bar, 1000, 0, false)
             } else {
                 val img = runCatching { Covers.load(context, book.cover)?.asAndroidBitmap() }.getOrNull()
@@ -79,6 +95,7 @@ class ReadingWidget : AppWidgetProvider() {
                         else -> l.getString(R.string.wr_pages, book.page, book.pages, Book.percentOf(book.pages, book.page))
                     },
                 )
+                views.setTextViewText(R.id.today, if (st.todayPages > 0) l.getString(R.string.wr_today, st.todayPages, settings.dailyGoal) else l.getString(R.string.wr_today_none))
                 views.setProgressBar(R.id.bar, 1000, if (book.pages > 0) (book.fraction * 1000).toInt() else 0, false)
             }
             val open = PendingIntent.getActivity(
@@ -88,6 +105,24 @@ class ReadingWidget : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.root, open)
             manager.updateAppWidget(ids, views)
+        }
+
+        /** The card behind it all: a dusk gradient from the book's colour down to night, a faint glow top left, round corners. */
+        private fun card(w: Int, h: Int, c: Int, r: Float): Bitmap {
+            val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            val cv = Canvas(out)
+            val rect = RectF(0f, 0f, w.toFloat(), h.toFloat())
+            val top = ColorUtils.blendARGB(c, 0xFF000000.toInt(), 0.35f)
+            val bottom = ColorUtils.blendARGB(c, 0xFF120E1A.toInt(), 0.82f)
+            cv.drawRoundRect(rect, r, r, Paint(Paint.ANTI_ALIAS_FLAG).apply { shader = LinearGradient(0f, 0f, w * 0.4f, h.toFloat(), top, bottom, Shader.TileMode.CLAMP) })
+            cv.drawRoundRect(rect, r, r, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                shader = android.graphics.RadialGradient(w * 0.18f, h * 0.2f, w * 0.6f, intArrayOf(0x40FFE9B0, 0x00FFE9B0), null, Shader.TileMode.CLAMP)
+            })
+            // A few pixel stars over the night end, as in the den.
+            val star = Paint().apply { color = 0x66FFF6E4 }
+            val rnd = java.util.Random(c.toLong())
+            repeat(14) { val x = w * (0.45f + rnd.nextFloat() * 0.53f); val y = h * rnd.nextFloat() * 0.9f; val s = if (rnd.nextInt(4) == 0) 4f else 2.5f; cv.drawRect(x, y, x + s, y + s, star) }
+            return out
         }
 
         /** The cover as on the shelf: the real picture cropped to fill, or one drawn in the genre's colour with the title. */

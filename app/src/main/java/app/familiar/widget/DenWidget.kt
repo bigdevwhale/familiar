@@ -44,7 +44,7 @@ class DenWidget : AppWidgetProvider() {
          * The familiar cut out of its 80-pixel frame (which leaves room above its head for the stages to grow
          * into) and set in the middle of a square, so it fills a one-cell widget evenly instead of sitting low.
          */
-        private fun fitted(b: Bitmap): Bitmap {
+        internal fun fitted(b: Bitmap): Bitmap {
             val w = b.width; val h = b.height
             val px = IntArray(w * h).also { b.getPixels(it, 0, w, 0, 0, w, h) }
             var x0 = w; var y0 = h; var x1 = -1; var y1 = -1
@@ -63,20 +63,10 @@ class DenWidget : AppWidgetProvider() {
             return out
         }
 
-        suspend fun refresh(context: Context) {
-            val manager = AppWidgetManager.getInstance(context)
-            val ids = manager.getAppWidgetIds(ComponentName(context, DenWidget::class.java))
-            val mini = manager.getAppWidgetIds(ComponentName(context, MiniWidget::class.java))
-            if (ids.isEmpty() && mini.isEmpty()) return
-            val c = context.container
-            val s = c.settings.now()
-            val dao = c.db.dao()
-            val st = Stats(dao.books(), dao.readings(), dao.pets(), System.currentTimeMillis(), ZoneId.systemDefault(), s.dailyGoal, s.guardedDays)
-            val l = context.localized()
-            val views = RemoteViews(context.packageName, R.layout.widget_den)
+        /** The familiar you read with, as it is: stage, form, rare colouring and what it has gathered; null with none. */
+        internal fun art(st: Stats): Bitmap? {
             val pet = st.active
-            // The familiar you read with, as it is: stage, form, rare colouring and what it has gathered.
-            val art = pet?.let {
+            return pet?.let {
                 val stage = Stage.of(it.mana)
                 val look = Look(
                     Species.of(it.species), stage, stone = st.stone, mood = st.mood,
@@ -93,6 +83,21 @@ class DenWidget : AppWidgetProvider() {
                 // Scaled up without smoothing so the pixels stay crisp.
                 Bitmap.createScaledBitmap(raw, px.fw * 2, px.fh * 2, false)
             }
+        }
+
+        suspend fun refresh(context: Context) {
+            val manager = AppWidgetManager.getInstance(context)
+            val ids = manager.getAppWidgetIds(ComponentName(context, DenWidget::class.java))
+            val mini = manager.getAppWidgetIds(ComponentName(context, MiniWidget::class.java))
+            if (ids.isEmpty() && mini.isEmpty()) return
+            val c = context.container
+            val s = c.settings.now()
+            val dao = c.db.dao()
+            val st = Stats(dao.books(), dao.readings(), dao.pets(), System.currentTimeMillis(), ZoneId.systemDefault(), s.dailyGoal, s.guardedDays)
+            val l = context.localized()
+            val views = RemoteViews(context.packageName, R.layout.widget_den)
+            val pet = st.active
+            val art = art(st)
             val open = PendingIntent.getActivity(
                 context, 5000,
                 Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),

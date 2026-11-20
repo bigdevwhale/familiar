@@ -1,5 +1,7 @@
 package app.familiar.ui.components
 
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.input.pointer.pointerInput
@@ -453,29 +455,41 @@ fun starsText(halves: Int, empty: Boolean = false): String {
 }
 
 /**
- * Five stars to rate with, in halves (#60): the left half of a star gives half of it, the right half the whole;
- * tapping the rating already given takes it away.
+ * Five big stars to rate with, in halves (#60). A tap gives the whole star; a second tap on the same star makes it
+ * half; a third takes it away. A finger slid along the row picks halves too, and the number shows beside.
  */
 @Composable
 fun StarPicker(halves: Int, onPick: (Int) -> Unit) {
-    Row {
-        (1..5).forEach { r ->
-            Box(
-                Modifier.size(42.dp).pointerInput(halves) {
-                    detectTapGestures { o ->
-                        val v = if (o.x < size.width / 2f) r * 2 - 1 else r * 2
-                        onPick(if (v == halves) 0 else v)
-                    }
-                },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text("☆", fontSize = 30.sp, color = U.c.gold)
-                val fill = (halves - (r - 1) * 2).coerceIn(0, 2)
-                if (fill > 0) Text(
-                    "★", fontSize = 30.sp, color = U.c.gold,
-                    modifier = Modifier.drawWithContent { clipRect(right = size.width * fill / 2f) { this@drawWithContent.drawContent() } },
-                )
+    var live by remember(halves) { mutableStateOf(halves) }
+    val pick by rememberUpdatedState(onPick)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.pointerInput(Unit) {
+                val star = size.width / 5f
+                fun at(x: Float) = ((x / star) * 2f).let { kotlin.math.ceil(it).toInt() }.coerceIn(1, 10)
+                detectHorizontalDragGestures(onDragEnd = { pick(live) }) { change, _ -> change.consume(); live = at(change.position.x) }
+            },
+        ) {
+            (1..5).forEach { r ->
+                Box(
+                    Modifier.size(52.dp).clickable(remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, null) {
+                        val v = when (live) { r * 2 -> r * 2 - 1; r * 2 - 1 -> 0; else -> r * 2 }
+                        live = v; pick(v)
+                    },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("☆", fontSize = 38.sp, color = U.c.gold)
+                    val fill = (live - (r - 1) * 2).coerceIn(0, 2)
+                    if (fill > 0) Text(
+                        "★", fontSize = 38.sp, color = U.c.gold,
+                        modifier = Modifier.drawWithContent { clipRect(right = size.width * fill / 2f) { this@drawWithContent.drawContent() } },
+                    )
+                }
             }
         }
+        if (live > 0) Text(
+            (live / 2).toString().takeIf { live >= 2 }.orEmpty() + if (live % 2 == 1) "½" else "",
+            style = UType.Strong.copy(color = U.c.gold), modifier = Modifier.padding(start = 8.dp),
+        )
     }
 }
