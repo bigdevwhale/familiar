@@ -381,6 +381,7 @@
     <string name="wr_pages">стр. %1$d из %2$d · %3$d%%</string>
     <string name="wr_page">стр. %1$d</string>
     <string name="wr_minutes">прослушано %1$d%%</string>
+    <string name="ritual_paused">На паузе – свеча не горит</string>
     <string name="ritual_pause">Пауза</string>
     <string name="ritual_resume">Продолжить</string>
     <string name="set_candle_loud">Громко, как будильник</string>

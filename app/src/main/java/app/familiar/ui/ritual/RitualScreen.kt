@@ -1,5 +1,7 @@
 package app.familiar.ui.ritual
 
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.clickable
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -197,13 +199,26 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
             }
             val min = elapsed / 60_000
             val sec = (elapsed / 1000) % 60
-            Text("%d:%02d".format(min, sec), style = UType.Timer.copy(color = if (ritual.paused) U.c.muted else UType.Timer.color))
-            // A pause: the candle stops burning while you're away or writing something down (#70).
-            if (!slept) TextButton(onClick = { val t = System.currentTimeMillis(); update { if (it.paused) it.resume(t) else it.pause(t) } }) {
-                Icon(if (ritual.paused) Icons.Rounded.PlayArrow else Icons.Rounded.Pause, null, tint = U.c.accent, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(stringResource(if (ritual.paused) R.string.ritual_resume else R.string.ritual_pause), color = U.c.accent, style = UType.Button)
+            // The timer with a big pause beside it: the candle stops while you're away or writing (#70).
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("%d:%02d".format(min, sec), style = UType.Timer.copy(color = if (ritual.paused) U.c.muted else UType.Timer.color))
+                if (!slept) {
+                    Spacer(Modifier.width(14.dp))
+                    Box(
+                        Modifier.size(52.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                            .background(if (ritual.paused) U.c.accent else U.c.surface2)
+                            .clickable { val t = System.currentTimeMillis(); update { if (it.paused) it.resume(t) else it.pause(t) } },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            if (ritual.paused) Icons.Rounded.PlayArrow else Icons.Rounded.Pause,
+                            stringResource(if (ritual.paused) R.string.ritual_resume else R.string.ritual_pause),
+                            tint = if (ritual.paused) U.c.onAccent else U.c.ink, modifier = Modifier.size(28.dp),
+                        )
+                    }
+                }
             }
+            if (ritual.paused) Text(stringResource(R.string.ritual_paused), style = UType.Strong.copy(color = U.c.accent))
             when {
                 ritual.listen && !book.audio -> {
                     Text(stringResource(R.string.listen_text), style = UType.Sub.copy(textAlign = androidx.compose.ui.text.style.TextAlign.Center))
