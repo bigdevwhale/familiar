@@ -383,6 +383,7 @@
     <string name="book_notes_later">Quotes and notes come once you start reading.</string>
     <string name="wr_today">Today: %1$d of %2$d pages</string>
     <string name="wr_today_none">Not read today yet</string>
+    <string name="wr_today_full">Today: %1$d pages – goal reached</string>
     <string name="ritual_pause">Pause</string>
     <string name="ritual_resume">Go on</string>
     <string name="set_candle_loud">Loud, like an alarm</string>

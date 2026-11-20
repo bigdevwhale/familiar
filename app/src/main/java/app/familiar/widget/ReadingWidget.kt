@@ -95,7 +95,15 @@ class ReadingWidget : AppWidgetProvider() {
                         else -> l.getString(R.string.wr_pages, book.page, book.pages, Book.percentOf(book.pages, book.page))
                     },
                 )
-                views.setTextViewText(R.id.today, if (st.todayPages > 0) l.getString(R.string.wr_today, st.todayPages, settings.dailyGoal) else l.getString(R.string.wr_today_none))
+                views.setTextViewText(
+                    R.id.today,
+                    when {
+                        st.todayPages <= 0 -> l.getString(R.string.wr_today_none)
+                        // past the day's goal: no «66 of 30», just the pages and a word that the familiar is full
+                        st.todayPages >= settings.dailyGoal -> l.getString(R.string.wr_today_full, st.todayPages)
+                        else -> l.getString(R.string.wr_today, st.todayPages, settings.dailyGoal)
+                    },
+                )
                 views.setProgressBar(R.id.bar, 1000, if (book.pages > 0) (book.fraction * 1000).toInt() else 0, false)
             }
             val open = PendingIntent.getActivity(

@@ -39,7 +39,7 @@
                 android:id="@+id/pet"
                 android:layout_width="46dp"
                 android:layout_height="46dp"
-                android:layout_gravity="bottom|center_horizontal"
+                android:layout_gravity="bottom|end"
                 android:contentDescription="@null"
                 android:scaleType="fitCenter" />
         </FrameLayout>

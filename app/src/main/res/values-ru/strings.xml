@@ -397,6 +397,7 @@
     <string name="book_notes_later">Цитаты и заметки появятся, когда начнёте читать.</string>
     <string name="wr_today">Сегодня: %1$d из %2$d стр.</string>
     <string name="wr_today_none">Сегодня ещё не читали</string>
+    <string name="wr_today_full">Сегодня: %1$d стр. – норма выполнена</string>
     <string name="ritual_pause">Пауза</string>
     <string name="ritual_resume">Продолжить</string>
     <string name="set_candle_loud">Громко, как будильник</string>
