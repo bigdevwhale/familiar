@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.EditNote
 import androidx.compose.material.icons.rounded.ViewWeek
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Delete
@@ -79,6 +80,8 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
     var abandoning by remember { mutableStateOf(false) }
     // The day it was finished (or put down) can be moved: an imported book arrives dated the day of the import.
     var redating by remember { mutableStateOf(false) }
+    var addingNote by remember { mutableStateOf(false) }
+    var editingNote by remember { mutableStateOf<app.familiar.data.Quote?>(null) }
     var restarting by remember { mutableStateOf(false) }
     var quoting by remember { mutableStateOf(false) }
     var rereading by remember { mutableStateOf(false) }
@@ -186,6 +189,21 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
                 }
             }
 
+            // Thoughts of the reader's own, made along the way (#67).
+            if (book.shelfOf != Shelf.WANT) {
+                val notes = data.notes.filter { it.bookId == id }.sortedBy { it.at }
+                SectionTitle(stringResource(R.string.notes))
+                notes.forEach { n ->
+                    UCard(Modifier.padding(bottom = 8.dp), onClick = { editingNote = n }) {
+                        Text(n.text, style = UType.Body)
+                        quotePlace(n, book).takeIf { it.isNotBlank() }.let { place ->
+                            Text(listOfNotNull(place, dateShort(n.at)).joinToString(" · "), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 4.dp))
+                        }
+                    }
+                }
+                SoftButton(stringResource(R.string.note_add), { addingNote = true }, Modifier.fillMaxWidth(), color = U.c.accent, soft = U.c.accentSoft, icon = Icons.Rounded.EditNote)
+            }
+
             // Lines copied out of it.
             if (book.shelfOf != Shelf.WANT) {
                 val quotes = data.quotes.filter { it.bookId == id }
@@ -249,6 +267,14 @@ fun BookScreen(id: Long, data: FamiliarData, go: Go) {
                     Chip(stringResource(R.string.mark_done), false, { go.log(id) })
                 }
             }
+        }
+    }
+    if (addingNote) QuoteDialog(book, null, { addingNote = false }, page = if (book.audio) 0 else book.page, note = true) { text, page ->
+        container.write { dao().insertQuote(app.familiar.data.Quote(bookId = book.id, text = text, page = page, at = System.currentTimeMillis(), note = true)) }
+    }
+    editingNote?.let { n ->
+        QuoteDialog(book, n, { editingNote = null }, onDelete = { container.write { dao().deleteQuote(n) } }) { text, page ->
+            container.write { dao().updateQuote(n.copy(text = text, page = page)) }
         }
     }
     if (redating) app.familiar.ui.components.DateTimeDialog(book.finished ?: book.added, { redating = false }, time = false) { day ->

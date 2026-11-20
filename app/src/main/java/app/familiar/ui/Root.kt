@@ -107,6 +107,8 @@ class FamiliarData(
     val now: Long,
     val finds: List<Find> = emptyList(),
     val quotes: List<app.familiar.data.Quote> = emptyList(),
+    /** The reader's own notes, newest first as stored. */
+    val notes: List<app.familiar.data.Quote> = emptyList(),
 ) {
     val stats = Stats(books, readings, pets, now, ZoneId.systemDefault(), settings.dailyGoal, settings.guardedDays, quotes, settings.visits)
     val pet: Pet? = stats.active
@@ -195,7 +197,8 @@ fun FamiliarRoot(settings: Settings, dim: (Boolean) -> Unit) {
     val loaded = books != null && readings != null && pets != null && finds != null && quotes != null
     val minute = rememberNow(60_000)
     val data = remember(books, readings, pets, finds, quotes, settings, minute) {
-        FamiliarData(books.orEmpty(), readings.orEmpty(), pets.orEmpty(), settings, System.currentTimeMillis(), finds.orEmpty(), quotes.orEmpty())
+        // Notes ride with the quotes in one table; everything that counts quotes sees the quotes alone (#67).
+        FamiliarData(books.orEmpty(), readings.orEmpty(), pets.orEmpty(), settings, System.currentTimeMillis(), finds.orEmpty(), quotes.orEmpty().filter { !it.note }, quotes.orEmpty().filter { it.note })
     }
     // What was already earned when achievements arrived (a shelf of years, an import) is written down quietly, once.
     LaunchedEffect(loaded, settings.onboarded, settings.featsInit) {

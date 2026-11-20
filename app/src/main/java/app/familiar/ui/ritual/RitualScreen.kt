@@ -27,6 +27,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.EditNote
 import androidx.compose.material.icons.rounded.FormatQuote
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.Icon
@@ -91,6 +92,7 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
     var discarding by remember { mutableStateOf(false) }
     var quoting by remember { mutableStateOf(false) }
     var autoPaused by remember { mutableStateOf(false) }
+    var noting by remember { mutableStateOf(false) }
 
     fun update(change: (Ritual) -> Ritual) {
         container.scope.launch { container.settings.update { st -> st.copy(ritual = st.ritual?.let(change)) } }
@@ -271,11 +273,17 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
             }
             Spacer(Modifier.height(10.dp))
             // A line worth keeping, copied out without leaving the candle.
-            SoftButton(stringResource(R.string.quote_add), {
-                // Writing a line down doesn't burn the candle: it pauses while the note is open.
-                if (!ritual.paused) { autoPaused = true; val t = System.currentTimeMillis(); update { it.pause(t) } }
-                quoting = true
-            }, Modifier.fillMaxWidth(), color = U.c.gold, soft = U.c.goldSoft, icon = Icons.Rounded.FormatQuote)
+            // A line of the book, or a thought of your own (#67); writing doesn't burn the candle: it pauses while open.
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SoftButton(stringResource(R.string.quote_short), {
+                    if (!ritual.paused) { autoPaused = true; val t = System.currentTimeMillis(); update { it.pause(t) } }
+                    noting = false; quoting = true
+                }, Modifier.weight(1f), color = U.c.gold, soft = U.c.goldSoft, icon = Icons.Rounded.FormatQuote)
+                SoftButton(stringResource(R.string.note_short), {
+                    if (!ritual.paused) { autoPaused = true; val t = System.currentTimeMillis(); update { it.pause(t) } }
+                    noting = true; quoting = true
+                }, Modifier.weight(1f), color = U.c.accent, soft = U.c.accentSoft, icon = Icons.Rounded.EditNote)
+            }
             Spacer(Modifier.height(16.dp))
         }
         PrimaryButton(
@@ -286,8 +294,8 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
     if (quoting) app.familiar.ui.books.QuoteDialog(book, null, {
         quoting = false
         if (autoPaused) { autoPaused = false; val t = System.currentTimeMillis(); update { it.resume(t) } }
-    }, page = if (book.audio || s.pagesAtEnd || listening) 0 else ritual.page) { text, page ->
-        container.write { dao().insertQuote(app.familiar.data.Quote(bookId = book.id, text = text, page = page, at = System.currentTimeMillis())) }
+    }, page = if (book.audio || s.pagesAtEnd || listening) 0 else ritual.page, note = noting) { text, page ->
+        container.write { dao().insertQuote(app.familiar.data.Quote(bookId = book.id, text = text, page = page, at = System.currentTimeMillis(), note = noting)) }
     }
     if (discarding) ConfirmDialog(
         title = stringResource(R.string.ritual_discard_title),

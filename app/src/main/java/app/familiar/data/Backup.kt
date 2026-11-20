@@ -140,7 +140,7 @@ object Backup {
             JSONObject().put("id", it.id).put("kind", it.kind).put("at", it.at).put("petId", it.petId).put("readingId", it.readingId)
         }))
         .put("quotes", JSONArray(s.quotes.map {
-            JSONObject().put("id", it.id).put("bookId", it.bookId).put("text", it.text).put("page", it.page).put("at", it.at)
+            JSONObject().put("id", it.id).put("bookId", it.bookId).put("text", it.text).put("page", it.page).put("at", it.at).put("note", it.note)
         }))
         .apply { if (settings != null) put("settings", settings) }
 
@@ -183,7 +183,7 @@ object Backup {
             },
             pets = root.list("pets") { Pet(getLong("id"), getString("species"), getString("name"), getLong("joined"), getInt("mana"), optBoolean("active"), optBoolean("shiny"), optString("trait"), optString("form")) },
             finds = root.list("finds") { Find(getLong("id"), getString("kind"), getLong("at"), optLong("petId"), optLong("readingId")) },
-            quotes = root.list("quotes") { Quote(getLong("id"), getLong("bookId"), getString("text"), optInt("page"), getLong("at")) },
+            quotes = root.list("quotes") { Quote(getLong("id"), getLong("bookId"), getString("text"), optInt("page"), getLong("at"), optBoolean("note")) },
         )
     }
 

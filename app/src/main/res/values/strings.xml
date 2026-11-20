@@ -341,6 +341,12 @@
     <string name="log_today">Today</string>
     <string name="log_yesterday">Yesterday</string>
     <string name="log_other_day">Another day…</string>
+    <string name="notes">Notes</string>
+    <string name="note_add">Add a note</string>
+    <string name="note_edit">Note</string>
+    <string name="reading_note_hint">A thought, a question, something to remember</string>
+    <string name="note_short">Note</string>
+    <string name="quote_short">Quote</string>
     <string name="ritual_pause">Pause</string>
     <string name="ritual_resume">Go on</string>
     <string name="set_candle_loud">Loud, like an alarm</string>

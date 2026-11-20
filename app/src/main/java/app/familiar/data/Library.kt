@@ -76,7 +76,7 @@ object Library {
                 bookPages = book.pages, streak = streak, gapDays = gapDays, finishedBook = done && book.shelfOf != Shelf.DONE,
                 item = item, listened = listened, morning = isMorning(start, zone), own = book.sub.isNotBlank(),
                 ebook = book.ebook, series = book.series.isNotBlank(), reread = book.reread > 0, fire = ambience == Ambience.FIRE.name,
-                quoted = dao.quotes().any { it.bookId == book.id }, guest = guest, audio = book.audio,
+                quoted = dao.quotes().any { it.bookId == book.id && !it.note }, guest = guest, audio = book.audio,
                 pace = pace,
             ),
         )

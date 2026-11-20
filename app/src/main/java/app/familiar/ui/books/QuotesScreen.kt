@@ -133,18 +133,18 @@ fun QuotesScreen(bookId: Long, data: FamiliarData, go: Go) {
  * [page] is offered for a new one (the page the ritual is on).
  */
 @Composable
-fun QuoteDialog(book: Book?, quote: Quote?, onDismiss: () -> Unit, page: Int = 0, onDelete: (() -> Unit)? = null, onSave: (String, Int) -> Unit) {
+fun QuoteDialog(book: Book?, quote: Quote?, onDismiss: () -> Unit, page: Int = 0, onDelete: (() -> Unit)? = null, note: Boolean = quote?.note ?: false, onSave: (String, Int) -> Unit) {
     var text by remember { mutableStateOf(quote?.text.orEmpty()) }
     var at by remember { mutableStateOf((quote?.page ?: page).takeIf { it > 0 }?.toString().orEmpty()) }
     val ok = text.isNotBlank()
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = U.c.bg,
-        title = { Text(stringResource(if (quote == null) R.string.quote_add else R.string.quote_edit), style = UType.Strong) },
+        title = { Text(stringResource(if (note) (if (quote == null) R.string.note_add else R.string.note_edit) else if (quote == null) R.string.quote_add else R.string.quote_edit), style = UType.Strong) },
         text = {
             Column {
                 if (book != null) Text(book.title, style = UType.Small.copy(color = U.c.muted), maxLines = 1, modifier = Modifier.padding(bottom = 8.dp))
-                UTextField(text, { text = it.take(QUOTE_MAX) }, placeholder = stringResource(R.string.quote_hint), minLines = 4)
+                UTextField(text, { text = it.take(QUOTE_MAX) }, placeholder = stringResource(if (note) R.string.reading_note_hint else R.string.quote_hint), minLines = 4)
                 // An audiobook has no pages to point at.
                 if (book?.audio != true) {
                     Spacer(Modifier.height(8.dp))

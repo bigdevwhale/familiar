@@ -167,6 +167,8 @@ data class Quote(
     /** The page it is on (the minute, for an audiobook); 0 when not said. */
     val page: Int = 0,
     val at: Long,
+    /** The reader's own note made while reading, not a line of the book (#67). */
+    @ColumnInfo(defaultValue = "0") val note: Boolean = false,
 )
 
 class Snapshot(val books: List<Book>, val readings: List<Reading>, val pets: List<Pet>, val finds: List<Find> = emptyList(), val quotes: List<Quote> = emptyList())
@@ -274,9 +276,9 @@ abstract class FamiliarDao {
 // Every schema change gets a new version and a migration that keeps what's there (1.1.0 lost data without one).
 @Database(
     entities = [Book::class, Reading::class, Pet::class, Find::class, Quote::class],
-    version = 10,
+    version = 11,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8), AutoMigration(from = 8, to = 9), AutoMigration(from = 9, to = 10)],
+    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8), AutoMigration(from = 8, to = 9), AutoMigration(from = 9, to = 10), AutoMigration(from = 10, to = 11)],
 )
 abstract class FamiliarDatabase : RoomDatabase() {
     abstract fun dao(): FamiliarDao
