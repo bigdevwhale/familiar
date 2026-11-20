@@ -363,6 +363,10 @@
     <string name="quote_short">Цитата</string>
     <string name="guild_week">Гильдия: поручения недели</string>
     <string name="guild_week_text">Два небольших поручения, новые каждый понедельник. За каждое – %d маны.</string>
+    <string name="f_cycle_total">Всего томов в цикле</string>
+    <string name="f_cycle_total_hint">Если хотите добавить весь цикл</string>
+    <string name="f_cycle_total_note">Остальные тома встанут на полку «Хочу прочитать». Названия и страницы можно поправить потом.</string>
+    <string name="cycle_volume_title">%1$s. Книга %2$d</string>
     <string name="ritual_pause">Пауза</string>
     <string name="ritual_resume">Продолжить</string>
     <string name="set_candle_loud">Громко, как будильник</string>

@@ -349,6 +349,10 @@
     <string name="quote_short">Quote</string>
     <string name="guild_week">The guild: this week</string>
     <string name="guild_week_text">Two small errands, new every Monday. %d mana for each.</string>
+    <string name="f_cycle_total">Volumes in the cycle</string>
+    <string name="f_cycle_total_hint">To add the whole cycle</string>
+    <string name="f_cycle_total_note">The other volumes go to «Want to read». Titles and pages can be put right later.</string>
+    <string name="cycle_volume_title">%1$s, book %2$d</string>
     <string name="ritual_pause">Pause</string>
     <string name="ritual_resume">Go on</string>
     <string name="set_candle_loud">Loud, like an alarm</string>

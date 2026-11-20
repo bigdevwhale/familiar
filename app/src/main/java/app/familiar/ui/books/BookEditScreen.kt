@@ -65,7 +65,10 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
     var cover by remember { mutableStateOf(old?.cover ?: "") }
     var audio by remember { mutableStateOf(old?.audio ?: false) }
     var ebook by remember { mutableStateOf(old?.ebook ?: false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
     var series by remember { mutableStateOf(old?.series ?: newSeries) }
+    // The whole cycle at once (#37): how many volumes it has; the missing ones go to «Want to read».
+    var cycleOf by remember { mutableStateOf("") }
     // A new volume of a cycle gets the next number.
     var tags by remember { mutableStateOf(old?.tagList?.toSet() ?: emptySet()) }
     var volume by remember {
@@ -145,6 +148,11 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
                     UTextField(volume, { volume = it.filter(Char::isDigit).take(3) }, number = true, placeholder = "1")
                 }
             }
+            if (old == null && series.isNotBlank()) {
+                SectionTitle(stringResource(R.string.f_cycle_total))
+                UTextField(cycleOf, { cycleOf = it.filter(Char::isDigit).take(2) }, number = true, placeholder = stringResource(R.string.f_cycle_total_hint))
+                if ((cycleOf.toIntOrNull() ?: 0) > 1) Text(stringResource(R.string.f_cycle_total_note), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 6.dp))
+            }
             // The cycles on the shelves, the latest first: the ones that match what's typed, or all of them on request.
             val known = remember(data.books) { app.familiar.domain.Series.all(data.books).map { it.name } }
             val typed = series.trim()
@@ -194,7 +202,18 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
                     finished = if (read) finished else old?.finished,
                     rating = if (read) rating.takeIf { it in 1..10 } else old?.rating,
                 )
-                container.write { if (old == null) dao().insertBook(b) else dao().updateBook(b) }
+                // The other volumes of the cycle, as many as it has, wait on «Want to read»; those on the shelves already are skipped.
+                val total = (cycleOf.toIntOrNull() ?: 0).coerceAtMost(50)
+                val name = series.trim()
+                val have = data.books.filter { it.series.equals(name, true) }.mapNotNull { it.volume }.toSet() + listOfNotNull(b.volume)
+                val rest = if (old == null && name.isNotBlank() && total > 1) (1..total).filter { it !in have } else emptyList()
+                val volumeTitle = context.getString(R.string.cycle_volume_title)
+                container.write {
+                    if (old == null) dao().insertBook(b) else dao().updateBook(b)
+                    rest.forEach { k ->
+                        dao().insertBook(Book(title = volumeTitle.format(name, k), author = b.author, pages = 0, genre = b.genre, sub = b.sub, shelf = Shelf.WANT.name, added = now + k, series = name, volume = k, audio = b.audio, ebook = b.ebook))
+                    }
+                }
                 go.back()
             },
             Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 12.dp).navigationBarsPadding(),
