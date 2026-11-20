@@ -347,6 +347,8 @@
     <string name="reading_note_hint">A thought, a question, something to remember</string>
     <string name="note_short">Note</string>
     <string name="quote_short">Quote</string>
+    <string name="guild_week">The guild: this week</string>
+    <string name="guild_week_text">Two small errands, new every Monday. %d mana for each.</string>
     <string name="ritual_pause">Pause</string>
     <string name="ritual_resume">Go on</string>
     <string name="set_candle_loud">Loud, like an alarm</string>

@@ -205,39 +205,16 @@ private fun TreePage(data: FamiliarData, go: Go) {
             }
         }
         val month = java.time.YearMonth.from(s.today)
+        // Two small errands a week (#42), above the month's three.
+        SectionTitle(stringResource(R.string.guild_week))
+        UCard {
+            Text(stringResource(R.string.guild_week_text, Mana.QUEST / 2), style = UType.Muted)
+            Quests.week(s).forEach { q -> QuestRow(q, Mana.QUEST / 2, data, container) }
+        }
         SectionTitle(stringResource(R.string.guild, month.month.getDisplayName(TextStyle.FULL_STANDALONE, locale())))
         UCard {
             Text(stringResource(R.string.guild_text, Mana.QUEST), style = UType.Muted)
-            Quests.state(s).forEach { q ->
-                HorizontalDivider(Modifier.padding(vertical = 12.dp), color = U.c.line)
-                val claimed = q.key in data.settings.claimed
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(questTitle(q.quest), style = UType.Strong)
-                        Text(questText(q.quest), style = UType.Muted)
-                    }
-                    if (claimed) Icon(Icons.Rounded.CheckCircle, null, tint = U.c.leaf)
-                    // A reward waiting is a small gold button beside the errand, not a bar across the card.
-                    else if (q.done) {
-                        Spacer(Modifier.width(10.dp))
-                        SoftButton(stringResource(R.string.mana_plus, Mana.QUEST), {
-                            container.scope.launch {
-                                Library.reward(container.db.dao(), Mana.QUEST)
-                                container.settings.update { it.copy(claimed = it.claimed + q.key) }
-                                container.changed()
-                            }
-                        }, Modifier.height(40.dp), color = U.c.gold, soft = U.c.goldSoft)
-                    }
-                }
-                if (!q.done) {
-                    Spacer(Modifier.height(8.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Bar(q.progress / q.quest.target.toFloat(), Modifier.weight(1f), color = U.c.gold, track = U.c.goldSoft)
-                        Spacer(Modifier.width(10.dp))
-                        Text("${q.progress} / ${q.quest.target}", style = UType.Small)
-                    }
-                }
-            }
+            Quests.state(s).forEach { q -> QuestRow(q, Mana.QUEST, data, container) }
         }
     }
 }
@@ -322,6 +299,39 @@ private fun YearGoal(data: FamiliarData) {
             Text(stringResource(R.string.goal_pick), style = UType.Muted)
             Spacer(Modifier.height(6.dp))
             YearGoalPicker(goal) { n -> container.scope.launch { container.settings.update { it.copy(yearGoal = n) } }; editing = false }
+        }
+    }
+}
+
+/** One errand of the guild: what it asks, how far along, and its reward to claim once done. */
+@Composable
+private fun QuestRow(q: app.familiar.domain.QuestState, mana: Int, data: FamiliarData, container: app.familiar.AppContainer) {
+    HorizontalDivider(Modifier.padding(vertical = 12.dp), color = U.c.line)
+    val claimed = q.key in data.settings.claimed
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(questTitle(q.quest), style = UType.Strong)
+            Text(questText(q.quest, q.target), style = UType.Muted)
+        }
+        if (claimed) Icon(Icons.Rounded.CheckCircle, null, tint = U.c.leaf)
+        // A reward waiting is a small gold button beside the errand, not a bar across the card.
+        else if (q.done) {
+            Spacer(Modifier.width(10.dp))
+            SoftButton(stringResource(R.string.mana_plus, mana), {
+                container.scope.launch {
+                    Library.reward(container.db.dao(), mana)
+                    container.settings.update { it.copy(claimed = it.claimed + q.key) }
+                    container.changed()
+                }
+            }, Modifier.height(40.dp), color = U.c.gold, soft = U.c.goldSoft)
+        }
+    }
+    if (!q.done) {
+        Spacer(Modifier.height(8.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Bar(q.progress / q.target.toFloat(), Modifier.weight(1f), color = U.c.gold, track = U.c.goldSoft)
+            Spacer(Modifier.width(10.dp))
+            Text("${q.progress} / ${q.target}", style = UType.Small)
         }
     }
 }

@@ -342,21 +342,47 @@ object Mana {
 
 }
 
-/** Monthly guild errands: three from the board, the same three for everyone in that month. */
-enum class Quest(val target: Int) {
-    STREAK(5), PAGES(500), TWO_BOOKS(2), LONG_BOOK(1), NEW_GENRE(1), NIGHTS(3), HOUR(1), STILL(5);
+/**
+ * Guild errands: three from the board for the month, the same three for everyone in that month, and two smaller
+ * ones each week from Monday (#42). [week] is the errand's size in a week; 0 for those that only fit a month.
+ */
+enum class Quest(val target: Int, val week: Int = 0) {
+    STREAK(5, 3), PAGES(500, 120), TWO_BOOKS(2), LONG_BOOK(1), NEW_GENRE(1), NIGHTS(3, 1), HOUR(1, 1), STILL(5, 2);
 
     companion object {
         fun of(month: YearMonth): List<Quest> = entries.shuffled(Random(month.year * 12 + month.monthValue)).take(3)
+
+        /** The week's two errands, from the Monday [monday] (an epoch day). */
+        fun ofWeek(monday: Long): List<Quest> = entries.filter { it.week > 0 }.shuffled(Random(monday * 31 + 7)).take(2)
     }
 }
 
-class QuestState(val quest: Quest, val progress: Int, val month: YearMonth) {
-    val done: Boolean get() = progress >= quest.target
-    val key: String get() = "$month:${quest.name}"
+class QuestState(val quest: Quest, val progress: Int, val month: YearMonth, val target: Int = quest.target, private val id: String = month.toString()) {
+    val done: Boolean get() = progress >= target
+    val key: String get() = "$id:${quest.name}"
+    val weekly: Boolean get() = id.startsWith("W")
 }
 
 object Quests {
+    /** The week's errands (#42): from Monday to Sunday, their smaller targets. */
+    fun week(s: Stats): List<QuestState> {
+        val monday = s.today.with(java.time.DayOfWeek.MONDAY)
+        val from = monday.atStartOfDay(s.zone).toInstant().toEpochMilli()
+        val to = monday.plusDays(7).atStartOfDay(s.zone).toInstant().toEpochMilli()
+        val rs = s.readings.filter { it.end in from until to }
+        return Quest.ofWeek(monday.toEpochDay()).map { q ->
+            val p = when (q) {
+                Quest.STREAK -> longestRun(rs.filter { it.counts }.map { Instant.ofEpochMilli(it.end).atZone(s.zone).toLocalDate() }.toSet())
+                Quest.PAGES -> rs.sumOf { it.amount }
+                Quest.NIGHTS -> rs.count { it.timed && it.counts && isNight(it.start, s.zone) }
+                Quest.HOUR -> rs.count { it.timed && it.minutes >= 60 }
+                Quest.STILL -> rs.count { it.stillSec >= 600 }
+                else -> 0
+            }
+            QuestState(q, p.coerceAtMost(q.week), YearMonth.from(monday), q.week, "W" + monday)
+        }
+    }
+
     fun state(s: Stats, month: YearMonth = YearMonth.from(s.today)): List<QuestState> {
         fun inMonth(t: Long) = YearMonth.from(Instant.ofEpochMilli(t).atZone(s.zone)) == month
         val rs = s.readings.filter { inMonth(it.end) }

@@ -393,15 +393,15 @@ fun questTitle(q: Quest): String = stringResource(
 )
 
 @Composable
-fun questText(q: Quest): String = when (q) {
-    Quest.STREAK -> pluralStringResource(R.plurals.qt_streak, q.target, q.target)
-    Quest.PAGES -> pluralStringResource(R.plurals.qt_pages, q.target, q.target)
-    Quest.TWO_BOOKS -> pluralStringResource(R.plurals.qt_books, q.target, q.target)
+fun questText(q: Quest, target: Int = q.target): String = when (q) {
+    Quest.STREAK -> pluralStringResource(R.plurals.qt_streak, target, target)
+    Quest.PAGES -> pluralStringResource(R.plurals.qt_pages, target, target)
+    Quest.TWO_BOOKS -> pluralStringResource(R.plurals.qt_books, target, target)
     Quest.LONG_BOOK -> stringResource(R.string.qt_long_book)
     Quest.NEW_GENRE -> stringResource(R.string.qt_new_genre)
-    Quest.NIGHTS -> pluralStringResource(R.plurals.qt_nights, q.target, q.target)
+    Quest.NIGHTS -> pluralStringResource(R.plurals.qt_nights, target, target)
     Quest.HOUR -> stringResource(R.string.qt_hour)
-    Quest.STILL -> pluralStringResource(R.plurals.qt_still, q.target, q.target)
+    Quest.STILL -> pluralStringResource(R.plurals.qt_still, target, target)
 }
 
 @Composable

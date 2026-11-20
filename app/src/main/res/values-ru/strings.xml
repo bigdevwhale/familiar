@@ -361,6 +361,8 @@
     <string name="reading_note_hint">Мысль, вопрос, что хочется запомнить</string>
     <string name="note_short">Заметка</string>
     <string name="quote_short">Цитата</string>
+    <string name="guild_week">Гильдия: поручения недели</string>
+    <string name="guild_week_text">Два небольших поручения, новые каждый понедельник. За каждое – %d маны.</string>
     <string name="ritual_pause">Пауза</string>
     <string name="ritual_resume">Продолжить</string>
     <string name="set_candle_loud">Громко, как будильник</string>
