@@ -23,9 +23,20 @@ enum class Ambience { OFF, FIRE, RAIN }
 /** A ritual in progress; kept in settings so it survives the app being closed. */
 /** [rang]: the bell has told that the candle burned out, so it doesn't again. */
 /** [sleepAt]: when the sleep timer stops the listening (and whatever is playing); 0 when it isn't set. */
-data class Ritual(val bookId: Long, val start: Long, val fromPage: Int, val page: Int, val stillMs: Long, val listen: Boolean = false, val rang: Boolean = false, val sleepAt: Long = 0) {
+data class Ritual(
+    val bookId: Long, val start: Long, val fromPage: Int, val page: Int, val stillMs: Long, val listen: Boolean = false, val rang: Boolean = false, val sleepAt: Long = 0,
+    /** Paused since then (0 when burning), and the time already spent paused (#70). */
+    val pausedAt: Long = 0, val pausedMs: Long = 0,
+) {
     /** The moment the sitting ends if it were closed at [now]: no later than the sleep timer. */
     fun endAt(now: Long): Long = if (sleepAt in (start + 1)..now) sleepAt else now
+    val paused: Boolean get() = pausedAt > 0
+    /** All the time the candle stood paused up to [now]. */
+    fun pausedTotal(now: Long): Long = pausedMs + if (pausedAt in 1..now) now - pausedAt else 0
+    /** The time really spent reading up to [now]: pauses don't count. */
+    fun elapsed(now: Long): Long = endAt(now).let { e -> (e - start - pausedTotal(e)).coerceAtLeast(0) }
+    fun pause(now: Long) = if (paused) this else copy(pausedAt = now)
+    fun resume(now: Long) = if (!paused) this else copy(pausedAt = 0, pausedMs = pausedMs + (now - pausedAt).coerceAtLeast(0))
 }
 
 data class Settings(
@@ -140,7 +151,7 @@ class SettingsStore(context: Context) {
         classicArt = this[CLASSIC_ART] ?: false,
         remindAt = this[REMIND_AT] ?: -1,
         ritual = (this[R_BOOK] ?: 0L).takeIf { it > 0 }?.let {
-            Ritual(it, this[R_START] ?: 0L, this[R_FROM] ?: 0, this[R_PAGE] ?: 0, this[R_STILL] ?: 0L, this[R_LISTEN] ?: false, this[R_RANG] ?: false, this[R_SLEEP] ?: 0L)
+            Ritual(it, this[R_START] ?: 0L, this[R_FROM] ?: 0, this[R_PAGE] ?: 0, this[R_STILL] ?: 0L, this[R_LISTEN] ?: false, this[R_RANG] ?: false, this[R_SLEEP] ?: 0L, this[R_PAUSED_AT] ?: 0L, this[R_PAUSED_MS] ?: 0L)
         },
         seenUnlocks = this[SEEN_UNLOCKS] ?: emptySet(),
         seenStages = this[SEEN_STAGES] ?: emptySet(),
@@ -243,6 +254,8 @@ class SettingsStore(context: Context) {
             it[R_LISTEN] = r?.listen ?: false
             it[R_RANG] = r?.rang ?: false
             it[R_SLEEP] = r?.sleepAt ?: 0L
+            it[R_PAUSED_AT] = r?.pausedAt ?: 0L
+            it[R_PAUSED_MS] = r?.pausedMs ?: 0L
             it[SEEN_UNLOCKS] = s.seenUnlocks
             it[SEEN_STAGES] = s.seenStages
             it[SEEN_EGGS] = s.seenEggs
@@ -332,6 +345,8 @@ class SettingsStore(context: Context) {
         val BACKDROP = stringPreferencesKey("backdrop")
         val BACKDROP_STAMP = longPreferencesKey("backdrop_stamp")
         val R_SLEEP = longPreferencesKey("ritual_sleep")
+        val R_PAUSED_AT = longPreferencesKey("ritual_paused_at")
+        val R_PAUSED_MS = longPreferencesKey("ritual_paused_ms")
         val COMPANION = longPreferencesKey("companion")
         val VISITS = intPreferencesKey("visits")
         val EARNED = stringSetPreferencesKey("earned")

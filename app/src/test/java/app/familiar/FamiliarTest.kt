@@ -617,4 +617,14 @@ class FamiliarTest {
         val planks = s.planks(s.groups(listOf(loose, v1, v2)), room = 70)
         assertEquals(listOf(listOf(""), listOf("earthsea")), planks.map { r -> r.map { it.name } })
     }
+
+    @Test fun aPausedCandleDoesNotBurn() {
+        val t0 = 1_000_000L
+        var r = app.familiar.data.Ritual(1, t0, 0, 0, 0)
+        r = r.pause(t0 + 10 * 60_000)
+        assertEquals(10 * 60_000L, r.elapsed(t0 + 25 * 60_000))
+        r = r.resume(t0 + 25 * 60_000)
+        assertEquals(15 * 60_000L, r.pausedTotal(t0 + 30 * 60_000))
+        assertEquals(15 * 60_000L, r.elapsed(t0 + 30 * 60_000))
+    }
 }

@@ -54,7 +54,7 @@ object CandleBell {
     }
 
     /** When the candle of [r] burns out. */
-    fun due(r: Ritual, candleMin: Int): Long = r.start + candleMin * 60_000L
+    fun due(r: Ritual, candleMin: Int): Long = r.start + candleMin * 60_000L + r.pausedTotal(System.currentTimeMillis())
 
     private fun pi(context: Context) = PendingIntent.getBroadcast(
         context, 2,
@@ -66,7 +66,7 @@ object CandleBell {
     fun schedule(context: Context, r: Ritual?, candleMin: Int, on: Boolean) {
         val am = context.getSystemService(AlarmManager::class.java)
         val p = pi(context)
-        if (r == null || r.rang || !on) {
+        if (r == null || r.rang || !on || r.paused) {
             am.cancel(p)
             return
         }
@@ -81,7 +81,7 @@ object CandleBell {
         val c = context.container
         val s = c.settings.now()
         val r = s.ritual ?: return false
-        if (!s.candleBell || r.rang || System.currentTimeMillis() < due(r, s.candleMin) - 1_000) return false
+        if (!s.candleBell || r.rang || r.paused || System.currentTimeMillis() < due(r, s.candleMin) - 1_000) return false
         var mine = false
         // Marked rung first, so the app's timer and the alarm never both ring.
         c.settings.update { st ->

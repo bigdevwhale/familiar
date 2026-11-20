@@ -351,6 +351,8 @@
     <string name="set_candle">Сколько горит свеча</string>
     <string name="set_page_sound">Шелест страницы</string>
     <string name="set_candle_bell">Сигнал, когда свеча догорит</string>
+    <string name="ritual_pause">Пауза</string>
+    <string name="ritual_resume">Продолжить</string>
     <string name="set_candle_loud">Громко, как будильник</string>
     <string name="set_candle_loud_sub">Слышно, даже когда телефон лежит экраном вниз, на беззвучном или в режиме «Не беспокоить»</string>
     <string name="set_candle_bell_sub">Звон и вибрация, чтобы не зачитаться</string>

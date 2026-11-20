@@ -25,11 +25,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.FormatQuote
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -87,6 +90,7 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
     var finishing by remember { mutableStateOf(false) }
     var discarding by remember { mutableStateOf(false) }
     var quoting by remember { mutableStateOf(false) }
+    var autoPaused by remember { mutableStateOf(false) }
 
     fun update(change: (Ritual) -> Ritual) {
         container.scope.launch { container.settings.update { st -> st.copy(ritual = st.ritual?.let(change)) } }
@@ -110,15 +114,15 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
     // No fireplace over an audiobook: the voice matters more.
     // Listening: an audiobook, or a book switched to its audio version for this sitting.
     val listening = book.audio || ritual.listen
-    DisposableEffect(s.ambience, listening) {
-        Sound.ambience(if (listening) Ambience.OFF else s.ambience)
+    DisposableEffect(s.ambience, listening, ritual.paused) {
+        Sound.ambience(if (listening || ritual.paused) Ambience.OFF else s.ambience)
         onDispose { Sound.stop() }
     }
     LaunchedEffect(down, s.stillDim) { dim(down && s.stillDim) }
     DisposableEffect(Unit) { onDispose { dim(false) } }
     // Time with the phone face down counts toward the stillness bonus.
-    LaunchedEffect(down) {
-        if (!down) return@LaunchedEffect
+    LaunchedEffect(down, ritual.paused) {
+        if (!down || ritual.paused) return@LaunchedEffect
         var since = System.currentTimeMillis()
         while (true) {
             delay(5_000)
@@ -133,7 +137,7 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
     val now = rememberNow(1000)
     // Once the sleep timer has gone off the record stands still: nothing after it is counted.
     val slept = ritual.sleepAt in (ritual.start + 1)..now
-    val elapsed = (ritual.endAt(now) - ritual.start).coerceAtLeast(0)
+    val elapsed = ritual.elapsed(now)
     val left = 1f - elapsed / (s.candleMin * 60_000f)
     // An audiobook counts itself: every minute listened is a minute further.
     val heard = (ritual.fromPage + (elapsed / 60_000).toInt()).coerceAtMost(book.cap)
@@ -151,8 +155,9 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
                     closing = true
                     container.scope.launch {
                         val end = ritual.endAt(System.currentTimeMillis())
+                        // Pauses aren't reading: the sitting starts that much later (#70).
                         val r = Library.sit(
-                            container.db.dao(), book, ritual.fromPage, input.toPage, ritual.start, end, timed = true,
+                            container.db.dao(), book, ritual.fromPage, input.toPage, ritual.start + ritual.pausedTotal(end), end, timed = true,
                             stillSec = (ritual.stillMs / 1000).toInt(), listened = listening, item = input.item, finish = input.finish,
                             guarded = s.guardedDays, ambience = if (listening) "" else s.ambience.name,
                             guest = data.guest != null, companionId = s.companion,
@@ -190,7 +195,13 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
             }
             val min = elapsed / 60_000
             val sec = (elapsed / 1000) % 60
-            Text("%d:%02d".format(min, sec), style = UType.Timer)
+            Text("%d:%02d".format(min, sec), style = UType.Timer.copy(color = if (ritual.paused) U.c.muted else UType.Timer.color))
+            // A pause: the candle stops burning while you're away or writing something down (#70).
+            if (!slept) TextButton(onClick = { val t = System.currentTimeMillis(); update { if (it.paused) it.resume(t) else it.pause(t) } }) {
+                Icon(if (ritual.paused) Icons.Rounded.PlayArrow else Icons.Rounded.Pause, null, tint = U.c.accent, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(if (ritual.paused) R.string.ritual_resume else R.string.ritual_pause), color = U.c.accent, style = UType.Button)
+            }
             when {
                 ritual.listen && !book.audio -> {
                     Text(stringResource(R.string.listen_text), style = UType.Sub.copy(textAlign = androidx.compose.ui.text.style.TextAlign.Center))
@@ -260,7 +271,11 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
             }
             Spacer(Modifier.height(10.dp))
             // A line worth keeping, copied out without leaving the candle.
-            SoftButton(stringResource(R.string.quote_add), { quoting = true }, Modifier.fillMaxWidth(), color = U.c.gold, soft = U.c.goldSoft, icon = Icons.Rounded.FormatQuote)
+            SoftButton(stringResource(R.string.quote_add), {
+                // Writing a line down doesn't burn the candle: it pauses while the note is open.
+                if (!ritual.paused) { autoPaused = true; val t = System.currentTimeMillis(); update { it.pause(t) } }
+                quoting = true
+            }, Modifier.fillMaxWidth(), color = U.c.gold, soft = U.c.goldSoft, icon = Icons.Rounded.FormatQuote)
             Spacer(Modifier.height(16.dp))
         }
         PrimaryButton(
@@ -268,7 +283,10 @@ fun RitualScreen(id: Long, data: FamiliarData, go: Go, dim: (Boolean) -> Unit) {
             Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 12.dp).navigationBarsPadding(), color = U.c.ember,
         )
     }
-    if (quoting) app.familiar.ui.books.QuoteDialog(book, null, { quoting = false }, page = if (book.audio || s.pagesAtEnd || listening) 0 else ritual.page) { text, page ->
+    if (quoting) app.familiar.ui.books.QuoteDialog(book, null, {
+        quoting = false
+        if (autoPaused) { autoPaused = false; val t = System.currentTimeMillis(); update { it.resume(t) } }
+    }, page = if (book.audio || s.pagesAtEnd || listening) 0 else ritual.page) { text, page ->
         container.write { dao().insertQuote(app.familiar.data.Quote(bookId = book.id, text = text, page = page, at = System.currentTimeMillis())) }
     }
     if (discarding) ConfirmDialog(

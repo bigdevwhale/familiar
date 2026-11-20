@@ -219,9 +219,9 @@ fun FamiliarRoot(settings: Settings, dim: (Boolean) -> Unit) {
 
     // The candle's bell: an alarm in case the phone sleeps, and the app's own timer while it's awake.
     val ritual = settings.ritual
-    LaunchedEffect(ritual?.start, ritual?.rang, settings.candleMin, settings.candleBell) {
+    LaunchedEffect(ritual?.start, ritual?.rang, ritual?.pausedAt, ritual?.pausedMs, settings.candleMin, settings.candleBell) {
         app.familiar.notify.CandleBell.schedule(context, ritual, settings.candleMin, settings.candleBell)
-        if (ritual == null || ritual.rang || !settings.candleBell) return@LaunchedEffect
+        if (ritual == null || ritual.rang || ritual.paused || !settings.candleBell) return@LaunchedEffect
         kotlinx.coroutines.delay((app.familiar.notify.CandleBell.due(ritual, settings.candleMin) - System.currentTimeMillis()).coerceAtLeast(0))
         app.familiar.notify.CandleBell.ringIfDue(context)
     }
