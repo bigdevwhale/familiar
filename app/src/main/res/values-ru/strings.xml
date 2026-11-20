@@ -367,6 +367,12 @@
     <string name="f_cycle_total_hint">Если хотите добавить весь цикл</string>
     <string name="f_cycle_total_note">Остальные тома встанут на полку «Хочу прочитать». Названия и страницы можно поправить потом.</string>
     <string name="cycle_volume_title">%1$s. Книга %2$d</string>
+    <string name="plank_new">С этой книги – новая полка</string>
+    <string name="plank_new_sub">Она и всё, что за ней, переедут на следующую доску</string>
+    <string name="picked_n">Выбрано: %1$d</string>
+    <string name="picked_to_shelf">На полку…</string>
+    <string name="picked_shelves_title">Свои полки для книг: %1$d</string>
+    <string name="picked_shelves_text">Отмеченная полка достанется всем выбранным книгам, снятая отметка уберёт с неё все.</string>
     <string name="ritual_pause">Пауза</string>
     <string name="ritual_resume">Продолжить</string>
     <string name="set_candle_loud">Громко, как будильник</string>

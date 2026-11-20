@@ -1,5 +1,7 @@
 package app.familiar.ui.books
 
+import app.familiar.ui.components.SwitchRow
+import androidx.compose.runtime.collectAsState
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -65,6 +67,12 @@ fun BookLookSheet(b: Book, all: List<Book>, onDismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = U.c.bg) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).navigationBarsPadding().padding(bottom = 40.dp)) {
             Text(b.title, style = UType.Title, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            // A plank of its own from this book on, put there by hand (#65).
+            val breaks by container.settings.settings.collectAsState(initial = null)
+            val starts = breaks?.shelfBreaks?.contains(b.id.toString()) == true
+            SwitchRow(stringResource(R.string.plank_new), stringResource(R.string.plank_new_sub), starts, { on ->
+                container.scope.launch { container.settings.update { s -> s.copy(shelfBreaks = if (on) s.shelfBreaks + b.id.toString() else s.shelfBreaks - b.id.toString()) } }
+            })
             SectionTitle(stringResource(R.string.pose_title))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(Pose.STAND to R.string.pose_stand, Pose.FACE to R.string.pose_face, Pose.LIE to R.string.pose_lie).forEach { (p, res) ->

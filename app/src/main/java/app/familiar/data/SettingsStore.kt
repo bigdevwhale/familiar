@@ -112,6 +112,8 @@ data class Settings(
     val shelfScale: Int = 100,
     /** Every book on the planks of one height, rather than each its own; one sized by hand keeps its own. */
     val shelfEven: Boolean = false,
+    /** Books that start a new plank of their own, by id (#65): the plank before stays as full as it is. */
+    val shelfBreaks: Set<String> = emptySet(),
     /** The tree bears only this year's books rather than every book ever finished. */
     val treeYear: Boolean = false,
     /** The picture behind every screen ([app.familiar.ui.Backdrops] key), and when the reader's own was last picked. */
@@ -180,6 +182,7 @@ class SettingsStore(context: Context) {
         shelfDecor = this[SHELF_DECOR] ?: "",
         shelfScale = this[SHELF_SCALE] ?: 100,
         shelfEven = this[SHELF_EVEN] ?: false,
+        shelfBreaks = this[SHELF_BREAKS] ?: emptySet(),
         treeYear = this[TREE_YEAR] ?: false,
         backdrop = this[BACKDROP] ?: "",
         backdropStamp = this[BACKDROP_STAMP] ?: 0L,
@@ -283,6 +286,7 @@ class SettingsStore(context: Context) {
             it[SHELF_DECOR] = s.shelfDecor
             it[SHELF_SCALE] = s.shelfScale
             it[SHELF_EVEN] = s.shelfEven
+            it[SHELF_BREAKS] = s.shelfBreaks
             it[TREE_YEAR] = s.treeYear
             it[BACKDROP] = s.backdrop
             it[BACKDROP_STAMP] = s.backdropStamp
@@ -341,6 +345,7 @@ class SettingsStore(context: Context) {
         val SHELF_DECOR = stringPreferencesKey("shelf_decor")
         val SHELF_SCALE = intPreferencesKey("shelf_scale")
         val SHELF_EVEN = booleanPreferencesKey("shelf_even")
+        val SHELF_BREAKS = stringSetPreferencesKey("shelf_breaks")
         val TREE_YEAR = booleanPreferencesKey("tree_year")
         val BACKDROP = stringPreferencesKey("backdrop")
         val BACKDROP_STAMP = longPreferencesKey("backdrop_stamp")

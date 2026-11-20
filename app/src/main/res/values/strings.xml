@@ -353,6 +353,12 @@
     <string name="f_cycle_total_hint">To add the whole cycle</string>
     <string name="f_cycle_total_note">The other volumes go to «Want to read». Titles and pages can be put right later.</string>
     <string name="cycle_volume_title">%1$s, book %2$d</string>
+    <string name="plank_new">A new plank from this book</string>
+    <string name="plank_new_sub">It and everything after it move to the next plank</string>
+    <string name="picked_n">Picked: %1$d</string>
+    <string name="picked_to_shelf">To a shelf…</string>
+    <string name="picked_shelves_title">Own shelves for %1$d books</string>
+    <string name="picked_shelves_text">A ticked shelf gets every picked book; untick it to take them all off.</string>
     <string name="ritual_pause">Pause</string>
     <string name="ritual_resume">Go on</string>
     <string name="set_candle_loud">Loud, like an alarm</string>

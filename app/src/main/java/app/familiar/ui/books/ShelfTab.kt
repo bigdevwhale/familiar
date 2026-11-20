@@ -1,5 +1,9 @@
 package app.familiar.ui.books
 
+import androidx.compose.ui.zIndex
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.input.pointer.pointerInput
@@ -150,8 +154,8 @@ fun ShelfTab(data: FamiliarData, go: Go) {
     // What stands at the end of each plank takes its room there.
     val decor = remember(data.settings.shelfDecor) { Decor.parse(data.settings.shelfDecor) }
     val look = PlankLook.of(data.settings.shelfWood, data.settings.shelfTrim)
-    val planks = remember(list, room, spineMode, cycle, decor, decorMode, data.settings.shelfScale, data.settings.shelfEven) {
-        if (spineMode) Spines.planks(Spines.groups(list, cycles = cycle.isBlank(), decor = decor), room) { if (decorMode) Decor.room(Decor.SLOT) else 0 } else emptyList()
+    val planks = remember(list, room, spineMode, cycle, decor, decorMode, data.settings.shelfScale, data.settings.shelfEven, data.settings.shelfBreaks) {
+        if (spineMode) Spines.planks(Spines.groups(list, cycles = cycle.isBlank(), decor = decor, breaks = data.settings.shelfBreaks.mapNotNull { it.toLongOrNull() }.toSet()), room) { if (decorMode) Decor.room(Decor.SLOT) else 0 }.filter { it.isNotEmpty() } else emptyList()
     }
     // The book held down on the shelf of spines, to change how it stands and looks; the plank held, to decorate it.
     var holding by remember { mutableStateOf<Long?>(null) }
@@ -224,6 +228,10 @@ fun ShelfTab(data: FamiliarData, go: Go) {
         listOfNotNull(Shelf.ABANDONED.name.takeIf { a -> view == a || data.books.any { it.shelfOf == Shelf.ABANDONED } }) +
         listOf(CYCLES) + data.shelves.map { OWN + it }
     val tabRow = androidx.compose.foundation.lazy.rememberLazyListState()
+    // Several books picked at once, to put on the reader's own shelves together (#74).
+    val picked = remember { androidx.compose.runtime.mutableStateListOf<Long>() }
+    var shelving by remember { mutableStateOf(false) }
+    fun pick(id: Long) { if (id in picked) picked.remove(id) else picked.add(id) }
     // The tab picked by a swipe comes into sight in the row of tabs.
     LaunchedEffect(view) { tabs.indexOf(view).takeIf { it >= 0 }?.let { tabRow.animateScrollToItem(maxOf(0, it - 1)) } }
     val swipe = with(androidx.compose.ui.platform.LocalDensity.current) { 80.dp.toPx() }
@@ -354,10 +362,16 @@ fun ShelfTab(data: FamiliarData, go: Go) {
                     )
                 }
             }
-            else if (listMode) items(list, key = { it.id }, span = { GridItemSpan(3) }) { b -> BookRow(b, view == ALL) { go.book(b.id) } }
+            else if (listMode) items(list, key = { it.id }, span = { GridItemSpan(3) }) { b ->
+                BookRow(b, view == ALL, b.id in picked, onLong = { pick(b.id) }) { if (picked.isNotEmpty()) pick(b.id) else go.book(b.id) }
+            }
             else items(list, key = { it.id }) { b ->
-                Column(Modifier.clip(RoundedCornerShape(8.dp)).clickable { go.book(b.id) }) {
+                Column(Modifier.clip(RoundedCornerShape(8.dp)).combinedClickable(onLongClick = { pick(b.id) }) { if (picked.isNotEmpty()) pick(b.id) else go.book(b.id) }) {
                     Box {
+                        if (b.id in picked) Box(
+                            Modifier.align(Alignment.TopStart).padding(5.dp).size(24.dp).clip(CircleShape).background(U.c.accent).zIndex(1f),
+                            contentAlignment = Alignment.Center,
+                        ) { Icon(Icons.Rounded.Check, null, tint = U.c.onAccent, modifier = Modifier.size(16.dp)) }
                         // An abandoned book fades like an old gravestone, its epitaph the reader's reason.
                         BookCover(b, Modifier.fillMaxWidth().aspectRatio(0.68f).graphicsLayer { alpha = if (b.shelfOf == Shelf.ABANDONED) FADED else 1f })
                         if (b.audio) Box(
@@ -382,7 +396,15 @@ fun ShelfTab(data: FamiliarData, go: Go) {
                 }
             }
         }
-        FloatingActionButton(
+        if (picked.isNotEmpty()) Row(
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp).clip(RoundedCornerShape(16.dp)).background(U.c.ink).padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(stringResource(R.string.picked_n, picked.size), style = UType.Strong.copy(color = U.c.bg), modifier = Modifier.weight(1f))
+            TextButton(onClick = { shelving = true }) { Text(stringResource(R.string.picked_to_shelf), color = U.c.gold, style = UType.Button) }
+            IconButton(onClick = { picked.clear() }) { Icon(Icons.Rounded.Close, stringResource(R.string.cancel), tint = U.c.bg) }
+        }
+        else FloatingActionButton(
             onClick = { go.editBook() },
             containerColor = U.c.accent,
             contentColor = U.c.onAccent,
@@ -391,6 +413,7 @@ fun ShelfTab(data: FamiliarData, go: Go) {
     }
     }
     holding?.let { id -> data.books.firstOrNull { it.id == id }?.let { b -> BookLookSheet(b, data.books) { holding = null } } }
+    if (shelving) PickedShelvesSheet(data, picked.toList(), { shelving = false }) { picked.clear(); shelving = false }
     decorating?.let { o -> ShelfLookSheet(data.settings.shelfWood, data.settings.shelfTrim, data.settings.shelfDecor, o, data.owned) { decorating = null } }
     if (filtering) FilterSheet(
         data, all, browse,
@@ -527,8 +550,9 @@ private fun sortName(s: Sort): String = stringResource(
 
 /** A book as a line: a small cover, the title, author, genre and how far along. */
 @Composable
-private fun BookRow(b: Book, withShelf: Boolean, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clickable(onClick = onClick), verticalAlignment = Alignment.CenterVertically) {
+private fun BookRow(b: Book, withShelf: Boolean, picked: Boolean = false, onLong: () -> Unit = {}, onClick: () -> Unit) {
+    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(if (picked) U.c.accentSoft else Color.Transparent).combinedClickable(onLongClick = onLong, onClick = onClick), verticalAlignment = Alignment.CenterVertically) {
+        if (picked) Icon(Icons.Rounded.CheckCircle, null, tint = U.c.accent, modifier = Modifier.padding(end = 8.dp).size(22.dp))
         BookCover(b, Modifier.width(46.dp).height(66.dp).graphicsLayer { alpha = if (b.shelfOf == Shelf.ABANDONED) FADED else 1f }, small = true)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
@@ -649,3 +673,30 @@ private const val FADED = 0.45f
 
 /** How much of the screen the filter sheet takes, whatever is in it. */
 private const val SHEET_HEIGHT = 0.85f
+
+/**
+ * The reader's own shelves for the books [ids] picked together (#74): a shelf ticked holds every one of them;
+ * ticking puts them all on it, unticking takes them all off. [onDone] once it's applied.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PickedShelvesSheet(data: FamiliarData, ids: List<Long>, onDismiss: () -> Unit, onDone: () -> Unit) {
+    val container = androidx.compose.ui.platform.LocalContext.current.container
+    val books = data.books.filter { it.id in ids }
+    val common = remember(ids) { books.map { it.tagList.toSet() }.reduceOrNull { a, b -> a intersect b } ?: emptySet() }
+    var chosen by remember(ids) { mutableStateOf(common) }
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = U.c.bg) {
+        Column(Modifier.padding(horizontal = 18.dp).navigationBarsPadding().padding(bottom = 24.dp)) {
+            Text(stringResource(R.string.picked_shelves_title, books.size), style = UType.Title)
+            Text(stringResource(R.string.picked_shelves_text), style = UType.Muted, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
+            ShelfChips(data.shelves, chosen) { chosen = it }
+            Spacer(Modifier.height(18.dp))
+            app.familiar.ui.components.PrimaryButton(stringResource(R.string.save), {
+                val add = chosen - common
+                val drop = common - chosen
+                container.write { books.forEach { b -> dao().updateBook(b.copy(tags = ((b.tagList.toSet() + add) - drop).joinToString("\n"))) } }
+                onDone()
+            }, Modifier.fillMaxWidth())
+        }
+    }
+}

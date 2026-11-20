@@ -155,7 +155,10 @@ object Spines {
      * its name once there are two of them. With [cycles] off they all stay where they are. A pile made by hand
      * gathers where its first book comes, and its books leave their cycles to lie in it.
      */
-    fun groups(books: List<Book>, cycles: Boolean = true, decor: List<Decor.Placed> = emptyList()): List<Group> {
+    /** A group that only says «a new plank here» (#65). */
+    const val BREAK = "\u0000break"
+
+    fun groups(books: List<Book>, cycles: Boolean = true, decor: List<Decor.Placed> = emptyList(), breaks: Set<Long> = emptySet()): List<Group> {
         val out = mutableListOf<Group>()
         val after = decor.groupBy { it.after }
         // Things put before every book; those after a book not shown here aren't shown either.
@@ -166,6 +169,8 @@ object Spines {
         var loose = mutableListOf<Book>()
         fun flush() { if (loose.isNotEmpty()) out += Group("", pieces(loose, after)); loose = mutableListOf() }
         for (b in books) {
+            // The reader asked for a new plank from this book on (#65).
+            if (b.id in breaks) { flush(); out += Group(BREAK, emptyList()) }
             if (b.pile.isNotEmpty()) { if (seenPiles.add(b.pile)) loose += piles.getValue(b.pile); continue }
             val key = b.series.trim().lowercase()
             if (!cycles || key.isEmpty()) { loose += b; continue }
@@ -197,6 +202,7 @@ object Spines {
         }
         fun next() { planks += mutableListOf<Group>(); used = 0 }
         for (g in groups) {
+            if (g.name == BREAK) { if (planks.lastOrNull()?.isNotEmpty() == true) next(); continue }
             if (g.name.isNotEmpty()) {
                 val last = planks.lastOrNull()
                 if (last != null && last.isNotEmpty() && g.width <= free()) { put(g); continue }
