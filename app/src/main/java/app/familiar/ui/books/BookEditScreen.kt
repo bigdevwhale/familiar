@@ -162,7 +162,7 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
                 if (!allCycles && fits.size > CYCLES_SHOWN) Chip(stringResource(R.string.f_series_all, fits.size), false, { allCycles = true }, U.c.gold)
             }
             SectionTitle(stringResource(R.string.f_genre))
-            GenrePicker(genre, sub, data.genres) { g, s -> genre = g; sub = s }
+            GenrePicker(genre, sub, data.genres, data.books) { g, s -> genre = g; sub = s }
             Text(stringResource(R.string.f_genre_note), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 6.dp))
             SectionTitle(stringResource(R.string.f_shelves))
             ShelfChips(data.shelves, tags) { tags = it }

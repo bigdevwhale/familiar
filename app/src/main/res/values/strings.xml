@@ -1262,4 +1262,12 @@
     <!-- Shelf ornaments: each one once -->
     <string name="decor_remove">Take away</string>
     <string name="decor_elsewhere">on the shelf</string>
+    <string name="subgenre_line">Subgenre: %s</string>
+    <string name="genres_mine">My genres</string>
+    <string name="genres_mine_text">Rename a genre or delete it. Its books stay, in the genre it was part of.</string>
+    <string name="genres_standalone">On their own</string>
+    <string name="genre_no_books">no books</string>
+    <string name="subgenre_delete_title">Delete the subgenre «%s»?</string>
+    <string name="genre_delete_none">There are no books in it.</string>
+    <string name="genre_delete_n">Its books (%1$d) will stay, in «%2$s».</string>
 </resources>

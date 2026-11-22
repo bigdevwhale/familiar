@@ -441,16 +441,7 @@ fun ShelfTab(data: FamiliarData, go: Go) {
             genreKeys = Browse.genreKey(to)
         }
     }
-    removingGenre?.let { g ->
-        app.familiar.ui.components.ConfirmDialog(
-            title = stringResource(R.string.genre_delete_title, g.name),
-            text = stringResource(R.string.genre_delete_text),
-            confirm = stringResource(R.string.delete),
-            danger = true,
-            onConfirm = { container.scope.launch { OwnGenres.remove(container, g) }; genreKeys = "" },
-            onDismiss = { removingGenre = null },
-        )
-    }
+    removingGenre?.let { g -> RemoveGenreDialog(g, data.books, { removingGenre = null }) { genreKeys = "" } }
 }
 
 private const val OWN = "own:"
@@ -584,6 +575,11 @@ private fun FilterSheet(data: FamiliarData, shown: List<Book>, browse: Browse, o
     // The sheet animates shut on the screen's own scope: the app's background one has no frame clock.
     val ui = androidx.compose.runtime.rememberCoroutineScope()
     var adding by remember { mutableStateOf(false) }
+    var managing by remember { mutableStateOf(false) }
+    if (managing) OwnGenresSheet(data.genres, data.books, onDismiss = { managing = false }) { from, to ->
+        val k = Browse.genreKey(from)
+        if (k in browse.genres) onChange(browse.copy(genres = browse.genres - k + listOfNotNull(to?.let { Browse.genreKey(it) })))
+    }
     val names = Genre.entries.associateWith { genreName(it) }
     fun toggle(k: String) = onChange(browse.copy(genres = if (k in browse.genres) browse.genres - k else browse.genres + k))
     // Only the genres there are books in, so the sheet stays short; anything picked stays too.
@@ -607,6 +603,7 @@ private fun FilterSheet(data: FamiliarData, shown: List<Book>, browse: Browse, o
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 owns.forEach { o -> Chip(o.name, Browse.genreKey(o) in browse.genres, { toggle(Browse.genreKey(o)) }, Color(o.argb)) }
                 Chip("+ " + stringResource(R.string.genre_own), false, { adding = true }, U.c.gold)
+                if (data.genres.isNotEmpty()) Chip("✎ " + stringResource(R.string.genres_mine), false, { managing = true }, U.c.gold)
             }
             // The cycles on this shelf, one at a time: picking one shows its volumes in order.
             val cycles = remember(shown) { Series.all(shown).map { it.name }.sortedWith(java.text.Collator.getInstance(java.util.Locale.getDefault()).apply { strength = java.text.Collator.PRIMARY }) }

@@ -6,6 +6,17 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.19.2] - 2026-11-22
+
+### Changed
+- **My genres (#77):** one list of all your own genres and subgenres, grouped by the genre they are part of, each with its books, a pencil and a bin. It opens from «My genres» beside «+ Own genre» in the book editor and in the shelf filter. Before, renaming or deleting one was only possible from a shelf filtered to it alone.
+- Deleting a genre says how many books are in it and which genre they stay in; the chosen own genre in the book editor can be renamed or deleted right there.
+
+<!-- tg
+Свои жанры и поджанры теперь собраны в окне «Мои жанры»: переименовать или удалить можно прямо из редактора книги или фильтра полки
+Перед удалением видно, сколько в жанре книг и в каком жанре они останутся
+-->
+
 ## [1.19.1] - 2026-11-20
 
 ### Fixed

@@ -1351,4 +1351,12 @@
     <!-- Украшения полки: каждое по одному -->
     <string name="decor_remove">Убрать</string>
     <string name="decor_elsewhere">уже на полке</string>
+    <string name="subgenre_line">Поджанр: %s</string>
+    <string name="genres_mine">Мои жанры</string>
+    <string name="genres_mine_text">Переименуйте жанр или удалите его. Книги из него останутся – в жанре, в который он входил.</string>
+    <string name="genres_standalone">Сами по себе</string>
+    <string name="genre_no_books">нет книг</string>
+    <string name="subgenre_delete_title">Удалить поджанр «%s»?</string>
+    <string name="genre_delete_none">Книг в нём нет.</string>
+    <string name="genre_delete_n">Книги из него (%1$d) останутся в жанре «%2$s».</string>
 </resources>
