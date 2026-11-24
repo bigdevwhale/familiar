@@ -34,7 +34,11 @@ object Shelves {
     suspend fun rename(c: AppContainer, from: String, to: String) {
         val n = to.trim()
         if (n.isEmpty() || n == from) return
-        c.settings.update { s -> s.copy(shelves = s.shelves.map { if (it == from) n else it }.distinct()) }
+        c.settings.update { s ->
+            // The view picked for the shelf goes with it to its new name.
+            val views = s.shelfViews[OWN + from]?.let { v -> s.shelfViews - (OWN + from) + (OWN + n to v) } ?: s.shelfViews
+            s.copy(shelves = s.shelves.map { if (it == from) n else it }.distinct(), shelfViews = views)
+        }
         val dao = c.db.dao()
         dao.books().filter { from in it.tagList }.forEach { b ->
             dao.updateBook(b.copy(tags = b.tagList.map { if (it == from) n else it }.distinct().joinToString("\n")))
@@ -43,7 +47,7 @@ object Shelves {
     }
 
     suspend fun remove(c: AppContainer, name: String) {
-        c.settings.update { s -> s.copy(shelves = s.shelves - name) }
+        c.settings.update { s -> s.copy(shelves = s.shelves - name, shelfViews = s.shelfViews - (OWN + name)) }
         val dao = c.db.dao()
         dao.books().filter { name in it.tagList }.forEach { b -> dao.updateBook(b.copy(tags = (b.tagList - name).joinToString("\n"))) }
         c.changed()

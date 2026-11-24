@@ -144,8 +144,10 @@ fun ShelfTab(data: FamiliarData, go: Go) {
     val cycles = remember(data.books, query) {
         Series.all(data.books).filter { c -> query.isBlank() || query.trim().lowercase().let { q -> q in c.name.lowercase() || c.books.any { q in it.title.lowercase() } } }
     }
-    val spineMode = data.settings.shelfSpines
-    val listMode = data.settings.shelfList && !spineMode
+    // Each tab keeps the view picked on it (#84); one never picked on shows the shelf as it was shown before.
+    val tabView = data.settings.shelfViews[view]
+    val spineMode = tabView?.let { it == View.SPINES.name } ?: data.settings.shelfSpines
+    val listMode = (tabView?.let { it == View.LIST.name } ?: data.settings.shelfList) && !spineMode
     // The planks, packed for the width there is: the screen less the grid's side padding and the plank's own.
     val room = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp - 36 - 12
     // A cycle's volumes stand together under its name, unless the shelf is narrowed to that one cycle.
@@ -272,7 +274,7 @@ fun ShelfTab(data: FamiliarData, go: Go) {
                             Icon(Icons.Rounded.LocalFlorist, stringResource(R.string.shelf_decorate), tint = if (decorMode) U.c.accent else U.c.muted)
                         }
                         ViewMenu(if (spineMode) View.SPINES else if (listMode) View.LIST else View.COVERS) { v ->
-                            container.scope.launch { container.settings.update { it.copy(shelfList = v == View.LIST, shelfSpines = v == View.SPINES) } }
+                            container.scope.launch { container.settings.update { it.copy(shelfViews = it.shelfViews + (view to v.name)) } }
                         }
                     }
                     if (searching) UTextField(query, { query = it.take(60) }, Modifier.padding(top = 6.dp), placeholder = stringResource(R.string.lib_search_hint))
@@ -444,7 +446,7 @@ fun ShelfTab(data: FamiliarData, go: Go) {
     removingGenre?.let { g -> RemoveGenreDialog(g, data.books, { removingGenre = null }) { genreKeys = "" } }
 }
 
-private const val OWN = "own:"
+internal const val OWN = "own:"
 private const val CYCLES = "cycles"
 private const val ALL = "all"
 

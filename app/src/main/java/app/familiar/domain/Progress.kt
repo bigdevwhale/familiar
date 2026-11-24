@@ -277,6 +277,8 @@ object Mana {
         val audio: Boolean = false,
         /** The reader's usual pace with books of this kind, pages a minute ([ownPace]), or 0. */
         val pace: Float = 0f,
+        /** A book read in a flash (a comic, manga, poems): no pace is too fast for it (#83). */
+        val quick: Boolean = false,
     )
 
     private fun loves(sp: Species, s: Sitting): Boolean = when (sp) {
@@ -322,7 +324,7 @@ object Mana {
             val base = if (s.ebook) MAX_PACE_EBOOK else MAX_PACE
             val rate = maxOf(base, (s.pace * OWN_PACE_SPARE).coerceAtMost(base * OWN_PACE_CAP))
             val allowed = (s.minutes * rate + 5).toInt()
-            if (s.pages > allowed) {
+            if (s.pages > allowed && !s.quick) {
                 val cut = (s.pages - allowed) / 2
                 parts += Part.SNIFF to -cut
                 pages -= cut

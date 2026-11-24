@@ -518,6 +518,8 @@
     <string name="f_format">Формат</string>
     <string name="f_paper">Бумажная</string>
     <string name="f_ebook">Электронная</string>
+    <string name="f_quick">Читается быстро: комикс, манга, стихи</string>
+    <string name="f_quick_note">Фамильяр не будет удивляться, как быстро ты листаешь эту книгу.</string>
     <string name="f_minutes">Длительность</string>
     <string name="f_minute_now">Сейчас на</string>
     <string name="audio_playing">Каждая прослушанная минута засчитывается сама.</string>
@@ -684,7 +686,7 @@
     <string name="tk_valentine">Валентинка</string>
     <string name="tk_first_edition">Первое издание</string>
     <string name="tk_firefly_jar">Светлячок в банке</string>
-    <string name="tkt_bookmark">Кто-то оставил её на 213-й странице. Что же там случилось?</string>
+    <string name="tkt_bookmark">Кто-то оставил её на самом интересном месте. Что же там случилось?</string>
     <string name="tkt_acorn">Белки в книгах тоже их прячут.</string>
     <string name="tkt_button">С пальто героя, который очень спешил.</string>
     <string name="tkt_candle_stub">Горела всю ночь, пока читалась последняя глава.</string>

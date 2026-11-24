@@ -69,6 +69,8 @@ data class Book(
     /** Its spine's height and thickness on the plank, in dp, set by hand (#58); 0 for the usual, from its title and pages. */
     @ColumnInfo(defaultValue = "0") val tall: Int = 0,
     @ColumnInfo(defaultValue = "0") val thick: Int = 0,
+    /** Read in a flash by nature: a comic, manga, poems, a picture book (#83). The familiar never doubts its pace. */
+    @ColumnInfo(defaultValue = "0") val quick: Boolean = false,
 ) {
     val tagList: List<String> get() = tags.split('\n').map { it.trim() }.filter { it.isNotEmpty() }
     /** The last page you can reach: the book's end, or no limit when its length isn't known. */
@@ -276,7 +278,7 @@ abstract class FamiliarDao {
 // Every schema change gets a new version and a migration that keeps what's there (1.1.0 lost data without one).
 @Database(
     entities = [Book::class, Reading::class, Pet::class, Find::class, Quote::class],
-    version = 11,
+    version = 12,
     exportSchema = true,
     autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8), AutoMigration(from = 8, to = 9), AutoMigration(from = 9, to = 10)],
 )
@@ -287,7 +289,7 @@ abstract class FamiliarDatabase : RoomDatabase() {
         fun create(context: Context, name: String = "familiar.db"): FamiliarDatabase =
             Room.databaseBuilder(context.applicationContext, FamiliarDatabase::class.java, name)
                 // Only a database older than the migrations (1.0.0) starts fresh (and onboarding again, see FamiliarApp).
-                .addMigrations(M10_11)
+                .addMigrations(M10_11, M11_12)
                 .fallbackToDestructiveMigration(dropAllTables = true)
                 .build()
     }
@@ -298,5 +300,12 @@ internal val M10_11 = object : androidx.room.migration.Migration(10, 11) {
     override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE `quotes` ADD COLUMN `note` INTEGER NOT NULL DEFAULT 0")
         db.execSQL("UPDATE `books` SET `rating` = `rating` * 2 WHERE `rating` IS NOT NULL")
+    }
+}
+
+/** A book can be one that is read in a flash (#83). */
+internal val M11_12 = object : androidx.room.migration.Migration(11, 12) {
+    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `books` ADD COLUMN `quick` INTEGER NOT NULL DEFAULT 0")
     }
 }

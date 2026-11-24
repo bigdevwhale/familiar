@@ -103,6 +103,8 @@ data class Settings(
     val shelfList: Boolean = false,
     /** The shelf shown as spines on planks; wins over [shelfList]. */
     val shelfSpines: Boolean = false,
+    /** How each shelf tab is shown, by its key (COVERS, LIST or SPINES), once picked there (#84); others follow the two above. */
+    val shelfViews: Map<String, String> = emptyMap(),
     /** The planks of the spines view: their wood and trim ([app.familiar.ui.books.Wood], [app.familiar.ui.books.Trim] names),
      *  and what stands at the end of each ("<plank>:<ornament>" a line, see [app.familiar.ui.books.Decor]). */
     val shelfWood: String = "",
@@ -177,6 +179,7 @@ class SettingsStore(context: Context) {
         shelfSort = this[SHELF_SORT] ?: "",
         shelfList = this[SHELF_LIST] ?: false,
         shelfSpines = this[SHELF_SPINES] ?: false,
+        shelfViews = (this[SHELF_VIEWS] ?: emptySet()).filter { '|' in it }.associate { it.substringBeforeLast('|') to it.substringAfterLast('|') },
         shelfWood = this[SHELF_WOOD] ?: "",
         shelfTrim = this[SHELF_TRIM] ?: "",
         shelfDecor = this[SHELF_DECOR] ?: "",
@@ -281,6 +284,7 @@ class SettingsStore(context: Context) {
             it[SHELF_SORT] = s.shelfSort
             it[SHELF_LIST] = s.shelfList
             it[SHELF_SPINES] = s.shelfSpines
+            it[SHELF_VIEWS] = s.shelfViews.map { (k, v) -> "$k|$v" }.toSet()
             it[SHELF_WOOD] = s.shelfWood
             it[SHELF_TRIM] = s.shelfTrim
             it[SHELF_DECOR] = s.shelfDecor
@@ -340,6 +344,7 @@ class SettingsStore(context: Context) {
         val SHELF_SORT = stringPreferencesKey("shelf_sort")
         val SHELF_LIST = booleanPreferencesKey("shelf_list")
         val SHELF_SPINES = booleanPreferencesKey("shelf_spines")
+        val SHELF_VIEWS = stringSetPreferencesKey("shelf_views")
         val SHELF_WOOD = stringPreferencesKey("shelf_wood")
         val SHELF_TRIM = stringPreferencesKey("shelf_trim")
         val SHELF_DECOR = stringPreferencesKey("shelf_decor")

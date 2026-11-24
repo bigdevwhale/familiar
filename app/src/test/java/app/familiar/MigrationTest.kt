@@ -4,6 +4,7 @@ import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
 import app.familiar.data.FamiliarDatabase
 import app.familiar.data.M10_11
+import app.familiar.data.M11_12
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -35,7 +36,7 @@ class MigrationTest {
             db.execSQL("INSERT INTO books (id, title, author, pages, genre, shelf, page, added, rating, cover, audio, series, tags, sub, note, ebook) VALUES (1, 'Dune', '', 600, 'FANTASY', 'DONE', 600, 0, 4, '', 0, '', '', '', '', 0)")
             db.version = 10
         }
-        val room = Room.databaseBuilder(ctx, FamiliarDatabase::class.java, name).addMigrations(M10_11).allowMainThreadQueries().build()
+        val room = Room.databaseBuilder(ctx, FamiliarDatabase::class.java, name).addMigrations(M10_11, M11_12).allowMainThreadQueries().build()
         val books = room.dao().books()
         assertEquals(1, books.size)
         assertEquals(8, books.single().rating)

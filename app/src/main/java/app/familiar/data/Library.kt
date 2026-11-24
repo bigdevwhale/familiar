@@ -62,9 +62,10 @@ object Library {
         var streak = 0
         while (d in days) { streak++; d = d.minusDays(1) }
         val minutes = ((end - start) / 60_000).toInt()
-        // The last timed sittings with books of the same kind (e-book or paper): how fast this reader really reads.
+        // The last timed sittings with books of the same kind (e-book or paper, and not one read in a flash):
+        // how fast this reader really reads.
         val pace = Mana.ownPace(
-            past.filter { it.timed && !it.listened && books[it.bookId]?.let { b -> !b.audio && b.ebook == book.ebook } == true }
+            past.filter { it.timed && !it.listened && books[it.bookId]?.let { b -> !b.audio && !b.quick && b.ebook == book.ebook } == true }
                 .sortedByDescending { it.end }.take(20).map { it.pages to it.minutes }
         )
         val feast = Mana.feast(
@@ -77,7 +78,7 @@ object Library {
                 item = item, listened = listened, morning = isMorning(start, zone), own = book.sub.isNotBlank(),
                 ebook = book.ebook, series = book.series.isNotBlank(), reread = book.reread > 0, fire = ambience == Ambience.FIRE.name,
                 quoted = dao.quotes().any { it.bookId == book.id && !it.note }, guest = guest, audio = book.audio,
-                pace = pace,
+                pace = pace, quick = book.quick,
             ),
         )
         val reading = Reading(

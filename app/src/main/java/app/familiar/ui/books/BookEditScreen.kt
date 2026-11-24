@@ -65,6 +65,7 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
     var cover by remember { mutableStateOf(old?.cover ?: "") }
     var audio by remember { mutableStateOf(old?.audio ?: false) }
     var ebook by remember { mutableStateOf(old?.ebook ?: false) }
+    var quick by remember { mutableStateOf(old?.quick ?: false) }
     val context = androidx.compose.ui.platform.LocalContext.current
     var series by remember { mutableStateOf(old?.series ?: newSeries) }
     // The whole cycle at once (#37): how many volumes it has; the missing ones go to «Want to read».
@@ -115,6 +116,12 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
                 Chip(stringResource(R.string.f_audio), audio, { audio = true; ebook = false })
             }
             if (audio) Text(stringResource(R.string.f_audio_sub), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 6.dp))
+            // A comic or a book of poems goes by fast; the familiar shouldn't doubt it (#83).
+            else {
+                Spacer(Modifier.height(4.dp))
+                Chip(stringResource(R.string.f_quick), quick, { quick = !quick })
+                if (quick) Text(stringResource(R.string.f_quick_note), style = UType.Small.copy(color = U.c.muted))
+            }
             if (audio) {
                 // An audiobook's length as the shop or the player shows it: hours and minutes.
                 SectionTitle(stringResource(R.string.f_minutes))
@@ -196,7 +203,7 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
                 val read = old == null && shelf == Shelf.DONE
                 val p = if (read) total else (page.toIntOrNull() ?: 0).coerceIn(0, if (total > 0) total else 99_999)
                 val b = (old ?: Book(title = "", pages = total, genre = genre.name, added = if (read) finished else now)).copy(
-                    title = title.trim(), author = author.trim(), pages = total, genre = genre.name, sub = sub.trim(), page = p, cover = cover, audio = audio, ebook = ebook && !audio, tags = tags.joinToString("\n"), series = series.trim(), volume = volume.toIntOrNull()?.takeIf { series.isNotBlank() },
+                    title = title.trim(), author = author.trim(), pages = total, genre = genre.name, sub = sub.trim(), page = p, cover = cover, audio = audio, ebook = ebook && !audio, quick = quick && !audio, tags = tags.joinToString("\n"), series = series.trim(), volume = volume.toIntOrNull()?.takeIf { series.isNotBlank() },
                     shelf = if (old == null) shelf.name else old.shelf,
                     started = old?.started ?: if (shelf == Shelf.READING) now else if (read) begun?.coerceAtMost(finished) else null,
                     finished = if (read) finished else old?.finished,
@@ -211,7 +218,7 @@ fun BookEditScreen(id: Long, data: FamiliarData, go: Go, newSeries: String = "")
                 container.write {
                     if (old == null) dao().insertBook(b) else dao().updateBook(b)
                     rest.forEach { k ->
-                        dao().insertBook(Book(title = volumeTitle.format(name, k), author = b.author, pages = 0, genre = b.genre, sub = b.sub, shelf = Shelf.WANT.name, added = now + k, series = name, volume = k, audio = b.audio, ebook = b.ebook))
+                        dao().insertBook(Book(title = volumeTitle.format(name, k), author = b.author, pages = 0, genre = b.genre, sub = b.sub, shelf = Shelf.WANT.name, added = now + k, series = name, volume = k, audio = b.audio, ebook = b.ebook, quick = b.quick))
                     }
                 }
                 go.back()

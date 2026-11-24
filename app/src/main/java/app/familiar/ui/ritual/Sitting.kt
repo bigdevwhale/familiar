@@ -117,7 +117,7 @@ fun SittingForm(book: Book, fromPage: Int, startPage: Int, slime: Boolean, butto
         }
         if (slime) {
             SectionTitle(stringResource(R.string.slime_item))
-            UTextField(item, { item = it.take(30) }, placeholder = stringResource(R.string.slime_item_hint))
+            UTextField(item, { item = it.take(80) }, placeholder = stringResource(R.string.slime_item_hint))
             Text(stringResource(R.string.slime_item_note), style = UType.Small.copy(color = U.c.muted), modifier = Modifier.padding(top = 4.dp))
         }
         Spacer(Modifier.height(18.dp))

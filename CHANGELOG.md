@@ -6,6 +6,25 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.20.0] - 2026-11-24
+
+### Added
+- **Books that read fast (#83):** a book can be marked «Reads fast: a comic, manga, poems» in the book editor. The familiar never sniffs at how quickly its pages go, and such sittings don't count when it learns your usual pace for other books.
+- **A view for each shelf (#84):** covers, list or spines are now picked for each tab on its own (All, Reading, Want to read, Cycles, your own shelves) and kept. A tab you haven't set yet shows the shelf as before.
+
+### Changed
+- **More room for the slime (#82):** what the slime swallows can be up to 80 letters, not 30.
+
+### Fixed
+- **The silk bookmark (#85)** no longer claims it was left on page 213, which made no sense in a shorter book.
+
+<!-- tg
+Книгу можно отметить «Читается быстро: комикс, манга, стихи», и фамильяр перестанет подозрительно принюхиваться к быстрому чтению
+У каждой полки теперь свой вид: обложки, список или корешки
+Слайму можно скормить вещь подлиннее, до 80 букв
+Шёлковая закладка больше не утверждает, что её оставили на 213-й странице
+-->
+
 ## [1.19.2] - 2026-11-22
 
 ### Changed

@@ -117,6 +117,15 @@ class FamiliarTest {
     }
 
     @Test
+    fun aQuickBookIsNeverDoubted() {
+        // 250 pages of a comic in 30 minutes (#83).
+        fun at(quick: Boolean) = Mana.feast(Species.MIMIC, Mana.Sitting(250, true, 30, 0f, false, Genre.FANTASY, null, 250, 1, 0, false, "", quick = quick))
+        assertTrue(at(quick = false).sniffed)
+        assertFalse(at(quick = true).sniffed)
+        assertEquals(250, at(quick = true).parts.first { it.first == app.familiar.domain.Part.PAGES }.second)
+    }
+
+    @Test
     fun favourites() {
         fun fav(sp: Species, s: Mana.Sitting) = Mana.feast(sp, s).parts.any { it.first == Part.FAVOURITE }
         assertTrue(fav(Species.KITSUNE, sitting(genre = Genre.HORROR, prev = Genre.FANTASY)))

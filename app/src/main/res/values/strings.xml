@@ -505,6 +505,8 @@
     <string name="f_format">Format</string>
     <string name="f_paper">Paper</string>
     <string name="f_ebook">E-book</string>
+    <string name="f_quick">Reads fast: a comic, manga, poems</string>
+    <string name="f_quick_note">The familiar won\'t wonder how fast you turn the pages of this one.</string>
     <string name="f_minutes">Length</string>
     <string name="f_minute_now">Now at</string>
     <string name="audio_playing">Every minute listened counts by itself.</string>
@@ -663,7 +665,7 @@
     <string name="tk_valentine">Valentine</string>
     <string name="tk_first_edition">First edition</string>
     <string name="tk_firefly_jar">Firefly in a jar</string>
-    <string name="tkt_bookmark">Someone left it on page 213. What happened there?</string>
+    <string name="tkt_bookmark">Someone left it at the best part. What happened there?</string>
     <string name="tkt_acorn">Squirrels in books hide them too.</string>
     <string name="tkt_button">From a coat of a character who left in a hurry.</string>
     <string name="tkt_candle_stub">It burned all night through the last chapter.</string>
