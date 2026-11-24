@@ -9,20 +9,27 @@ then close it like any HTML comment. The release notes carry it, and the chat bo
 ## [1.20.0] - 2026-11-24
 
 ### Added
-- **Books that read fast (#83):** a book can be marked «Reads fast: a comic, manga, poems» in the book editor. The familiar never sniffs at how quickly its pages go, and such sittings don't count when it learns your usual pace for other books.
-- **A view for each shelf (#84):** covers, list or spines are now picked for each tab on its own (All, Reading, Want to read, Cycles, your own shelves) and kept. A tab you haven't set yet shows the shelf as before.
+- **Books that read fast:** mark a comic, manga or poems, and the familiar won't doubt your pace (#83).
+- **A view for each shelf:** covers, list or spines, kept per tab (#84).
 
 ### Changed
-- **More room for the slime (#82):** what the slime swallows can be up to 80 letters, not 30.
+- The slime can swallow things of up to 80 letters, not 30 (#82).
 
 ### Fixed
-- **The silk bookmark (#85)** no longer claims it was left on page 213, which made no sense in a shorter book.
+- The silk bookmark no longer insists on page 213 (#85).
+
+<details>
+<summary>More</summary>
+
+- A book marked «Reads fast: a comic, manga, poems» in the book editor is never sniffed at, and its sittings don't count when the familiar learns your usual pace for other books.
+- The view picked on a tab (All, Reading, Want to read, Cycles, your own shelves) stays with that tab; a tab never set shows the shelf as before.
+</details>
 
 <!-- tg
-Книгу можно отметить «Читается быстро: комикс, манга, стихи», и фамильяр перестанет подозрительно принюхиваться к быстрому чтению
-У каждой полки теперь свой вид: обложки, список или корешки
-Слайму можно скормить вещь подлиннее, до 80 букв
-Шёлковая закладка больше не утверждает, что её оставили на 213-й странице
+Комиксы, мангу и стихи можно отметить «Читается быстро»: фамильяр не будет принюхиваться к темпу.
+У каждой полки свой вид: обложки, список или корешки.
+Слайму можно скормить вещь до 80 букв.
+Шёлковая закладка больше не твердит про 213-ю страницу.
 -->
 
 ## [1.19.2] - 2026-11-22
