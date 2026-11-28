@@ -231,7 +231,7 @@ class MonthSummary(private val s: Stats, val month: YearMonth) {
     val days: Map<LocalDate, Int> = mine.groupBy { date(it.end) }.mapValues { (_, rs) -> rs.sumOf { it.amount } }
     val pages: Int = mine.sumOf { it.pages }
     val minutes: Int = mine.filter { it.timed }.sumOf { it.minutes }
-    val bestStreak: Int = longestRun(days.keys)
+    val bestStreak: Int = longestRun(mine.flatMap { it.chainDays(s.zone) }.filter { YearMonth.from(it) == month }.toSet())
     val genre: Genre? = (finished.ifEmpty { opened }).groupBy { Genre.of(it.genre) }.maxByOrNull { it.value.size }?.key
     val empty: Boolean get() = mine.isEmpty() && finished.isEmpty()
 }

@@ -128,6 +128,16 @@ data class Reading(
     /** It counts as a day of reading. */
     val counts: Boolean get() = amount > 0
     val minutes: Int get() = ((end - start) / 60_000).toInt()
+
+    /**
+     * The days this sitting keeps the chain for: the day it ended and, when it ran past midnight,
+     * the evening it began on too (reading from 23:30 to 00:10 keeps both days).
+     */
+    fun chainDays(zone: java.time.ZoneId): Set<java.time.LocalDate> {
+        val last = java.time.Instant.ofEpochMilli(end).atZone(zone).toLocalDate()
+        val first = java.time.Instant.ofEpochMilli(start).atZone(zone).toLocalDate()
+        return if (first == last.minusDays(1)) setOf(first, last) else setOf(last)
+    }
 }
 
 /** A familiar that has joined the den. [mana] is everything it has eaten. */

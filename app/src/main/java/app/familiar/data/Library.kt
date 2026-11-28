@@ -57,7 +57,8 @@ object Library {
         val previousGenre = past.filter { it.bookId != book.id }.maxByOrNull { it.end }?.let { books[it.bookId] }?.let { Genre.of(it.genre) }
         val lastEnd = past.filter { it.counts }.maxOfOrNull { it.end }
         val gapDays = lastEnd?.let { ((start - it) / 86_400_000L).toInt() } ?: 0
-        val days = (past.filter { it.counts }.map { it.end } + end).map { Instant.ofEpochMilli(it).atZone(zone).toLocalDate() }.toSet() + guarded
+        val days = past.filter { it.counts }.flatMap { it.chainDays(zone) }.toSet() +
+            Reading(bookId = 0, petId = 0, start = start, end = end, fromPage = 0, toPage = 0, mana = 0, timed = timed).chainDays(zone) + guarded
         var d = Instant.ofEpochMilli(end).atZone(zone).toLocalDate()
         var streak = 0
         while (d in days) { streak++; d = d.minusDays(1) }

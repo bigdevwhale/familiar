@@ -38,7 +38,7 @@ class Stats(
     val today: LocalDate = Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
     private fun day(t: Long): LocalDate = Instant.ofEpochMilli(t).atZone(zone).toLocalDate()
 
-    val readDays: Set<LocalDate> = readings.filter { it.counts }.map { day(it.end) }.toSet()
+    val readDays: Set<LocalDate> = readings.filter { it.counts }.flatMap { it.chainDays(zone) }.toSet()
     val todayPages: Int = readings.filter { day(it.end) == today }.sumOf { it.amount }
     val fed: Float = if (dailyGoal <= 0) 1f else (todayPages.toFloat() / dailyGoal).coerceIn(0f, 1f)
 
@@ -378,7 +378,7 @@ object Quests {
         val rs = s.readings.filter { it.end in from until to }
         return Quest.ofWeek(monday.toEpochDay()).map { q ->
             val p = when (q) {
-                Quest.STREAK -> longestRun(rs.filter { it.counts }.map { Instant.ofEpochMilli(it.end).atZone(s.zone).toLocalDate() }.toSet())
+                Quest.STREAK -> longestRun(rs.filter { it.counts }.flatMap { it.chainDays(s.zone) }.filter { !it.isBefore(monday) }.toSet())
                 Quest.PAGES -> rs.sumOf { it.amount }
                 Quest.NIGHTS -> rs.count { it.timed && it.counts && isNight(it.start, s.zone) }
                 Quest.HOUR -> rs.count { it.timed && it.minutes >= 60 }
@@ -397,7 +397,7 @@ object Quests {
         val oldGenres = s.finished.filter { (it.finished ?: 0) < monthStart }.map { it.genre }.toSet()
         return Quest.of(month).map { q ->
             val p = when (q) {
-                Quest.STREAK -> longestRun(rs.filter { it.counts }.map { Instant.ofEpochMilli(it.end).atZone(s.zone).toLocalDate() }.toSet())
+                Quest.STREAK -> longestRun(rs.filter { it.counts }.flatMap { it.chainDays(s.zone) }.filter { YearMonth.from(it) == month }.toSet())
                 Quest.PAGES -> rs.sumOf { it.amount }
                 Quest.TWO_BOOKS -> doneNow.size
                 Quest.LONG_BOOK -> doneNow.count { it.pages >= 300 }
@@ -419,7 +419,7 @@ class Year(private val s: Stats, val year: Int) {
     val nights: Int = s.readings.count { inYear(it.end) && it.counts && isNight(it.start, s.zone) }
     val genre: Genre? = books.groupBy { Genre.of(it.genre) }.maxByOrNull { it.value.size }?.key
     val longest: Book? = books.maxByOrNull { it.pages }
-    val bestStreak: Int = longestRun(s.readings.filter { inYear(it.end) && it.counts }.map { Instant.ofEpochMilli(it.end).atZone(s.zone).toLocalDate() }.toSet())
+    val bestStreak: Int = longestRun(s.readings.filter { inYear(it.end) && it.counts }.flatMap { it.chainDays(s.zone) }.filter { it.year == year }.toSet())
 }
 
 /** A cycle of books, gathered by the name typed on each volume. */

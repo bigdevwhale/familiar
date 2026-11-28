@@ -148,6 +148,17 @@ class FamiliarTest {
     }
 
     @Test
+    fun sittingPastMidnightKeepsTheEveningItBegan() {
+        // #93: read 23:30 two days ago until 00:39 yesterday, read three days ago too.
+        val late = read(2, hour = 23, minutes = 70)
+        val s = stats(listOf(read(3), late))
+        assertEquals(3, s.streak)
+        assertEquals(setOf(today.minusDays(2), today.minusDays(1)), late.chainDays(zone))
+        // An ordinary evening keeps only its own day.
+        assertEquals(setOf(today.minusDays(3)), read(3).chainDays(zone))
+    }
+
+    @Test
     fun stoneCreepsInAfterTwoDays() {
         assertEquals(0f, stats(listOf(read(1))).stone, 0f)
         val three = stats(listOf(read(3))).stone

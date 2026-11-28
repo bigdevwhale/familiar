@@ -26,7 +26,7 @@ class Wrapped(s: Stats, val year: Int, allFinds: List<Find> = emptyList(), earne
     val pages: Int = readings.sumOf { it.pages }
     val minutes: Int = readings.filter { it.timed }.sumOf { it.minutes }
     val days: Int = counted.map { date(it.end) }.toSet().size
-    val bestStreak: Int = longestRun(counted.map { date(it.end) }.toSet())
+    val bestStreak: Int = longestRun(counted.flatMap { it.chainDays(s.zone) }.filter { it.year == year }.toSet())
 
     val first: Book? = books.firstOrNull()
     val last: Book? = books.lastOrNull()?.takeIf { books.size > 1 }

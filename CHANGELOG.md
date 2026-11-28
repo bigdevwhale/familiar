@@ -6,6 +6,15 @@ line "<!-- tg", then 2-4 short lines in Russian for users (what is new, what is 
 then close it like any HTML comment. The release notes carry it, and the chat bot posts those lines.
 -->
 
+## [1.20.1] - 2026-11-28
+
+### Fixed
+- **A sitting past midnight keeps the streak (#93):** reading from 23:30 to 00:09 now counts for the evening it began on as well as the night it ended in, so the streak no longer breaks.
+
+<!-- tg
+Чтение через полночь больше не обрывает серию: сессия с 23:30 до 00:09 засчитывается и вечеру, когда вы начали.
+-->
+
 ## [1.20.0] - 2026-11-24
 
 ### Added
